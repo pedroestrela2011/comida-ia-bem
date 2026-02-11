@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",
@@ -14,7 +16,9 @@ const countries = [
 
 const Cadastro = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     nome: "",
     dia: "",
@@ -37,10 +41,38 @@ const Cadastro = () => {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      navigate("/planos");
+    if (!validate()) return;
+    setLoading(true);
+
+    const dataNascimento = `${form.ano}-${form.mes.padStart(2, "0")}-${form.dia.padStart(2, "0")}`;
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.senha,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            nome: form.nome,
+            data_nascimento: dataNascimento,
+            pais: form.pais,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      navigate("/verificar-email", { state: { email: form.email } });
+    } catch (err: any) {
+      toast({
+        title: "Erro ao criar conta",
+        description: err.message || "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,8 +239,8 @@ const Cadastro = () => {
               {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
             </div>
 
-            <Button type="submit" size="lg" className="w-full font-semibold text-base">
-              Criar conta
+            <Button type="submit" size="lg" className="w-full font-semibold text-base" disabled={loading}>
+              {loading ? "Criando conta..." : "Criar conta"}
             </Button>
           </form>
 
