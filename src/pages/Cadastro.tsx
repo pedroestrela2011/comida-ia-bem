@@ -17,7 +17,9 @@ const Cadastro = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     nome: "",
-    nascimento: "",
+    dia: "",
+    mes: "",
+    ano: "",
     pais: "",
     email: "",
     senha: "",
@@ -27,7 +29,7 @@ const Cadastro = () => {
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.nome.trim()) e.nome = "Nome é obrigatório";
-    if (!form.nascimento) e.nascimento = "Data de nascimento é obrigatória";
+    if (!form.dia || !form.mes || !form.ano) e.nascimento = "Data de nascimento é obrigatória";
     if (!form.pais) e.pais = "Selecione seu país";
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Email inválido";
     if (form.senha.length < 6) e.senha = "Senha deve ter pelo menos 6 caracteres";
@@ -116,14 +118,39 @@ const Cadastro = () => {
 
             {/* Data de nascimento */}
             <div className="space-y-2">
-              <Label htmlFor="nascimento">Data de nascimento</Label>
-              <Input
-                id="nascimento"
-                type="date"
-                value={form.nascimento}
-                onChange={(e) => setForm({ ...form, nascimento: e.target.value })}
-                className={errors.nascimento ? "border-destructive" : ""}
-              />
+              <Label>Data de nascimento</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Select value={form.dia} onValueChange={(v) => setForm({ ...form, dia: v })}>
+                  <SelectTrigger className={errors.nascimento ? "border-destructive" : ""}>
+                    <SelectValue placeholder="Dia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                      <SelectItem key={d} value={String(d)}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={form.mes} onValueChange={(v) => setForm({ ...form, mes: v })}>
+                  <SelectTrigger className={errors.nascimento ? "border-destructive" : ""}>
+                    <SelectValue placeholder="Mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map((m, i) => (
+                      <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={form.ano} onValueChange={(v) => setForm({ ...form, ano: v })}>
+                  <SelectTrigger className={errors.nascimento ? "border-destructive" : ""}>
+                    <SelectValue placeholder="Ano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               {errors.nascimento && <p className="text-sm text-destructive">{errors.nascimento}</p>}
             </div>
 
