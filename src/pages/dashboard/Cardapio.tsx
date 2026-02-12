@@ -3,7 +3,6 @@ import { CalendarDays, ShoppingCart, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,26 +21,103 @@ const REFEICOES_LABEL: Record<string, string> = {
   almoco: "🍽️ Almoço", lanche_tarde: "🥤 Lanche da Tarde", jantar: "🌙 Jantar",
 };
 
+const OBJETIVOS = [
+  { value: "emagrecer", label: "🏃 Emagrecer", desc: "Perder peso de forma saudável" },
+  { value: "ganhar_massa", label: "💪 Ganhar Massa", desc: "Aumentar massa muscular" },
+  { value: "manter_saude", label: "🌿 Manter a Saúde", desc: "Alimentação equilibrada" },
+];
+
+const ORCAMENTOS = [
+  { value: "econômico", label: "💰 Econômico", desc: "Até R$150/semana" },
+  { value: "moderado", label: "💵 Moderado", desc: "R$150 a R$300/semana" },
+  { value: "sem limite", label: "💎 Sem Limite", desc: "Foco na qualidade" },
+];
+
+const RESTRICOES = [
+  { value: "nenhuma", label: "✅ Nenhuma" },
+  { value: "vegetariano", label: "🥬 Vegetariano" },
+  { value: "vegano", label: "🌱 Vegano" },
+  { value: "sem glúten", label: "🚫🌾 Sem Glúten" },
+  { value: "sem lactose", label: "🚫🥛 Sem Lactose" },
+  { value: "low carb", label: "🥩 Low Carb" },
+];
+
+const DEFICIENCIAS = [
+  { value: "nenhuma", label: "✅ Nenhuma" },
+  { value: "ferro", label: "🩸 Ferro" },
+  { value: "vitamina D", label: "☀️ Vitamina D" },
+  { value: "vitamina B12", label: "💊 Vitamina B12" },
+  { value: "cálcio", label: "🦴 Cálcio" },
+  { value: "ômega 3", label: "🐟 Ômega 3" },
+];
+
+function OptionButton({ selected, onClick, label, desc }: { selected: boolean; onClick: () => void; label: string; desc?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border-2 p-3 text-left transition-all ${
+        selected
+          ? "border-primary bg-primary/10 shadow-sm"
+          : "border-border bg-card hover:border-primary/40"
+      }`}
+    >
+      <span className="font-medium text-sm text-foreground">{label}</span>
+      {desc && <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>}
+    </button>
+  );
+}
+
+function ChipButton({ selected, onClick, label }: { selected: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border-2 px-4 py-1.5 text-sm font-medium transition-all ${
+        selected
+          ? "border-primary bg-primary/10 text-foreground"
+          : "border-border bg-card text-muted-foreground hover:border-primary/40"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function Cardapio() {
   const [loading, setLoading] = useState(false);
   const [cardapio, setCardapio] = useState<CardapioData | null>(null);
   const [showList, setShowList] = useState(false);
   const [prefs, setPrefs] = useState({
-    objetivo: "", orcamento: "", pessoas: "1", preferencias: "", restricoes: "", deficiencias: "",
+    objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
   });
 
+  const toggleArray = (arr: string[], val: string) => {
+    if (val === "nenhuma") return ["nenhuma"];
+    const without = arr.filter(v => v !== "nenhuma");
+    return without.includes(val) ? without.filter(v => v !== val) : [...without, val];
+  };
+
   const gerarCardapio = async () => {
+    if (!prefs.objetivo) { toast({ title: "Selecione um objetivo", variant: "destructive" }); return; }
     setLoading(true);
     try {
+      const preferences = {
+        objetivo: OBJETIVOS.find(o => o.value === prefs.objetivo)?.label.replace(/^. /, "") || prefs.objetivo,
+        orcamento: prefs.orcamento || "moderado",
+        pessoas: prefs.pessoas,
+        preferencias: "",
+        restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
+        deficiencias: prefs.deficiencias.filter(d => d !== "nenhuma").join(", ") || "nenhuma",
+      };
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
-        body: { type: "cardapio", preferences: prefs },
+        body: { type: "cardapio", preferences },
       });
       if (error) throw error;
       const content = data.content || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("Resposta inválida da IA");
-      const parsed = JSON.parse(jsonMatch[0]) as CardapioData;
-      setCardapio(parsed);
+      setCardapio(JSON.parse(jsonMatch[0]) as CardapioData);
       toast({ title: "Cardápio gerado com sucesso! 🥗" });
     } catch (e: any) {
       toast({ title: "Erro ao gerar cardápio", description: e.message, variant: "destructive" });
@@ -58,35 +134,77 @@ export default function Cardapio() {
       </div>
 
       {!cardapio ? (
-        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Suas preferências</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label>Objetivo</Label>
-              <Input placeholder="Ex: Emagrecer, ganhar massa..." value={prefs.objetivo} onChange={e => setPrefs(p => ({ ...p, objetivo: e.target.value }))} />
-            </div>
-            <div>
-              <Label>Orçamento semanal</Label>
-              <Input placeholder="Ex: R$200, econômico..." value={prefs.orcamento} onChange={e => setPrefs(p => ({ ...p, orcamento: e.target.value }))} />
-            </div>
-            <div>
-              <Label>Nº de pessoas</Label>
-              <Input type="number" min="1" value={prefs.pessoas} onChange={e => setPrefs(p => ({ ...p, pessoas: e.target.value }))} />
-            </div>
-            <div>
-              <Label>Restrições alimentares</Label>
-              <Input placeholder="Ex: Sem glúten, vegetariano..." value={prefs.restricoes} onChange={e => setPrefs(p => ({ ...p, restricoes: e.target.value }))} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label>Preferências</Label>
-              <Textarea placeholder="Alimentos que gosta, cozinha favorita..." value={prefs.preferencias} onChange={e => setPrefs(p => ({ ...p, preferencias: e.target.value }))} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label>Deficiências nutricionais</Label>
-              <Input placeholder="Ex: Vitamina D, ferro..." value={prefs.deficiencias} onChange={e => setPrefs(p => ({ ...p, deficiencias: e.target.value }))} />
+        <div className="rounded-xl border border-border bg-card p-6 space-y-6">
+          {/* Objetivo */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">Qual é o seu objetivo?</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {OBJETIVOS.map(o => (
+                <OptionButton key={o.value} selected={prefs.objetivo === o.value} onClick={() => setPrefs(p => ({ ...p, objetivo: o.value }))} label={o.label} desc={o.desc} />
+              ))}
             </div>
           </div>
-          <Button onClick={gerarCardapio} disabled={loading} className="w-full sm:w-auto">
+
+          {/* Orçamento */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">Orçamento semanal</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {ORCAMENTOS.map(o => (
+                <OptionButton key={o.value} selected={prefs.orcamento === o.value} onClick={() => setPrefs(p => ({ ...p, orcamento: o.value }))} label={o.label} desc={o.desc} />
+              ))}
+            </div>
+          </div>
+
+          {/* Pessoas */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">Para quantas pessoas?</Label>
+            <div className="flex gap-2">
+              {["1", "2", "3", "4", "5"].map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setPrefs(p => ({ ...p, pessoas: n }))}
+                  className={`h-10 w-10 rounded-full border-2 font-semibold text-sm transition-all ${
+                    prefs.pessoas === n
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-foreground hover:border-primary/40"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+              <Input
+                type="number"
+                min="1"
+                placeholder="Outro"
+                className="w-20 h-10"
+                value={Number(prefs.pessoas) > 5 ? prefs.pessoas : ""}
+                onChange={e => setPrefs(p => ({ ...p, pessoas: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {/* Restrições */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">Restrições alimentares</Label>
+            <div className="flex flex-wrap gap-2">
+              {RESTRICOES.map(r => (
+                <ChipButton key={r.value} selected={prefs.restricoes.includes(r.value)} onClick={() => setPrefs(p => ({ ...p, restricoes: toggleArray(p.restricoes, r.value) }))} label={r.label} />
+              ))}
+            </div>
+          </div>
+
+          {/* Deficiências */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">Deficiências nutricionais</Label>
+            <div className="flex flex-wrap gap-2">
+              {DEFICIENCIAS.map(d => (
+                <ChipButton key={d.value} selected={prefs.deficiencias.includes(d.value)} onClick={() => setPrefs(p => ({ ...p, deficiencias: toggleArray(p.deficiencias, d.value) }))} label={d.label} />
+              ))}
+            </div>
+          </div>
+
+          <Button onClick={gerarCardapio} disabled={loading} className="w-full sm:w-auto" size="lg">
             {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando cardápio...</> : <><Sparkles className="mr-2 h-4 w-4" /> Gerar Cardápio Semanal</>}
           </Button>
         </div>
