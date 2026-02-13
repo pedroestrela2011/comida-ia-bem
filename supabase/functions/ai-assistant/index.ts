@@ -34,18 +34,21 @@ serve(async (req) => {
     if (type === "cardapio") {
       systemPrompt = `Você é um nutricionista brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON.
 Cada dia deve ter: cafe_da_manha, lanche_manha, almoco, lanche_tarde, jantar.
-Cada refeição deve ser DETALHADA com: { "nome": "...", "descricao": "breve descrição", "ingredientes": ["..."], "modo_preparo": ["passo 1 detalhado", "passo 2 detalhado", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "dica útil para esta refeição" }
+Cada refeição deve ser BEM DETALHADA com: { "nome": "...", "descricao": "breve descrição", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 muito detalhado explicando técnica, tempo e temperatura", "passo 2 muito detalhado com dicas de textura e ponto ideal", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "dica útil para esta refeição" }
+O modo_preparo deve ter passos bem explicados, com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está no ponto.
 Responda APENAS com JSON válido no formato: { "cardapio": { "segunda": { ... }, "terca": { ... }, ... } , "lista_compras": ["item1", "item2", ...] }`;
       const p = preferences;
       userPrompt = `Gere um cardápio semanal para ${p.pessoas || 1} pessoa(s).
 Objetivo: ${p.objetivo || "alimentação saudável"}
 Orçamento: ${p.orcamento || "moderado"}
-Preferências: ${p.preferencias || "nenhuma especial"}
+Alimentos que gosta: ${p.preferencias || "nenhuma preferência especial"}
+Alimentos que NÃO gosta (EVITAR no cardápio): ${p.nao_gosta || "nenhum"}
 Restrições: ${p.restricoes || "nenhuma"}
 Deficiências nutricionais: ${p.deficiencias || "nenhuma"}`;
     } else if (type === "receita") {
-      systemPrompt = `Você é um chef brasileiro criativo. Crie uma receita completa e DETALHADA usando os ingredientes fornecidos.
-Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_preparo": "ex: 45 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "porcoes": "...", "ingredientes": ["..."], "modo_preparo": ["passo 1 bem detalhado", "passo 2 bem detalhado", ...], "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "..." }`;
+      systemPrompt = `Você é um chef brasileiro criativo. Crie uma receita completa e MUITO DETALHADA usando os ingredientes fornecidos.
+O modo_preparo deve ter passos bem explicados com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está pronto.
+Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_preparo": "ex: 45 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "porcoes": "...", "ingredientes": ["ingrediente com quantidade"], "modo_preparo": ["passo 1 muito detalhado", "passo 2 muito detalhado", ...], "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "..." }`;
       userPrompt = `Crie uma receita detalhada usando estes ingredientes: ${ingredients}`;
     } else if (type === "chat") {
       systemPrompt = `Você é o "Conversa Saudável", um assistente de saúde amigável e educativo. 

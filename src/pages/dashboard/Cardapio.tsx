@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft } from "lucide-react";
+import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -164,6 +165,7 @@ export default function Cardapio() {
   const [viewingSaved, setViewingSaved] = useState<CardapioData | null>(null);
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
+    gosta: "", nao_gosta: "",
   });
 
   const toggleArray = (arr: string[], val: string) => {
@@ -180,7 +182,8 @@ export default function Cardapio() {
         objetivo: OBJETIVOS.find(o => o.value === prefs.objetivo)?.label || prefs.objetivo,
         orcamento: prefs.orcamento || "moderado",
         pessoas: prefs.pessoas,
-        preferencias: "",
+        preferencias: prefs.gosta || "nenhuma especial",
+        nao_gosta: prefs.nao_gosta || "nenhum",
         restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
         deficiencias: prefs.deficiencias.filter(d => d !== "nenhuma").join(", ") || "nenhuma",
       };
@@ -313,6 +316,30 @@ export default function Cardapio() {
                     <ChipButton key={d.value} selected={prefs.deficiencias.includes(d.value)} onClick={() => setPrefs(p => ({ ...p, deficiencias: toggleArray(p.deficiencias, d.value) }))} label={d.label} />
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <ThumbsUp className="h-4 w-4 text-primary" /> O que você gosta de comer?
+                </Label>
+                <Textarea
+                  placeholder="Ex: massas, saladas, frango grelhado, frutas tropicais..."
+                  value={prefs.gosta}
+                  onChange={e => setPrefs(p => ({ ...p, gosta: e.target.value }))}
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <ThumbsDown className="h-4 w-4 text-destructive" /> O que você não gosta de comer?
+                </Label>
+                <Textarea
+                  placeholder="Ex: fígado, beterraba, quiabo, peixe cru..."
+                  value={prefs.nao_gosta}
+                  onChange={e => setPrefs(p => ({ ...p, nao_gosta: e.target.value }))}
+                  rows={2}
+                />
               </div>
 
               <Button onClick={gerarCardapio} disabled={loading} className="w-full sm:w-auto" size="lg">
