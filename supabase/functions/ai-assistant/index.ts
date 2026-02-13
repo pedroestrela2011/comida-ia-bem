@@ -19,7 +19,7 @@ serve(async (req) => {
     if (type === "cardapio") {
       systemPrompt = `Você é um nutricionista brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON.
 Cada dia deve ter: cafe_da_manha, lanche_manha, almoco, lanche_tarde, jantar.
-Cada refeição: { "nome": "...", "descricao": "breve descrição", "ingredientes": ["..."], "modo_preparo": "..." }
+Cada refeição deve ser DETALHADA com: { "nome": "...", "descricao": "breve descrição", "ingredientes": ["..."], "modo_preparo": ["passo 1 detalhado", "passo 2 detalhado", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "dica útil para esta refeição" }
 Responda APENAS com JSON válido no formato: { "cardapio": { "segunda": { ... }, "terca": { ... }, ... } , "lista_compras": ["item1", "item2", ...] }`;
       const p = preferences;
       userPrompt = `Gere um cardápio semanal para ${p.pessoas || 1} pessoa(s).
@@ -29,9 +29,9 @@ Preferências: ${p.preferencias || "nenhuma especial"}
 Restrições: ${p.restricoes || "nenhuma"}
 Deficiências nutricionais: ${p.deficiencias || "nenhuma"}`;
     } else if (type === "receita") {
-      systemPrompt = `Você é um chef brasileiro criativo. Crie uma receita completa usando os ingredientes fornecidos.
-Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_preparo": "...", "porcoes": "...", "ingredientes": ["..."], "modo_preparo": ["passo 1", "passo 2", ...], "dicas": "..." }`;
-      userPrompt = `Crie uma receita usando estes ingredientes: ${ingredients}`;
+      systemPrompt = `Você é um chef brasileiro criativo. Crie uma receita completa e DETALHADA usando os ingredientes fornecidos.
+Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_preparo": "ex: 45 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "porcoes": "...", "ingredientes": ["..."], "modo_preparo": ["passo 1 bem detalhado", "passo 2 bem detalhado", ...], "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "..." }`;
+      userPrompt = `Crie uma receita detalhada usando estes ingredientes: ${ingredients}`;
     } else if (type === "chat") {
       systemPrompt = `Você é o "Conversa Saudável", um assistente de saúde amigável e educativo. 
 Responda dúvidas sobre alimentos, nutrição e hábitos alimentares saudáveis.

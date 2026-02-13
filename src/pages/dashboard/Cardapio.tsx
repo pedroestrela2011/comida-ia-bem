@@ -1,67 +1,68 @@
 import { useState } from "react";
-import { CalendarDays, ShoppingCart, Loader2, Sparkles } from "lucide-react";
+import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-type Refeicao = { nome: string; descricao: string; ingredientes: string[]; modo_preparo: string };
+type Refeicao = {
+  nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;
+  tempo_preparo?: string; dificuldade?: string; dicas?: string;
+  informacoes_nutricionais?: { calorias?: string; proteinas?: string; carboidratos?: string; gorduras?: string; fibras?: string };
+};
 type DiaCardapio = { cafe_da_manha: Refeicao; lanche_manha: Refeicao; almoco: Refeicao; lanche_tarde: Refeicao; jantar: Refeicao };
 type CardapioData = { cardapio: Record<string, DiaCardapio>; lista_compras: string[] };
 
 const DIAS = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
 const DIAS_LABEL: Record<string, string> = {
-  segunda: "Segunda", terca: "Terça", quarta: "Quarta", quinta: "Quinta",
-  sexta: "Sexta", sabado: "Sábado", domingo: "Domingo",
+  segunda: "Seg", terca: "Ter", quarta: "Qua", quinta: "Qui",
+  sexta: "Sex", sabado: "Sáb", domingo: "Dom",
 };
 const REFEICOES_LABEL: Record<string, string> = {
-  cafe_da_manha: "☕ Café da Manhã", lanche_manha: "🍎 Lanche da Manhã",
-  almoco: "🍽️ Almoço", lanche_tarde: "🥤 Lanche da Tarde", jantar: "🌙 Jantar",
+  cafe_da_manha: "Café da Manhã", lanche_manha: "Lanche da Manhã",
+  almoco: "Almoço", lanche_tarde: "Lanche da Tarde", jantar: "Jantar",
+};
+const REFEICOES_ICON: Record<string, string> = {
+  cafe_da_manha: "coffee", lanche_manha: "apple", almoco: "utensils", lanche_tarde: "cup-soda", jantar: "moon",
 };
 
 const OBJETIVOS = [
-  { value: "emagrecer", label: "🏃 Emagrecer", desc: "Perder peso de forma saudável" },
-  { value: "ganhar_massa", label: "💪 Ganhar Massa", desc: "Aumentar massa muscular" },
-  { value: "manter_saude", label: "🌿 Manter a Saúde", desc: "Alimentação equilibrada" },
+  { value: "emagrecer", label: "Emagrecer", desc: "Perder peso de forma saudável" },
+  { value: "ganhar_massa", label: "Ganhar Massa", desc: "Aumentar massa muscular" },
+  { value: "manter_saude", label: "Manter a Saúde", desc: "Alimentação equilibrada" },
 ];
 
 const ORCAMENTOS = [
-  { value: "econômico", label: "💰 Econômico", desc: "Até R$150/semana" },
-  { value: "moderado", label: "💵 Moderado", desc: "R$150 a R$300/semana" },
-  { value: "sem limite", label: "💎 Sem Limite", desc: "Foco na qualidade" },
+  { value: "econômico", label: "Econômico", desc: "Até R$150/semana" },
+  { value: "moderado", label: "Moderado", desc: "R$150 a R$300/semana" },
+  { value: "sem limite", label: "Sem Limite", desc: "Foco na qualidade" },
 ];
 
 const RESTRICOES = [
-  { value: "nenhuma", label: "✅ Nenhuma" },
-  { value: "vegetariano", label: "🥬 Vegetariano" },
-  { value: "vegano", label: "🌱 Vegano" },
-  { value: "sem glúten", label: "🚫🌾 Sem Glúten" },
-  { value: "sem lactose", label: "🚫🥛 Sem Lactose" },
-  { value: "low carb", label: "🥩 Low Carb" },
+  { value: "nenhuma", label: "Nenhuma" },
+  { value: "vegetariano", label: "Vegetariano" },
+  { value: "vegano", label: "Vegano" },
+  { value: "sem glúten", label: "Sem Glúten" },
+  { value: "sem lactose", label: "Sem Lactose" },
+  { value: "low carb", label: "Low Carb" },
 ];
 
 const DEFICIENCIAS = [
-  { value: "nenhuma", label: "✅ Nenhuma" },
-  { value: "ferro", label: "🩸 Ferro" },
-  { value: "vitamina D", label: "☀️ Vitamina D" },
-  { value: "vitamina B12", label: "💊 Vitamina B12" },
-  { value: "cálcio", label: "🦴 Cálcio" },
-  { value: "ômega 3", label: "🐟 Ômega 3" },
+  { value: "nenhuma", label: "Nenhuma" },
+  { value: "ferro", label: "Ferro" },
+  { value: "vitamina D", label: "Vitamina D" },
+  { value: "vitamina B12", label: "Vitamina B12" },
+  { value: "cálcio", label: "Cálcio" },
+  { value: "ômega 3", label: "Ômega 3" },
 ];
 
 function OptionButton({ selected, onClick, label, desc }: { selected: boolean; onClick: () => void; label: string; desc?: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl border-2 p-3 text-left transition-all ${
-        selected
-          ? "border-primary bg-primary/10 shadow-sm"
-          : "border-border bg-card hover:border-primary/40"
-      }`}
-    >
+    <button type="button" onClick={onClick}
+      className={`rounded-xl border-2 p-3 text-left transition-all ${selected ? "border-primary bg-primary/10 shadow-sm" : "border-border bg-card hover:border-primary/40"}`}>
       <span className="font-medium text-sm text-foreground">{label}</span>
       {desc && <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>}
     </button>
@@ -70,17 +71,87 @@ function OptionButton({ selected, onClick, label, desc }: { selected: boolean; o
 
 function ChipButton({ selected, onClick, label }: { selected: boolean; onClick: () => void; label: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border-2 px-4 py-1.5 text-sm font-medium transition-all ${
-        selected
-          ? "border-primary bg-primary/10 text-foreground"
-          : "border-border bg-card text-muted-foreground hover:border-primary/40"
-      }`}
-    >
+    <button type="button" onClick={onClick}
+      className={`rounded-full border-2 px-4 py-1.5 text-sm font-medium transition-all ${selected ? "border-primary bg-primary/10 text-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/40"}`}>
       {label}
     </button>
+  );
+}
+
+const difficultyColor = (d?: string) => {
+  if (!d) return "secondary" as const;
+  const l = d.toLowerCase();
+  if (l.includes("fácil") || l.includes("facil")) return "default" as const;
+  if (l.includes("médio") || l.includes("medio")) return "secondary" as const;
+  return "destructive" as const;
+};
+
+function RefeicaoDetail({ refeicao, label }: { refeicao: Refeicao; label: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const steps = Array.isArray(refeicao.modo_preparo) ? refeicao.modo_preparo : refeicao.modo_preparo ? [refeicao.modo_preparo] : [];
+
+  return (
+    <div className="rounded-lg border border-border bg-card overflow-hidden">
+      <button type="button" onClick={() => setExpanded(!expanded)}
+        className="w-full p-4 text-left hover:bg-muted/30 transition-colors">
+        <p className="text-xs text-muted-foreground mb-1">{label}</p>
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-foreground">{refeicao.nome}</p>
+          <div className="flex items-center gap-2">
+            {refeicao.tempo_preparo && <span className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" />{refeicao.tempo_preparo}</span>}
+            {refeicao.dificuldade && <Badge variant={difficultyColor(refeicao.dificuldade)} className="text-xs">{refeicao.dificuldade}</Badge>}
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1">{refeicao.descricao}</p>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-border p-4 space-y-4">
+          {refeicao.informacoes_nutricionais && (
+            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold"><BarChart3 className="h-3.5 w-3.5 text-primary" /> Informações Nutricionais</div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                {refeicao.informacoes_nutricionais.calorias && <div className="flex items-center gap-1"><Flame className="h-3 w-3 text-orange-500" />{refeicao.informacoes_nutricionais.calorias}</div>}
+                {refeicao.informacoes_nutricionais.proteinas && <div className="flex items-center gap-1"><Dumbbell className="h-3 w-3 text-red-500" />{refeicao.informacoes_nutricionais.proteinas}</div>}
+                {refeicao.informacoes_nutricionais.carboidratos && <div className="flex items-center gap-1"><Wheat className="h-3 w-3 text-amber-500" />{refeicao.informacoes_nutricionais.carboidratos}</div>}
+                {refeicao.informacoes_nutricionais.gorduras && <div className="flex items-center gap-1"><Droplets className="h-3 w-3 text-yellow-500" />{refeicao.informacoes_nutricionais.gorduras}</div>}
+                {refeicao.informacoes_nutricionais.fibras && <div className="flex items-center gap-1"><Salad className="h-3 w-3 text-green-500" />{refeicao.informacoes_nutricionais.fibras}</div>}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h4 className="text-sm font-semibold mb-1.5">Ingredientes</h4>
+            <ul className="space-y-1">
+              {refeicao.ingredientes?.map((ing, i) => (
+                <li key={i} className="text-xs flex items-center gap-2"><span className="h-1 w-1 rounded-full bg-primary shrink-0" />{ing}</li>
+              ))}
+            </ul>
+          </div>
+
+          {steps.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-1.5">Modo de Preparo</h4>
+              <ol className="space-y-2">
+                {steps.map((step, i) => (
+                  <li key={i} className="text-xs flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">{i + 1}</span>
+                    <span className="pt-0.5">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {refeicao.dicas && (
+            <div className="rounded-lg bg-muted p-2.5 flex gap-2">
+              <Lightbulb className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+              <p className="text-xs"><strong>Dica:</strong> {refeicao.dicas}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -88,6 +159,9 @@ export default function Cardapio() {
   const [loading, setLoading] = useState(false);
   const [cardapio, setCardapio] = useState<CardapioData | null>(null);
   const [showList, setShowList] = useState(false);
+  const [mainTab, setMainTab] = useState("criar");
+  const [savedCardapios, setSavedCardapios] = useState<CardapioData[]>([]);
+  const [viewingSaved, setViewingSaved] = useState<CardapioData | null>(null);
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
   });
@@ -103,7 +177,7 @@ export default function Cardapio() {
     setLoading(true);
     try {
       const preferences = {
-        objetivo: OBJETIVOS.find(o => o.value === prefs.objetivo)?.label.replace(/^. /, "") || prefs.objetivo,
+        objetivo: OBJETIVOS.find(o => o.value === prefs.objetivo)?.label || prefs.objetivo,
         orcamento: prefs.orcamento || "moderado",
         pessoas: prefs.pessoas,
         preferencias: "",
@@ -118,13 +192,57 @@ export default function Cardapio() {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("Resposta inválida da IA");
       setCardapio(JSON.parse(jsonMatch[0]) as CardapioData);
-      toast({ title: "Cardápio gerado com sucesso! 🥗" });
+      toast({ title: "Cardápio gerado com sucesso!" });
     } catch (e: any) {
       toast({ title: "Erro ao gerar cardápio", description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
+
+  const salvarCardapio = () => {
+    if (cardapio) {
+      setSavedCardapios(prev => [cardapio, ...prev]);
+      toast({ title: "Cardápio salvo!" });
+    }
+  };
+
+  const activeCardapio = viewingSaved || cardapio;
+
+  const renderCardapioView = (data: CardapioData) => (
+    <div className="space-y-4">
+      {showList ? (
+        <div className="rounded-xl border border-border bg-card p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <ShoppingCart className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Lista de Compras</h2>
+          </div>
+          <ul className="grid sm:grid-cols-2 gap-1">
+            {data.lista_compras?.map((item, i) => (
+              <li key={i} className="flex items-center gap-2 text-sm text-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" /> {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <Tabs defaultValue="segunda">
+          <TabsList className="flex-wrap h-auto gap-1">
+            {DIAS.map(d => (
+              <TabsTrigger key={d} value={d} className="text-xs">{DIAS_LABEL[d]}</TabsTrigger>
+            ))}
+          </TabsList>
+          {DIAS.map(dia => (
+            <TabsContent key={dia} value={dia} className="space-y-3">
+              {data.cardapio[dia] && Object.entries(data.cardapio[dia]).map(([key, ref]) => (
+                <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key} />
+              ))}
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -133,123 +251,120 @@ export default function Cardapio() {
         <h1 className="text-2xl font-bold text-foreground">Meu Cardápio</h1>
       </div>
 
-      {!cardapio ? (
-        <div className="rounded-xl border border-border bg-card p-6 space-y-6">
-          {/* Objetivo */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Qual é o seu objetivo?</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {OBJETIVOS.map(o => (
-                <OptionButton key={o.value} selected={prefs.objetivo === o.value} onClick={() => setPrefs(p => ({ ...p, objetivo: o.value }))} label={o.label} desc={o.desc} />
-              ))}
-            </div>
-          </div>
+      <Tabs value={mainTab} onValueChange={setMainTab}>
+        <TabsList>
+          <TabsTrigger value="criar" className="gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" /> Criar
+          </TabsTrigger>
+          <TabsTrigger value="salvos" className="gap-1.5">
+            <BookOpen className="h-3.5 w-3.5" /> Salvos ({savedCardapios.length})
+          </TabsTrigger>
+        </TabsList>
 
-          {/* Orçamento */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Orçamento semanal</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {ORCAMENTOS.map(o => (
-                <OptionButton key={o.value} selected={prefs.orcamento === o.value} onClick={() => setPrefs(p => ({ ...p, orcamento: o.value }))} label={o.label} desc={o.desc} />
-              ))}
-            </div>
-          </div>
+        <TabsContent value="criar" className="space-y-4">
+          {!cardapio ? (
+            <div className="rounded-xl border border-border bg-card p-6 space-y-6">
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Qual é o seu objetivo?</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {OBJETIVOS.map(o => (
+                    <OptionButton key={o.value} selected={prefs.objetivo === o.value} onClick={() => setPrefs(p => ({ ...p, objetivo: o.value }))} label={o.label} desc={o.desc} />
+                  ))}
+                </div>
+              </div>
 
-          {/* Pessoas */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Para quantas pessoas?</Label>
-            <div className="flex gap-2">
-              {["1", "2", "3", "4", "5"].map(n => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setPrefs(p => ({ ...p, pessoas: n }))}
-                  className={`h-10 w-10 rounded-full border-2 font-semibold text-sm transition-all ${
-                    prefs.pessoas === n
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground hover:border-primary/40"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              <Input
-                type="number"
-                min="1"
-                placeholder="Outro"
-                className="w-20 h-10"
-                value={Number(prefs.pessoas) > 5 ? prefs.pessoas : ""}
-                onChange={e => setPrefs(p => ({ ...p, pessoas: e.target.value }))}
-              />
-            </div>
-          </div>
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Orçamento semanal</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {ORCAMENTOS.map(o => (
+                    <OptionButton key={o.value} selected={prefs.orcamento === o.value} onClick={() => setPrefs(p => ({ ...p, orcamento: o.value }))} label={o.label} desc={o.desc} />
+                  ))}
+                </div>
+              </div>
 
-          {/* Restrições */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Restrições alimentares</Label>
-            <div className="flex flex-wrap gap-2">
-              {RESTRICOES.map(r => (
-                <ChipButton key={r.value} selected={prefs.restricoes.includes(r.value)} onClick={() => setPrefs(p => ({ ...p, restricoes: toggleArray(p.restricoes, r.value) }))} label={r.label} />
-              ))}
-            </div>
-          </div>
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Para quantas pessoas?</Label>
+                <div className="flex gap-2">
+                  {["1", "2", "3", "4", "5"].map(n => (
+                    <button key={n} type="button" onClick={() => setPrefs(p => ({ ...p, pessoas: n }))}
+                      className={`h-10 w-10 rounded-full border-2 font-semibold text-sm transition-all ${prefs.pessoas === n ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/40"}`}>
+                      {n}
+                    </button>
+                  ))}
+                  <Input type="number" min="1" placeholder="Outro" className="w-20 h-10"
+                    value={Number(prefs.pessoas) > 5 ? prefs.pessoas : ""}
+                    onChange={e => setPrefs(p => ({ ...p, pessoas: e.target.value }))} />
+                </div>
+              </div>
 
-          {/* Deficiências */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">Deficiências nutricionais</Label>
-            <div className="flex flex-wrap gap-2">
-              {DEFICIENCIAS.map(d => (
-                <ChipButton key={d.value} selected={prefs.deficiencias.includes(d.value)} onClick={() => setPrefs(p => ({ ...p, deficiencias: toggleArray(p.deficiencias, d.value) }))} label={d.label} />
-              ))}
-            </div>
-          </div>
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Restrições alimentares</Label>
+                <div className="flex flex-wrap gap-2">
+                  {RESTRICOES.map(r => (
+                    <ChipButton key={r.value} selected={prefs.restricoes.includes(r.value)} onClick={() => setPrefs(p => ({ ...p, restricoes: toggleArray(p.restricoes, r.value) }))} label={r.label} />
+                  ))}
+                </div>
+              </div>
 
-          <Button onClick={gerarCardapio} disabled={loading} className="w-full sm:w-auto" size="lg">
-            {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando cardápio...</> : <><Sparkles className="mr-2 h-4 w-4" /> Gerar Cardápio Semanal</>}
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" onClick={() => setShowList(!showList)}>
-              <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
-            </Button>
-            <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
-          </div>
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Deficiências nutricionais</Label>
+                <div className="flex flex-wrap gap-2">
+                  {DEFICIENCIAS.map(d => (
+                    <ChipButton key={d.value} selected={prefs.deficiencias.includes(d.value)} onClick={() => setPrefs(p => ({ ...p, deficiencias: toggleArray(p.deficiencias, d.value) }))} label={d.label} />
+                  ))}
+                </div>
+              </div>
 
-          {showList ? (
-            <div className="rounded-xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold mb-3">🛒 Lista de Compras</h2>
-              <ul className="grid sm:grid-cols-2 gap-1">
-                {cardapio.lista_compras?.map((item, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-foreground">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" /> {item}
-                  </li>
-                ))}
-              </ul>
+              <Button onClick={gerarCardapio} disabled={loading} className="w-full sm:w-auto" size="lg">
+                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando cardápio...</> : <><Sparkles className="mr-2 h-4 w-4" /> Gerar Cardápio Semanal</>}
+              </Button>
             </div>
           ) : (
-            <Tabs defaultValue="segunda">
-              <TabsList className="flex-wrap h-auto gap-1">
-                {DIAS.map(d => (
-                  <TabsTrigger key={d} value={d} className="text-xs">{DIAS_LABEL[d]}</TabsTrigger>
-                ))}
-              </TabsList>
-              {DIAS.map(dia => (
-                <TabsContent key={dia} value={dia} className="space-y-3">
-                  {cardapio.cardapio[dia] && Object.entries(cardapio.cardapio[dia]).map(([key, ref]) => (
-                    <div key={key} className="rounded-lg border border-border bg-card p-4">
-                      <p className="text-xs text-muted-foreground mb-1">{REFEICOES_LABEL[key] || key}</p>
-                      <p className="font-semibold text-foreground">{(ref as Refeicao).nome}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{(ref as Refeicao).descricao}</p>
-                    </div>
-                  ))}
-                </TabsContent>
-              ))}
-            </Tabs>
+            <div className="space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="outline" onClick={() => setShowList(!showList)}>
+                  <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
+                </Button>
+                <Button variant="outline" onClick={salvarCardapio}>
+                  <BookOpen className="mr-2 h-4 w-4" /> Salvar
+                </Button>
+                <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
+              </div>
+              {renderCardapioView(cardapio)}
+            </div>
           )}
-        </div>
-      )}
+        </TabsContent>
+
+        <TabsContent value="salvos" className="space-y-4">
+          {viewingSaved ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setViewingSaved(null)}>
+                <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar
+              </Button>
+              <div className="flex gap-2 mb-2">
+                <Button variant="outline" size="sm" onClick={() => setShowList(!showList)}>
+                  <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
+                </Button>
+              </div>
+              {renderCardapioView(viewingSaved)}
+            </>
+          ) : savedCardapios.length === 0 ? (
+            <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
+              <BookOpen className="h-10 w-10 mx-auto mb-3 opacity-40" />
+              <p>Nenhum cardápio salvo ainda.</p>
+              <p className="text-sm mt-1">Gere um cardápio e clique em "Salvar".</p>
+            </div>
+          ) : (
+            savedCardapios.map((c, i) => (
+              <div key={i} className="rounded-lg border border-border bg-card p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => setViewingSaved(c)}>
+                <p className="font-semibold text-foreground">Cardápio #{savedCardapios.length - i}</p>
+                <p className="text-sm text-muted-foreground mt-1">{Object.keys(c.cardapio || {}).length} dias · {c.lista_compras?.length || 0} itens na lista</p>
+              </div>
+            ))
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
