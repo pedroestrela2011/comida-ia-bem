@@ -56,8 +56,8 @@ const Benefits = () => {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Icon */}
-              <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
-                <benefit.icon className="w-7 h-7 text-primary" />
+              <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-5 group-hover:bg-accent/20 transition-colors">
+                <benefit.icon className="w-7 h-7 text-accent" />
               </div>
 
               {/* Title */}
