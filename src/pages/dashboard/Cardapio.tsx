@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft, ThumbsUp, ThumbsDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft, ThumbsUp, ThumbsDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -161,12 +161,34 @@ export default function Cardapio() {
   const [cardapio, setCardapio] = useState<CardapioData | null>(null);
   const [showList, setShowList] = useState(false);
   const [mainTab, setMainTab] = useState("criar");
-  const [savedCardapios, setSavedCardapios] = useState<CardapioData[]>([]);
-  const [viewingSaved, setViewingSaved] = useState<CardapioData | null>(null);
+  const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string }[]>([]);
+  const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string } | null>(null);
+  const [loadingSaved, setLoadingSaved] = useState(false);
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
     gosta: "", nao_gosta: "",
   });
+
+  const fetchSaved = async () => {
+    setLoadingSaved(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("cardapios_salvos")
+        .select("id, dados, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setSavedCardapios((data || []).map(d => ({ id: d.id, dados: d.dados as unknown as CardapioData, created_at: d.created_at })));
+    } catch (e: any) {
+      console.error("Erro ao carregar cardápios:", e.message);
+    } finally {
+      setLoadingSaved(false);
+    }
+  };
+
+  useEffect(() => { fetchSaved(); }, []);
 
   const toggleArray = (arr: string[], val: string) => {
     if (val === "nenhuma") return ["nenhuma"];
@@ -203,14 +225,35 @@ export default function Cardapio() {
     }
   };
 
-  const salvarCardapio = () => {
-    if (cardapio) {
-      setSavedCardapios(prev => [cardapio, ...prev]);
+  const salvarCardapio = async () => {
+    if (!cardapio) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast({ title: "Faça login para salvar", variant: "destructive" }); return; }
+      const { data, error } = await supabase
+        .from("cardapios_salvos")
+        .insert({ user_id: user.id, dados: cardapio as unknown as Record<string, unknown> } as any)
+        .select("id, dados, created_at")
+        .single();
+      if (error) throw error;
+      setSavedCardapios(prev => [{ id: data.id, dados: data.dados as unknown as CardapioData, created_at: data.created_at }, ...prev]);
       toast({ title: "Cardápio salvo!" });
+    } catch (e: any) {
+      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
     }
   };
 
-  const activeCardapio = viewingSaved || cardapio;
+  const deletarCardapio = async (id: string) => {
+    try {
+      const { error } = await supabase.from("cardapios_salvos").delete().eq("id", id);
+      if (error) throw error;
+      setSavedCardapios(prev => prev.filter(c => c.id !== id));
+      if (viewingSaved?.id === id) setViewingSaved(null);
+      toast({ title: "Cardápio removido" });
+    } catch (e: any) {
+      toast({ title: "Erro ao remover", description: e.message, variant: "destructive" });
+    }
+  };
 
   const renderCardapioView = (data: CardapioData) => (
     <div className="space-y-4">
@@ -373,7 +416,7 @@ export default function Cardapio() {
                   <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
                 </Button>
               </div>
-              {renderCardapioView(viewingSaved)}
+              {renderCardapioView(viewingSaved.dados)}
             </>
           ) : savedCardapios.length === 0 ? (
             <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
@@ -382,11 +425,15 @@ export default function Cardapio() {
               <p className="text-sm mt-1">Gere um cardápio e clique em "Salvar".</p>
             </div>
           ) : (
-            savedCardapios.map((c, i) => (
-              <div key={i} className="rounded-lg border border-border bg-card p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => setViewingSaved(c)}>
-                <p className="font-semibold text-foreground">Cardápio #{savedCardapios.length - i}</p>
-                <p className="text-sm text-muted-foreground mt-1">{Object.keys(c.cardapio || {}).length} dias · {c.lista_compras?.length || 0} itens na lista</p>
+            savedCardapios.map((c) => (
+              <div key={c.id} className="rounded-lg border border-border bg-card p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                <div className="cursor-pointer flex-1" onClick={() => setViewingSaved(c)}>
+                  <p className="font-semibold text-foreground">Cardápio de {new Date(c.created_at).toLocaleDateString("pt-BR")}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{Object.keys(c.dados.cardapio || {}).length} dias · {c.dados.lista_compras?.length || 0} itens na lista</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deletarCardapio(c.id); }}>
+                  <Trash2 className="h-4 w-4 text-muted-foreground" />
+                </Button>
               </div>
             ))
           )}
