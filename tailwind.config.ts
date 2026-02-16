@@ -78,6 +78,15 @@ export default {
           400: "hsl(var(--earth-400))",
           500: "hsl(var(--earth-500))",
         },
+        orange: {
+          50: "hsl(var(--orange-50))",
+          100: "hsl(var(--orange-100))",
+          200: "hsl(var(--orange-200))",
+          300: "hsl(var(--orange-300))",
+          400: "hsl(var(--orange-400))",
+          500: "hsl(var(--orange-500))",
+          600: "hsl(var(--orange-600))",
+        },
         cream: {
           DEFAULT: "hsl(var(--cream))",
           dark: "hsl(var(--cream-dark))",

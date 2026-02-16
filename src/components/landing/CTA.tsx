@@ -40,8 +40,7 @@ const CTA = () => {
           <Link to="/cadastro">
             <Button 
               size="lg" 
-              variant="secondary"
-              className="text-lg px-10 py-7 font-semibold shadow-2xl hover:shadow-3xl transition-all group bg-background text-primary hover:bg-background/90"
+              className="text-lg px-10 py-7 font-semibold shadow-2xl hover:shadow-3xl transition-all group bg-accent text-accent-foreground hover:bg-accent/90"
             >
               Comece Grátis Agora
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
