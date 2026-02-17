@@ -74,6 +74,7 @@ Use emojis ocasionalmente para ser mais amigável.`;
         model: "google/gemini-3-flash-preview",
         messages: aiMessages,
         stream,
+        ...(stream ? {} : { max_tokens: 16000 }),
       }),
     });
 
@@ -101,7 +102,25 @@ Use emojis ocasionalmente para ser mais amigável.`;
       });
     }
 
-    const data = await response.json();
+    // Robust parsing: read as text first, then extract JSON
+    const rawText = await response.text();
+    let data: any;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      console.error("Failed to parse gateway response, attempting extraction from raw text");
+      // Try to extract the content field manually
+      const contentMatch = rawText.match(/"content"\s*:\s*"([\s\S]*?)"\s*[,}]/);
+      if (contentMatch) {
+        return new Response(JSON.stringify({ content: contentMatch[1] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ error: "Resposta da IA foi incompleta. Tente novamente." }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const content = data.choices?.[0]?.message?.content || "";
 
     return new Response(JSON.stringify({ content }), {
