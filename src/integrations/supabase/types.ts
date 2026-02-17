@@ -37,29 +37,38 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           data_nascimento: string | null
           id: string
           nome: string
           pais: string | null
+          tema: string
+          two_fa_enabled: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           data_nascimento?: string | null
           id?: string
           nome: string
           pais?: string | null
+          tema?: string
+          two_fa_enabled?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           data_nascimento?: string | null
           id?: string
           nome?: string
           pais?: string | null
+          tema?: string
+          two_fa_enabled?: boolean
           updated_at?: string
           user_id?: string
         }
