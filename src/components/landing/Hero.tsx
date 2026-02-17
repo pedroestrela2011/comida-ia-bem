@@ -19,7 +19,7 @@ const Hero = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-2xl animate-fade-in">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
             <Sparkles size={16} />
             <span className="text-sm font-medium">Alimentação inteligente com IA</span>
           </div>
@@ -39,7 +39,7 @@ const Hero = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <Link to="/cadastro">
-              <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 font-semibold shadow-xl hover:shadow-2xl transition-all group bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 font-semibold shadow-xl hover:shadow-2xl transition-all group">
                 Comece Agora
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
@@ -58,7 +58,7 @@ const Hero = () => {
           {/* Stats */}
           <div className="flex flex-wrap gap-8 mt-12 pt-8 border-t border-border/50">
             <div>
-              <p className="text-3xl font-bold text-accent">10k+</p>
+              <p className="text-3xl font-bold text-primary">10k+</p>
               <p className="text-sm text-muted-foreground">Usuários ativos</p>
             </div>
             <div>
@@ -66,7 +66,7 @@ const Hero = () => {
               <p className="text-sm text-muted-foreground">Cardápios criados</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-accent">4.9★</p>
+              <p className="text-3xl font-bold text-primary">4.9★</p>
               <p className="text-sm text-muted-foreground">Avaliação média</p>
             </div>
           </div>

@@ -54,8 +54,8 @@ const HowItWorks = () => {
                   <item.icon className="w-12 h-12 text-primary" />
                 </div>
                 {/* Step Number */}
-                <div className="absolute -top-2 -right-2 w-10 h-10 bg-accent rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-accent-foreground font-bold text-sm">
+                <div className="absolute -top-2 -right-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                  <span className="text-primary-foreground font-bold text-sm">
                     {item.step}
                   </span>
                 </div>

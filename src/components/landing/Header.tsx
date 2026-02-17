@@ -57,7 +57,7 @@ const Header = () => {
           {/* CTA Button */}
           <div className="hidden md:block">
             <Link to="/cadastro">
-              <Button size="lg" className="font-semibold shadow-lg hover:shadow-xl transition-shadow bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button size="lg" className="font-semibold shadow-lg hover:shadow-xl transition-shadow">
                 Comece Já
               </Button>
             </Link>
@@ -88,7 +88,7 @@ const Header = () => {
                 </a>
               ))}
               <Link to="/cadastro" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button className="w-full mt-2 font-semibold bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button className="w-full mt-2 font-semibold">
                   Comece Já
                 </Button>
               </Link>

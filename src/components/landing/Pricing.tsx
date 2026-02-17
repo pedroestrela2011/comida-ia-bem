@@ -73,7 +73,7 @@ const Pricing = () => {
               {/* Popular Badge */}
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                   <div className="flex items-center gap-1 bg-accent text-accent-foreground px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg">
+                  <div className="flex items-center gap-1 bg-accent text-accent-foreground px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg">
                     <Star size={14} className="fill-current" />
                     Mais Popular
                   </div>
