@@ -193,7 +193,7 @@ export default function Cardapio() {
   const [showList, setShowList] = useState(false);
   const [mainTab, setMainTab] = useState("criar");
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string }[]>([]);
-  const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string } | null>(null);
+  const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
