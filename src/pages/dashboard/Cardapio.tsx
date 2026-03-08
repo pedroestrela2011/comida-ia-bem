@@ -345,7 +345,8 @@ export default function Cardapio() {
           {DIAS.map(dia => (
             <TabsContent key={dia} value={dia} className="space-y-3">
               {data.cardapio[dia] && Object.entries(data.cardapio[dia]).map(([key, ref]) => (
-                <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key} />
+                <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key}
+                  onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
               ))}
             </TabsContent>
           ))}
