@@ -75,6 +75,49 @@ Restrições: ${sub.restricoes || "nenhuma"}`;
 O modo_preparo deve ter passos bem explicados com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está pronto.
 Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_preparo": "ex: 45 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "porcoes": "...", "ingredientes": ["ingrediente com quantidade"], "modo_preparo": ["passo 1 muito detalhado", "passo 2 muito detalhado", ...], "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "..." }`;
       userPrompt = `Crie uma receita detalhada usando estes ingredientes: ${ingredients}`;
+    } else if (type === "identificar_alimentos_foto") {
+      // Use vision model to identify foods from photo
+      const imageUrl = preferences.image_base64;
+      const visionResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "Identifique todos os alimentos visíveis nesta foto de um prato de comida. Responda APENAS com uma lista simples dos alimentos, um por linha, sem numeração, sem explicações extras. Se não conseguir identificar alimentos, responda 'não identificado'."
+                },
+                {
+                  type: "image_url",
+                  image_url: { url: imageUrl }
+                }
+              ]
+            }
+          ],
+        }),
+      });
+
+      if (!visionResponse.ok) {
+        const t = await visionResponse.text();
+        console.error("Vision error:", visionResponse.status, t);
+        return new Response(JSON.stringify({ error: "Erro ao analisar a foto." }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const visionData = await visionResponse.json();
+      const identified = visionData.choices?.[0]?.message?.content || "";
+
+      return new Response(JSON.stringify({ content: identified }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } else if (type === "analisador_prato") {
       systemPrompt = `Você é um nutricionista brasileiro especializado em análise nutricional de refeições.
 Analise os alimentos informados pelo usuário e forneça uma análise nutricional estimada completa.

@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star, Camera, X, ImageIcon } from "lucide-react";
 
 interface Analise {
   nome_prato: string;
@@ -26,7 +25,69 @@ interface Analise {
 export default function AnalisadorPrato() {
   const [alimentos, setAlimentos] = useState("");
   const [loading, setLoading] = useState(false);
+  const [photoLoading, setPhotoLoading] = useState(false);
   const [analise, setAnalise] = useState<Analise | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Selecione uma imagem válida.", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "A imagem deve ter no máximo 5MB.", variant: "destructive" });
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string;
+      setPhotoPreview(base64);
+      await identifyFoodsFromPhoto(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const identifyFoodsFromPhoto = async (imageBase64: string) => {
+    setPhotoLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Faça login para usar esta funcionalidade.", variant: "destructive" });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+        body: { type: "identificar_alimentos_foto", preferences: { image_base64: imageBase64 } },
+      });
+
+      if (error) throw error;
+
+      const identified = data?.content?.trim() || "";
+      if (identified && identified.toLowerCase() !== "não identificado") {
+        setAlimentos((prev) => prev ? `${prev}\n${identified}` : identified);
+        toast({ title: "Alimentos identificados na foto!", description: "Revise a lista e ajuste se necessário." });
+      } else {
+        toast({ title: "Não foi possível identificar alimentos na foto.", description: "Tente descrever manualmente.", variant: "destructive" });
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "Erro ao analisar foto.", description: e.message, variant: "destructive" });
+    } finally {
+      setPhotoLoading(false);
+    }
+  };
+
+  const removePhoto = () => {
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const analisarPrato = async () => {
     if (!alimentos.trim()) {
@@ -88,10 +149,64 @@ export default function AnalisadorPrato() {
         <CardHeader>
           <CardTitle className="text-lg">Descreva seu prato</CardTitle>
           <CardDescription>
-            Liste os alimentos da sua refeição, um por linha ou separados por vírgula.
+            Liste os alimentos da sua refeição ou envie uma foto do prato para identificação automática.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Photo upload area */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={photoLoading}
+              className="gap-2"
+            >
+              {photoLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Identificando...
+                </>
+              ) : (
+                <>
+                  <Camera className="h-4 w-4" />
+                  Enviar foto do prato
+                </>
+              )}
+            </Button>
+            <span className="text-xs text-muted-foreground self-center">(opcional)</span>
+          </div>
+
+          {/* Photo preview */}
+          {photoPreview && (
+            <div className="relative inline-block">
+              <img
+                src={photoPreview}
+                alt="Foto do prato"
+                className="w-40 h-40 object-cover rounded-lg border border-border"
+              />
+              <button
+                onClick={removePhoto}
+                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md hover:opacity-80 transition"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+              {photoLoading && (
+                <div className="absolute inset-0 bg-background/70 rounded-lg flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+          )}
+
           <Textarea
             placeholder={"Ex:\narroz\nfrango grelhado\nfeijão\nsalada\nlegumes"}
             value={alimentos}
@@ -99,7 +214,7 @@ export default function AnalisadorPrato() {
             rows={5}
             className="resize-none"
           />
-          <Button onClick={analisarPrato} disabled={loading} className="w-full sm:w-auto">
+          <Button onClick={analisarPrato} disabled={loading || photoLoading} className="w-full sm:w-auto">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
