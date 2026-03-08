@@ -15,6 +15,7 @@ import Receitas from "./pages/dashboard/Receitas";
 import Chat from "./pages/dashboard/Chat";
 import Configuracoes from "./pages/dashboard/Configuracoes";
 import ModoEsporte from "./pages/dashboard/ModoEsporte";
+import Progresso from "./pages/dashboard/Progresso";
 
 const queryClient = new QueryClient();
 
