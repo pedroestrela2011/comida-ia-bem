@@ -1,4 +1,4 @@
-import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf } from "lucide-react";
+import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
