@@ -461,7 +461,164 @@ export default function Configuracoes() {
             </div>
           </div>
         </TabsContent>
+
+        {/* ========== PLANOS ========== */}
+        <TabsContent value="planos" className="space-y-6 mt-6">
+          <PlanosTab />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+const plansData = [
+  {
+    id: "basico",
+    name: "Básico",
+    price: "19,99",
+    description: "Ideal para começar sua jornada saudável",
+    icon: Zap,
+    features: [
+      "Cardápio semanal personalizado",
+      "Lista de compras automática",
+      "Receitas com IA",
+      "Chatbot de nutrição",
+      "Histórico de cardápios",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: "49,90",
+    description: "O mais escolhido! Tudo que você precisa",
+    icon: Star,
+    popular: true,
+    features: [
+      "Tudo do plano Básico",
+      "Cardápios ilimitados",
+      "Receitas premium",
+      "Suporte prioritário",
+      "Modo escuro",
+      "Exportar lista de compras",
+    ],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: "69,90",
+    description: "Experiência completa para toda a família",
+    icon: Crown,
+    features: [
+      "Tudo do plano Pro",
+      "Perfis familiares (até 5)",
+      "Acompanhamento nutricional",
+      "Receitas exclusivas de chefs",
+      "Consultoria nutricional IA",
+      "Acesso antecipado a novidades",
+    ],
+  },
+];
+
+function PlanosTab() {
+  const [currentPlan, setCurrentPlan] = useState("basico");
+  const [changing, setChanging] = useState(false);
+
+  const handleChangePlan = (planId: string) => {
+    if (planId === currentPlan) return;
+    setChanging(true);
+    // Simulated plan change
+    setTimeout(() => {
+      setCurrentPlan(planId);
+      setChanging(false);
+      toast({ title: `Plano alterado para ${plansData.find(p => p.id === planId)?.name}!` });
+    }, 1000);
+  };
+
+  const current = plansData.find(p => p.id === currentPlan);
+
+  return (
+    <div className="space-y-6">
+      {/* Current plan banner */}
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          {current && <current.icon className="h-6 w-6 text-primary" />}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm text-muted-foreground">Seu plano atual</p>
+          <p className="text-xl font-bold text-foreground">{current?.name}</p>
+          <p className="text-sm text-muted-foreground">R$ {current?.price}/mês</p>
+        </div>
+        <span className="text-xs bg-primary text-primary-foreground font-semibold px-3 py-1 rounded-full">
+          Ativo
+        </span>
+      </div>
+
+      {/* Plans grid */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {plansData.map((plan) => {
+          const Icon = plan.icon;
+          const isCurrent = plan.id === currentPlan;
+          return (
+            <div
+              key={plan.id}
+              className={`rounded-xl border p-5 space-y-4 transition-all ${
+                isCurrent
+                  ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                  : "border-border bg-card hover:border-primary/40"
+              }`}
+            >
+              {plan.popular && (
+                <span className="text-xs bg-primary text-primary-foreground font-semibold px-3 py-0.5 rounded-full">
+                  Mais Popular
+                </span>
+              )}
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isCurrent ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-foreground">{plan.name}</p>
+                  <p className="text-xs text-muted-foreground">{plan.description}</p>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-sm text-muted-foreground">R$ </span>
+                <span className="text-2xl font-bold text-foreground">{plan.price}</span>
+                <span className="text-sm text-muted-foreground">/mês</span>
+              </div>
+
+              <ul className="space-y-2">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <span className="text-foreground/80">{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                variant={isCurrent ? "secondary" : "default"}
+                className="w-full"
+                disabled={isCurrent || changing}
+                onClick={() => handleChangePlan(plan.id)}
+              >
+                {changing && !isCurrent ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Alterando...</>
+                ) : isCurrent ? (
+                  "Plano atual"
+                ) : (
+                  "Mudar para este plano"
+                )}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="text-xs text-muted-foreground text-center">
+        A alteração de plano entra em vigor imediatamente. Sem taxas de cancelamento.
+      </p>
     </div>
   );
 }
