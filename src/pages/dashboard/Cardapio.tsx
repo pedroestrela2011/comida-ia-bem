@@ -286,7 +286,40 @@ export default function Cardapio() {
     }
   };
 
-  const renderCardapioView = (data: CardapioData) => (
+  const substituirRefeicao = async (targetData: CardapioData, setTargetData: (d: CardapioData) => void, dia: string, tipoRefeicao: string, preferencia: string) => {
+    const swapKey = `${dia}-${tipoRefeicao}`;
+    setSwapping(swapKey);
+    try {
+      const refeicaoAtual = (targetData.cardapio[dia] as any)?.[tipoRefeicao] as Refeicao;
+      if (!refeicaoAtual) return;
+      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+        body: {
+          type: "substituir_refeicao",
+          preferences: {
+            refeicao_atual: refeicaoAtual.nome,
+            tipo_refeicao: REFEICOES_LABEL[tipoRefeicao] || tipoRefeicao,
+            preferencia,
+            objetivo: prefs.objetivo ? OBJETIVOS.find(o => o.value === prefs.objetivo)?.label : "",
+            restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
+          },
+        },
+      });
+      if (error) throw error;
+      const content = data.content || "";
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Resposta inválida da IA");
+      const novaRefeicao = JSON.parse(jsonMatch[0]) as Refeicao;
+      const novoCardapio = { ...targetData, cardapio: { ...targetData.cardapio, [dia]: { ...targetData.cardapio[dia], [tipoRefeicao]: novaRefeicao } } };
+      setTargetData(novoCardapio);
+      toast({ title: "Prato substituído!", description: `"${refeicaoAtual.nome}" → "${novaRefeicao.nome}"` });
+    } catch (e: any) {
+      toast({ title: "Erro ao substituir", description: e.message, variant: "destructive" });
+    } finally {
+      setSwapping(null);
+    }
+  };
+
+  const renderCardapioView = (data: CardapioData, setTargetData?: (d: CardapioData) => void) => (
     <div className="space-y-4">
       {showList ? (
         <div className="rounded-xl border border-border bg-card p-6">
