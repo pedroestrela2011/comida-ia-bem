@@ -1,0 +1,1 @@
+ALTER TABLE public.cardapios_salvos ADD COLUMN IF NOT EXISTS tipo text NOT NULL DEFAULT 'normal';
