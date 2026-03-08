@@ -481,7 +481,7 @@ export default function Cardapio() {
                   <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
                 </Button>
               </div>
-              {renderCardapioView(viewingSaved.dados)}
+              {renderCardapioView(viewingSaved.dados, (d) => setViewingSaved({ ...viewingSaved, dados: d }))}
             </>
           ) : savedCardapios.length === 0 ? (
             <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
