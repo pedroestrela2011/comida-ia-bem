@@ -257,15 +257,18 @@ export default function Configuracoes() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="perfil" className="gap-1.5">
-            <User className="h-3.5 w-3.5" /> Meu Perfil
+            <User className="h-3.5 w-3.5" /> Perfil
           </TabsTrigger>
           <TabsTrigger value="seguranca" className="gap-1.5">
             <Shield className="h-3.5 w-3.5" /> Segurança
           </TabsTrigger>
           <TabsTrigger value="aparencia" className="gap-1.5">
             {darkMode ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />} Aparência
+          </TabsTrigger>
+          <TabsTrigger value="planos" className="gap-1.5">
+            <Crown className="h-3.5 w-3.5" /> Planos
           </TabsTrigger>
         </TabsList>
 
