@@ -21,6 +21,7 @@ const menuItems = [
   { title: "Meu Cardápio", url: "/dashboard/cardapio", icon: CalendarDays },
   { title: "Modo Esporte", url: "/dashboard/modo-esporte", icon: Dumbbell },
   { title: "Receitas", url: "/dashboard/receitas", icon: ChefHat },
+  { title: "Analisador de Prato", url: "/dashboard/analisador-prato", icon: UtensilsCrossed },
   { title: "Meu Progresso", url: "/dashboard/progresso", icon: TrendingUp },
   { title: "Conversa Saudável", url: "/dashboard/chat", icon: MessageCircle },
   { title: "Configurações", url: "/dashboard/configuracoes", icon: Settings },
