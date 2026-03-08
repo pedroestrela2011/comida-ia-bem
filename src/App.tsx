@@ -15,6 +15,7 @@ import Receitas from "./pages/dashboard/Receitas";
 import Chat from "./pages/dashboard/Chat";
 import Configuracoes from "./pages/dashboard/Configuracoes";
 import ModoEsporte from "./pages/dashboard/ModoEsporte";
+import Progresso from "./pages/dashboard/Progresso";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route index element={<Navigate to="cardapio" replace />} />
             <Route path="cardapio" element={<Cardapio />} />
             <Route path="modo-esporte" element={<ModoEsporte />} />
+            <Route path="progresso" element={<Progresso />} />
             <Route path="receitas" element={<Receitas />} />
             <Route path="chat" element={<Chat />} />
             <Route path="configuracoes" element={<Configuracoes />} />

@@ -77,6 +77,51 @@ export type Database = {
         }
         Relationships: []
       }
+      progress_records: {
+        Row: {
+          braco: number | null
+          cintura: number | null
+          created_at: string
+          frequencia_exercicios: number | null
+          id: string
+          nivel_energia: string
+          observacoes: string | null
+          perna: number | null
+          peso: number | null
+          quadril: number | null
+          qualidade_sono: string
+          user_id: string
+        }
+        Insert: {
+          braco?: number | null
+          cintura?: number | null
+          created_at?: string
+          frequencia_exercicios?: number | null
+          id?: string
+          nivel_energia?: string
+          observacoes?: string | null
+          perna?: number | null
+          peso?: number | null
+          quadril?: number | null
+          qualidade_sono?: string
+          user_id: string
+        }
+        Update: {
+          braco?: number | null
+          cintura?: number | null
+          created_at?: string
+          frequencia_exercicios?: number | null
+          id?: string
+          nivel_energia?: string
+          observacoes?: string | null
+          perna?: number | null
+          peso?: number | null
+          quadril?: number | null
+          qualidade_sono?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
