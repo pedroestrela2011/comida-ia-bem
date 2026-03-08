@@ -311,9 +311,16 @@ export default function ModoEsporte() {
           </TabsList>
           {DIAS.map(dia => (
             <TabsContent key={dia} value={dia} className="space-y-3">
-              {data.cardapio[dia] && Object.entries(data.cardapio[dia]).map(([key, ref]) => (
-                <RefeicaoEsporteDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key} />
-              ))}
+              {data.cardapio[dia] && REFEICOES_ORDER
+                .filter(key => (data.cardapio[dia] as any)[key])
+                .map(key => (
+                  <RefeicaoEsporteDetail key={key} refeicao={(data.cardapio[dia] as any)[key] as Refeicao} label={REFEICOES_LABEL[key] || key} />
+                ))}
+              {data.cardapio[dia] && Object.entries(data.cardapio[dia])
+                .filter(([key]) => !REFEICOES_ORDER.includes(key))
+                .map(([key, ref]) => (
+                  <RefeicaoEsporteDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key} />
+                ))}
             </TabsContent>
           ))}
         </Tabs>
