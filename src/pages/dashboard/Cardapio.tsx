@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft, ThumbsUp, ThumbsDown, Trash2 } from "lucide-react";
+import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft, ThumbsUp, ThumbsDown, Trash2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -87,8 +87,10 @@ const difficultyColor = (d?: string) => {
   return "destructive" as const;
 };
 
-function RefeicaoDetail({ refeicao, label }: { refeicao: Refeicao; label: string }) {
+function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label: string; onSwap?: (preferencia: string) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [showSwap, setShowSwap] = useState(false);
+  const [swapText, setSwapText] = useState("");
   const steps = Array.isArray(refeicao.modo_preparo) ? refeicao.modo_preparo : refeicao.modo_preparo ? [refeicao.modo_preparo] : [];
 
   return (
@@ -108,6 +110,34 @@ function RefeicaoDetail({ refeicao, label }: { refeicao: Refeicao; label: string
 
       {expanded && (
         <div className="border-t border-border p-4 space-y-4">
+          {onSwap && (
+            <div className="space-y-2">
+              {!showSwap ? (
+                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setShowSwap(true); }}>
+                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Trocar Prato
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-medium text-foreground">O que gostaria no lugar?</p>
+                  <Input
+                    placeholder="Ex: algo com frango, uma salada leve... (opcional)"
+                    value={swapText}
+                    onChange={e => setSwapText(e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => { onSwap(swapText); setShowSwap(false); setSwapText(""); }}>
+                      <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Gerar Alternativa
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowSwap(false); setSwapText(""); }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {refeicao.informacoes_nutricionais && (
             <div className="rounded-lg bg-muted/50 p-3 space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold"><BarChart3 className="h-3.5 w-3.5 text-primary" /> Informações Nutricionais</div>
@@ -158,6 +188,7 @@ function RefeicaoDetail({ refeicao, label }: { refeicao: Refeicao; label: string
 
 export default function Cardapio() {
   const [loading, setLoading] = useState(false);
+  const [swapping, setSwapping] = useState<string | null>(null);
   const [cardapio, setCardapio] = useState<CardapioData | null>(null);
   const [showList, setShowList] = useState(false);
   const [mainTab, setMainTab] = useState("criar");
@@ -255,7 +286,40 @@ export default function Cardapio() {
     }
   };
 
-  const renderCardapioView = (data: CardapioData) => (
+  const substituirRefeicao = async (targetData: CardapioData, setTargetData: (d: CardapioData) => void, dia: string, tipoRefeicao: string, preferencia: string) => {
+    const swapKey = `${dia}-${tipoRefeicao}`;
+    setSwapping(swapKey);
+    try {
+      const refeicaoAtual = (targetData.cardapio[dia] as any)?.[tipoRefeicao] as Refeicao;
+      if (!refeicaoAtual) return;
+      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+        body: {
+          type: "substituir_refeicao",
+          preferences: {
+            refeicao_atual: refeicaoAtual.nome,
+            tipo_refeicao: REFEICOES_LABEL[tipoRefeicao] || tipoRefeicao,
+            preferencia,
+            objetivo: prefs.objetivo ? OBJETIVOS.find(o => o.value === prefs.objetivo)?.label : "",
+            restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
+          },
+        },
+      });
+      if (error) throw error;
+      const content = data.content || "";
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Resposta inválida da IA");
+      const novaRefeicao = JSON.parse(jsonMatch[0]) as Refeicao;
+      const novoCardapio = { ...targetData, cardapio: { ...targetData.cardapio, [dia]: { ...targetData.cardapio[dia], [tipoRefeicao]: novaRefeicao } } };
+      setTargetData(novoCardapio);
+      toast({ title: "Prato substituído!", description: `"${refeicaoAtual.nome}" → "${novaRefeicao.nome}"` });
+    } catch (e: any) {
+      toast({ title: "Erro ao substituir", description: e.message, variant: "destructive" });
+    } finally {
+      setSwapping(null);
+    }
+  };
+
+  const renderCardapioView = (data: CardapioData, setTargetData?: (d: CardapioData) => void) => (
     <div className="space-y-4">
       {showList ? (
         <div className="rounded-xl border border-border bg-card p-6">
@@ -281,7 +345,8 @@ export default function Cardapio() {
           {DIAS.map(dia => (
             <TabsContent key={dia} value={dia} className="space-y-3">
               {data.cardapio[dia] && Object.entries(data.cardapio[dia]).map(([key, ref]) => (
-                <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key} />
+                <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key}
+                  onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
               ))}
             </TabsContent>
           ))}
@@ -400,7 +465,7 @@ export default function Cardapio() {
                 </Button>
                 <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
               </div>
-              {renderCardapioView(cardapio)}
+              {renderCardapioView(cardapio, setCardapio)}
             </div>
           )}
         </TabsContent>
@@ -416,7 +481,7 @@ export default function Cardapio() {
                   <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
                 </Button>
               </div>
-              {renderCardapioView(viewingSaved.dados)}
+              {renderCardapioView(viewingSaved.dados, (d) => setViewingSaved({ ...viewingSaved, dados: d }))}
             </>
           ) : savedCardapios.length === 0 ? (
             <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
