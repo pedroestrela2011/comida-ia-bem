@@ -346,10 +346,18 @@ export default function Cardapio() {
           </TabsList>
           {DIAS.map(dia => (
             <TabsContent key={dia} value={dia} className="space-y-3">
-              {data.cardapio[dia] && Object.entries(data.cardapio[dia]).map(([key, ref]) => (
-                <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key}
-                  onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
-              ))}
+              {data.cardapio[dia] && REFEICOES_ORDER
+                .filter(key => (data.cardapio[dia] as any)[key])
+                .map(key => (
+                  <RefeicaoDetail key={key} refeicao={(data.cardapio[dia] as any)[key] as Refeicao} label={REFEICOES_LABEL[key] || key}
+                    onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
+                ))}
+              {data.cardapio[dia] && Object.entries(data.cardapio[dia])
+                .filter(([key]) => !REFEICOES_ORDER.includes(key))
+                .map(([key, ref]) => (
+                  <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key}
+                    onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
+                ))}
             </TabsContent>
           ))}
         </Tabs>
