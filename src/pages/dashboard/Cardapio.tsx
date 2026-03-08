@@ -87,8 +87,10 @@ const difficultyColor = (d?: string) => {
   return "destructive" as const;
 };
 
-function RefeicaoDetail({ refeicao, label }: { refeicao: Refeicao; label: string }) {
+function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label: string; onSwap?: (preferencia: string) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [showSwap, setShowSwap] = useState(false);
+  const [swapText, setSwapText] = useState("");
   const steps = Array.isArray(refeicao.modo_preparo) ? refeicao.modo_preparo : refeicao.modo_preparo ? [refeicao.modo_preparo] : [];
 
   return (
@@ -108,6 +110,34 @@ function RefeicaoDetail({ refeicao, label }: { refeicao: Refeicao; label: string
 
       {expanded && (
         <div className="border-t border-border p-4 space-y-4">
+          {onSwap && (
+            <div className="space-y-2">
+              {!showSwap ? (
+                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setShowSwap(true); }}>
+                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Trocar Prato
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-medium text-foreground">O que gostaria no lugar?</p>
+                  <Input
+                    placeholder="Ex: algo com frango, uma salada leve... (opcional)"
+                    value={swapText}
+                    onChange={e => setSwapText(e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => { onSwap(swapText); setShowSwap(false); setSwapText(""); }}>
+                      <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Gerar Alternativa
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowSwap(false); setSwapText(""); }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {refeicao.informacoes_nutricionais && (
             <div className="rounded-lg bg-muted/50 p-3 space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold"><BarChart3 className="h-3.5 w-3.5 text-primary" /> Informações Nutricionais</div>
