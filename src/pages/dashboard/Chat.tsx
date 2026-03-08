@@ -104,7 +104,7 @@ export default function Chat() {
 
   const novaConversa = () => {
     setMessages([
-      { role: "assistant", content: "Olá! Sou o Conversa Saudável, seu assistente de nutrição. Pergunte-me qualquer coisa sobre alimentos e saúde!" },
+      { role: "assistant", content: "Olá! Sou a Ali, sua assistente de nutrição. Pergunte-me qualquer coisa sobre alimentos e saúde!" },
     ]);
   };
 
