@@ -22,6 +22,7 @@ const DIAS_LABEL: Record<string, string> = {
   segunda: "Seg", terca: "Ter", quarta: "Qua", quinta: "Qui",
   sexta: "Sex", sabado: "Sáb", domingo: "Dom",
 };
+const REFEICOES_ORDER = ["cafe_da_manha", "lanche_manha", "almoco", "lanche_tarde", "jantar"];
 const REFEICOES_LABEL: Record<string, string> = {
   cafe_da_manha: "Café da Manhã", lanche_manha: "Lanche da Manhã",
   almoco: "Almoço", lanche_tarde: "Lanche da Tarde", jantar: "Jantar",
@@ -209,6 +210,7 @@ export default function Cardapio() {
         .from("cardapios_salvos")
         .select("id, dados, created_at, tipo")
         .eq("user_id", user.id)
+        .eq("tipo", "normal")
         .order("created_at", { ascending: false });
       if (error) throw error;
       setSavedCardapios((data || []).map(d => ({ id: d.id, dados: d.dados as unknown as CardapioData, created_at: d.created_at, tipo: d.tipo || "normal" })));
@@ -344,10 +346,18 @@ export default function Cardapio() {
           </TabsList>
           {DIAS.map(dia => (
             <TabsContent key={dia} value={dia} className="space-y-3">
-              {data.cardapio[dia] && Object.entries(data.cardapio[dia]).map(([key, ref]) => (
-                <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key}
-                  onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
-              ))}
+              {data.cardapio[dia] && REFEICOES_ORDER
+                .filter(key => (data.cardapio[dia] as any)[key])
+                .map(key => (
+                  <RefeicaoDetail key={key} refeicao={(data.cardapio[dia] as any)[key] as Refeicao} label={REFEICOES_LABEL[key] || key}
+                    onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
+                ))}
+              {data.cardapio[dia] && Object.entries(data.cardapio[dia])
+                .filter(([key]) => !REFEICOES_ORDER.includes(key))
+                .map(([key, ref]) => (
+                  <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key}
+                    onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
+                ))}
             </TabsContent>
           ))}
         </Tabs>
@@ -490,55 +500,17 @@ export default function Cardapio() {
               <p className="text-sm mt-1">Gere um cardápio e clique em "Salvar".</p>
             </div>
           ) : (
-            <>
-              {/* Cardápios Esportivos */}
-              {savedCardapios.some(c => c.tipo === "esportivo") && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Dumbbell className="h-5 w-5 text-primary" />
-                    <h3 className="text-base font-semibold text-foreground">Cardápios Esportivos</h3>
-                  </div>
-                  {savedCardapios.filter(c => c.tipo === "esportivo").map((c) => (
-                    <div key={c.id} className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 flex items-center justify-between hover:bg-primary/10 transition-colors">
-                      <div className="cursor-pointer flex-1" onClick={() => setViewingSaved(c)}>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-foreground">Cardápio Esportivo</p>
-                          <Badge variant="default" className="text-[10px]"><Dumbbell className="h-3 w-3 mr-1" />Esporte</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{new Date(c.created_at).toLocaleDateString("pt-BR")} · {Object.keys(c.dados.cardapio || {}).length} dias · {c.dados.lista_compras?.length || 0} itens</p>
-                      </div>
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deletarCardapio(c.id); }}>
-                        <Trash2 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    </div>
-                  ))}
+            savedCardapios.map((c) => (
+              <div key={c.id} className="rounded-lg border border-border bg-card p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                <div className="cursor-pointer flex-1" onClick={() => setViewingSaved(c)}>
+                  <p className="font-semibold text-foreground">Cardápio de {new Date(c.created_at).toLocaleDateString("pt-BR")}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{Object.keys(c.dados.cardapio || {}).length} dias · {c.dados.lista_compras?.length || 0} itens na lista</p>
                 </div>
-              )}
-
-              {/* Cardápios Normais */}
-              {savedCardapios.some(c => c.tipo !== "esportivo") && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Salad className="h-5 w-5 text-primary" />
-                    <h3 className="text-base font-semibold text-foreground">Cardápios Normais</h3>
-                  </div>
-                  {savedCardapios.filter(c => c.tipo !== "esportivo").map((c) => (
-                    <div key={c.id} className="rounded-lg border border-border bg-card p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                      <div className="cursor-pointer flex-1" onClick={() => setViewingSaved(c)}>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-foreground">Cardápio Semanal</p>
-                          <Badge variant="secondary" className="text-[10px]"><Salad className="h-3 w-3 mr-1" />Normal</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{new Date(c.created_at).toLocaleDateString("pt-BR")} · {Object.keys(c.dados.cardapio || {}).length} dias · {c.dados.lista_compras?.length || 0} itens</p>
-                      </div>
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deletarCardapio(c.id); }}>
-                        <Trash2 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deletarCardapio(c.id); }}>
+                  <Trash2 className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </div>
+            ))
           )}
         </TabsContent>
       </Tabs>

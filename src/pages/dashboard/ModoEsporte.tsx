@@ -22,9 +22,10 @@ const DIAS = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "doming
 const DIAS_LABEL: Record<string, string> = {
   segunda: "Seg", terca: "Ter", quarta: "Qua", quinta: "Qui", sexta: "Sex", sabado: "Sáb", domingo: "Dom",
 };
+const REFEICOES_ORDER = ["cafe_da_manha", "lanche_pre_treino", "almoco", "lanche_pos_treino", "jantar"];
 const REFEICOES_LABEL: Record<string, string> = {
-  cafe_da_manha: "Café da Manhã", almoco: "Almoço", jantar: "Jantar",
-  lanche_pre_treino: "Pré-Treino", lanche_pos_treino: "Pós-Treino",
+  cafe_da_manha: "Café da Manhã", lanche_pre_treino: "Pré-Treino", almoco: "Almoço",
+  lanche_pos_treino: "Pós-Treino", jantar: "Jantar",
 };
 
 const INTENSIDADES = [
@@ -196,8 +197,9 @@ export default function ModoEsporte() {
       if (!user) return;
       const result: any = await supabase
         .from("cardapios_salvos")
-        .select("id, dados, created_at")
+        .select("id, dados, created_at, tipo")
         .eq("user_id", user.id)
+        .eq("tipo", "esporte")
         .order("created_at", { ascending: false });
       const { data, error } = result;
       if (error) throw error;
@@ -309,9 +311,16 @@ export default function ModoEsporte() {
           </TabsList>
           {DIAS.map(dia => (
             <TabsContent key={dia} value={dia} className="space-y-3">
-              {data.cardapio[dia] && Object.entries(data.cardapio[dia]).map(([key, ref]) => (
-                <RefeicaoEsporteDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key} />
-              ))}
+              {data.cardapio[dia] && REFEICOES_ORDER
+                .filter(key => (data.cardapio[dia] as any)[key])
+                .map(key => (
+                  <RefeicaoEsporteDetail key={key} refeicao={(data.cardapio[dia] as any)[key] as Refeicao} label={REFEICOES_LABEL[key] || key} />
+                ))}
+              {data.cardapio[dia] && Object.entries(data.cardapio[dia])
+                .filter(([key]) => !REFEICOES_ORDER.includes(key))
+                .map(([key, ref]) => (
+                  <RefeicaoEsporteDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key} />
+                ))}
             </TabsContent>
           ))}
         </Tabs>
