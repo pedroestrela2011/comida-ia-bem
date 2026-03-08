@@ -192,8 +192,8 @@ export default function Cardapio() {
   const [cardapio, setCardapio] = useState<CardapioData | null>(null);
   const [showList, setShowList] = useState(false);
   const [mainTab, setMainTab] = useState("criar");
-  const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string }[]>([]);
-  const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string } | null>(null);
+  const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string }[]>([]);
+  const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
@@ -207,11 +207,11 @@ export default function Cardapio() {
       if (!user) return;
       const { data, error } = await supabase
         .from("cardapios_salvos")
-        .select("id, dados, created_at")
+        .select("id, dados, created_at, tipo")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      setSavedCardapios((data || []).map(d => ({ id: d.id, dados: d.dados as unknown as CardapioData, created_at: d.created_at })));
+      setSavedCardapios((data || []).map(d => ({ id: d.id, dados: d.dados as unknown as CardapioData, created_at: d.created_at, tipo: d.tipo || "normal" })));
     } catch (e: any) {
       console.error("Erro ao carregar cardápios:", e.message);
     } finally {
@@ -263,11 +263,11 @@ export default function Cardapio() {
       if (!user) { toast({ title: "Faça login para salvar", variant: "destructive" }); return; }
       const { data, error } = await supabase
         .from("cardapios_salvos")
-        .insert({ user_id: user.id, dados: cardapio as unknown as Record<string, unknown> } as any)
-        .select("id, dados, created_at")
+        .insert({ user_id: user.id, dados: cardapio as unknown as Record<string, unknown>, tipo: "normal" } as any)
+        .select("id, dados, created_at, tipo")
         .single();
       if (error) throw error;
-      setSavedCardapios(prev => [{ id: data.id, dados: data.dados as unknown as CardapioData, created_at: data.created_at }, ...prev]);
+      setSavedCardapios(prev => [{ id: data.id, dados: data.dados as unknown as CardapioData, created_at: data.created_at, tipo: data.tipo || "normal" }, ...prev]);
       toast({ title: "Cardápio salvo!" });
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
@@ -490,17 +490,55 @@ export default function Cardapio() {
               <p className="text-sm mt-1">Gere um cardápio e clique em "Salvar".</p>
             </div>
           ) : (
-            savedCardapios.map((c) => (
-              <div key={c.id} className="rounded-lg border border-border bg-card p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                <div className="cursor-pointer flex-1" onClick={() => setViewingSaved(c)}>
-                  <p className="font-semibold text-foreground">Cardápio de {new Date(c.created_at).toLocaleDateString("pt-BR")}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{Object.keys(c.dados.cardapio || {}).length} dias · {c.dados.lista_compras?.length || 0} itens na lista</p>
+            <>
+              {/* Cardápios Esportivos */}
+              {savedCardapios.some(c => c.tipo === "esportivo") && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Dumbbell className="h-5 w-5 text-primary" />
+                    <h3 className="text-base font-semibold text-foreground">Cardápios Esportivos</h3>
+                  </div>
+                  {savedCardapios.filter(c => c.tipo === "esportivo").map((c) => (
+                    <div key={c.id} className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 flex items-center justify-between hover:bg-primary/10 transition-colors">
+                      <div className="cursor-pointer flex-1" onClick={() => setViewingSaved(c)}>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-foreground">Cardápio Esportivo</p>
+                          <Badge variant="default" className="text-[10px]"><Dumbbell className="h-3 w-3 mr-1" />Esporte</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{new Date(c.created_at).toLocaleDateString("pt-BR")} · {Object.keys(c.dados.cardapio || {}).length} dias · {c.dados.lista_compras?.length || 0} itens</p>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deletarCardapio(c.id); }}>
+                        <Trash2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deletarCardapio(c.id); }}>
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>
-            ))
+              )}
+
+              {/* Cardápios Normais */}
+              {savedCardapios.some(c => c.tipo !== "esportivo") && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Salad className="h-5 w-5 text-primary" />
+                    <h3 className="text-base font-semibold text-foreground">Cardápios Normais</h3>
+                  </div>
+                  {savedCardapios.filter(c => c.tipo !== "esportivo").map((c) => (
+                    <div key={c.id} className="rounded-lg border border-border bg-card p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                      <div className="cursor-pointer flex-1" onClick={() => setViewingSaved(c)}>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-foreground">Cardápio Semanal</p>
+                          <Badge variant="secondary" className="text-[10px]"><Salad className="h-3 w-3 mr-1" />Normal</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{new Date(c.created_at).toLocaleDateString("pt-BR")} · {Object.keys(c.dados.cardapio || {}).length} dias · {c.dados.lista_compras?.length || 0} itens</p>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deletarCardapio(c.id); }}>
+                        <Trash2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>
