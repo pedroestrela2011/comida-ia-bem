@@ -210,6 +210,7 @@ export default function Cardapio() {
         .from("cardapios_salvos")
         .select("id, dados, created_at, tipo")
         .eq("user_id", user.id)
+        .eq("tipo", "normal")
         .order("created_at", { ascending: false });
       if (error) throw error;
       setSavedCardapios((data || []).map(d => ({ id: d.id, dados: d.dados as unknown as CardapioData, created_at: d.created_at, tipo: d.tipo || "normal" })));
