@@ -194,14 +194,14 @@ export default function ModoEsporte() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from("cardapios_salvos")
-        .select("id, dados, created_at, tipo")
+        .select("id, dados, created_at")
         .eq("user_id", user.id)
-        .eq("tipo", "esporte")
-        .order("created_at", { ascending: false });
+        .eq("tipo" as any, "esporte")
+        .order("created_at", { ascending: false }) as any);
       if (error) throw error;
-      setSavedCardapios((data || []).map(d => ({ id: d.id, dados: d.dados as unknown as CardapioEsporteData, created_at: d.created_at })));
+      setSavedCardapios((data || []).map((d: any) => ({ id: d.id, dados: d.dados as CardapioEsporteData, created_at: d.created_at })));
     } catch (e: any) {
       console.error("Erro ao carregar cardápios:", e.message);
     } finally {
