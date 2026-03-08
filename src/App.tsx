@@ -16,6 +16,7 @@ import Chat from "./pages/dashboard/Chat";
 import Configuracoes from "./pages/dashboard/Configuracoes";
 import ModoEsporte from "./pages/dashboard/ModoEsporte";
 import Progresso from "./pages/dashboard/Progresso";
+import AnalisadorPrato from "./pages/dashboard/AnalisadorPrato";
 
 const queryClient = new QueryClient();
 
