@@ -465,7 +465,7 @@ export default function Cardapio() {
                 </Button>
                 <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
               </div>
-              {renderCardapioView(cardapio)}
+              {renderCardapioView(cardapio, setCardapio)}
             </div>
           )}
         </TabsContent>
