@@ -152,7 +152,7 @@ export default function Chat() {
     <div className="flex flex-col h-[calc(100vh-8rem)] max-w-3xl">
       <div className="flex items-center gap-3 mb-4">
         <MessageCircle className="h-7 w-7 text-primary" />
-        <h1 className="text-2xl font-bold text-foreground">Conversa Saudável</h1>
+        <h1 className="text-2xl font-bold text-foreground">Ali</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
