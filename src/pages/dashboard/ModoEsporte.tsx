@@ -197,8 +197,9 @@ export default function ModoEsporte() {
       if (!user) return;
       const result: any = await supabase
         .from("cardapios_salvos")
-        .select("id, dados, created_at")
+        .select("id, dados, created_at, tipo")
         .eq("user_id", user.id)
+        .eq("tipo", "esporte")
         .order("created_at", { ascending: false });
       const { data, error } = result;
       if (error) throw error;
