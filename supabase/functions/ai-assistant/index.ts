@@ -45,6 +45,21 @@ Alimentos que gosta: ${p.preferencias || "nenhuma preferência especial"}
 Alimentos que NÃO gosta (EVITAR no cardápio): ${p.nao_gosta || "nenhum"}
 Restrições: ${p.restricoes || "nenhuma"}
 Deficiências nutricionais: ${p.deficiencias || "nenhuma"}`;
+    } else if (type === "cardapio_esporte") {
+      systemPrompt = `Você é um nutricionista esportivo brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, personalizado para atletas e praticantes de atividade física.
+Cada dia deve ter: cafe_da_manha, almoco, jantar, lanche_pre_treino, lanche_pos_treino.
+Cada refeição deve ser BEM DETALHADA com: { "nome": "...", "descricao": "breve descrição focada no benefício esportivo", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 muito detalhado", "passo 2 muito detalhado", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "vitaminas": ["Vitamina A", "Vitamina C", ...], "minerais": ["Ferro", "Magnésio", ...], "beneficio_esportivo": "explicação de como esta refeição ajuda no desempenho/recuperação", "dicas": "dica útil" }
+O cardápio deve priorizar: reposição de glicogênio, recuperação muscular, hidratação, energia sustentada e micronutrientes essenciais para o esporte praticado.
+Responda APENAS com JSON válido no formato: { "cardapio": { "segunda": { ... }, "terca": { ... }, ... }, "lista_compras": ["item1", "item2", ...], "resumo_nutricional": "breve resumo das estratégias nutricionais adotadas" }`;
+      const sp = preferences;
+      userPrompt = `Gere um cardápio semanal esportivo personalizado.
+Esporte praticado: ${sp.esporte || "não especificado"}
+Frequência de treino: ${sp.frequencia || "não especificado"} vezes por semana
+Intensidade: ${sp.intensidade || "moderado"}
+Desconfortos durante o treino: ${sp.desconforto || "nenhum"}
+Sente fraqueza/falta de energia: ${sp.fraqueza || "não"}
+Objetivo: ${sp.objetivo || "melhorar desempenho"}
+Restrições alimentares: ${sp.restricoes || "nenhuma"}`;
     } else if (type === "receita") {
       systemPrompt = `Você é um chef brasileiro criativo. Crie uma receita completa e MUITO DETALHADA usando os ingredientes fornecidos.
 O modo_preparo deve ter passos bem explicados com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está pronto.
