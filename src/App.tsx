@@ -14,6 +14,7 @@ import Cardapio from "./pages/dashboard/Cardapio";
 import Receitas from "./pages/dashboard/Receitas";
 import Chat from "./pages/dashboard/Chat";
 import Configuracoes from "./pages/dashboard/Configuracoes";
+import ModoEsporte from "./pages/dashboard/ModoEsporte";
 
 const queryClient = new QueryClient();
 
