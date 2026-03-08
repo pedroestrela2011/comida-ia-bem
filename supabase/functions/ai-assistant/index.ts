@@ -60,6 +60,16 @@ Desconfortos durante o treino: ${sp.desconforto || "nenhum"}
 Sente fraqueza/falta de energia: ${sp.fraqueza || "não"}
 Objetivo: ${sp.objetivo || "melhorar desempenho"}
 Restrições alimentares: ${sp.restricoes || "nenhuma"}`;
+    } else if (type === "substituir_refeicao") {
+      systemPrompt = `Você é um nutricionista brasileiro especializado. O usuário quer trocar uma refeição do cardápio por outra que goste mais.
+Gere UMA refeição substituta que mantenha o equilíbrio nutricional similar.
+Responda APENAS com JSON válido: { "nome": "...", "descricao": "breve descrição", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 detalhado", "passo 2 detalhado", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "dica útil" }`;
+      const sub = preferences;
+      userPrompt = `A refeição atual é: "${sub.refeicao_atual}" (${sub.tipo_refeicao}).
+O usuário quer uma alternativa diferente.
+${sub.preferencia ? `O usuário gostaria de algo como: ${sub.preferencia}` : "Sugira algo diferente mas equilibrado."}
+Objetivo nutricional: ${sub.objetivo || "alimentação saudável"}
+Restrições: ${sub.restricoes || "nenhuma"}`;
     } else if (type === "receita") {
       systemPrompt = `Você é um chef brasileiro criativo. Crie uma receita completa e MUITO DETALHADA usando os ingredientes fornecidos.
 O modo_preparo deve ter passos bem explicados com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está pronto.
