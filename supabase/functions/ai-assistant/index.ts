@@ -75,6 +75,36 @@ Restrições: ${sub.restricoes || "nenhuma"}`;
 O modo_preparo deve ter passos bem explicados com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está pronto.
 Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_preparo": "ex: 45 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "porcoes": "...", "ingredientes": ["ingrediente com quantidade"], "modo_preparo": ["passo 1 muito detalhado", "passo 2 muito detalhado", ...], "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "..." }`;
       userPrompt = `Crie uma receita detalhada usando estes ingredientes: ${ingredients}`;
+    } else if (type === "analisador_prato") {
+      systemPrompt = `Você é um nutricionista brasileiro especializado em análise nutricional de refeições.
+Analise os alimentos informados pelo usuário e forneça uma análise nutricional estimada completa.
+Responda APENAS com JSON válido no formato:
+{
+  "nome_prato": "nome descritivo do prato",
+  "macronutrientes": {
+    "calorias": "valor estimado em kcal",
+    "proteinas": "valor em gramas",
+    "carboidratos": "valor em gramas",
+    "gorduras": "valor em gramas",
+    "fibras": "valor em gramas"
+  },
+  "vitaminas": [
+    { "nome": "Vitamina A", "quantidade": "estimativa", "beneficio": "breve benefício" }
+  ],
+  "minerais": [
+    { "nome": "Ferro", "quantidade": "estimativa", "beneficio": "breve benefício" }
+  ],
+  "feedback": [
+    "feedback positivo ou sugestão 1",
+    "feedback positivo ou sugestão 2",
+    "feedback positivo ou sugestão 3"
+  ],
+  "pontuacao_saude": 7,
+  "resumo": "Um breve resumo geral sobre a qualidade nutricional do prato"
+}
+A pontuacao_saude deve ser de 1 a 10 (10 = muito saudável).
+Seja preciso nas estimativas e educativo nos feedbacks. Use português do Brasil.`;
+      userPrompt = `Analise nutricionalmente o seguinte prato com estes alimentos: ${preferences.alimentos}`;
     } else if (type === "chat") {
       systemPrompt = `Você é o "Conversa Saudável", um assistente de saúde amigável e educativo. 
 Responda dúvidas sobre alimentos, nutrição e hábitos alimentares saudáveis.

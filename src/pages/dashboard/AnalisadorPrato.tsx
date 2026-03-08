@@ -1,0 +1,250 @@
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+
+interface Analise {
+  nome_prato: string;
+  macronutrientes: {
+    calorias: string;
+    proteinas: string;
+    carboidratos: string;
+    gorduras: string;
+    fibras: string;
+  };
+  vitaminas: { nome: string; quantidade: string; beneficio: string }[];
+  minerais: { nome: string; quantidade: string; beneficio: string }[];
+  feedback: string[];
+  pontuacao_saude: number;
+  resumo: string;
+}
+
+export default function AnalisadorPrato() {
+  const [alimentos, setAlimentos] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [analise, setAnalise] = useState<Analise | null>(null);
+
+  const analisarPrato = async () => {
+    if (!alimentos.trim()) {
+      toast({ title: "Informe os alimentos do prato.", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    setAnalise(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Faça login para usar esta funcionalidade.", variant: "destructive" });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+        body: { type: "analisador_prato", preferences: { alimentos: alimentos.trim() } },
+      });
+
+      if (error) throw error;
+
+      const content = data?.content || "";
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Resposta inválida da IA");
+
+      const parsed: Analise = JSON.parse(jsonMatch[0]);
+      setAnalise(parsed);
+      toast({ title: "Análise concluída!" });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "Erro ao analisar prato.", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scoreColor = (score: number) => {
+    if (score >= 8) return "text-green-600";
+    if (score >= 5) return "text-yellow-600";
+    return "text-red-500";
+  };
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
+          <UtensilsCrossed className="h-7 w-7 text-primary" />
+          Analisador de Prato
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Descubra os nutrientes da sua refeição e receba feedback nutricional.
+        </p>
+      </div>
+
+      {/* Input */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Descreva seu prato</CardTitle>
+          <CardDescription>
+            Liste os alimentos da sua refeição, um por linha ou separados por vírgula.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Textarea
+            placeholder={"Ex:\narroz\nfrango grelhado\nfeijão\nsalada\nlegumes"}
+            value={alimentos}
+            onChange={(e) => setAlimentos(e.target.value)}
+            rows={5}
+            className="resize-none"
+          />
+          <Button onClick={analisarPrato} disabled={loading} className="w-full sm:w-auto">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analisando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Analisar Prato
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Results */}
+      {analise && (
+        <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+          {/* Score + Summary */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={`text-4xl font-bold ${scoreColor(analise.pontuacao_saude)}`}>
+                    {analise.pontuacao_saude}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-muted-foreground">Pontuação de Saúde</span>
+                    <div className="flex gap-0.5 mt-1">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3.5 w-3.5 ${i < analise.pontuacao_saude ? "text-primary fill-primary" : "text-muted"}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">{analise.nome_prato}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{analise.resumo}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Macros */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Flame className="h-5 w-5 text-primary" />
+                Macronutrientes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                {[
+                  { label: "Calorias", value: analise.macronutrientes.calorias, icon: Flame, color: "text-orange-500" },
+                  { label: "Proteínas", value: analise.macronutrientes.proteinas, icon: Beef, color: "text-red-500" },
+                  { label: "Carboidratos", value: analise.macronutrientes.carboidratos, icon: Wheat, color: "text-amber-500" },
+                  { label: "Gorduras", value: analise.macronutrientes.gorduras, icon: Droplets, color: "text-blue-500" },
+                  { label: "Fibras", value: analise.macronutrientes.fibras, icon: Leaf, color: "text-green-500" },
+                ].map((m) => (
+                  <div key={m.label} className="text-center p-3 rounded-lg bg-muted/50">
+                    <m.icon className={`h-5 w-5 mx-auto mb-1 ${m.color}`} />
+                    <p className="text-xs text-muted-foreground">{m.label}</p>
+                    <p className="font-bold text-foreground text-sm">{m.value}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Vitamins & Minerals */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Apple className="h-5 w-5 text-primary" />
+                  Vitaminas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {analise.vitaminas.map((v, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2 rounded-md bg-muted/30">
+                      <span className="text-xs font-semibold bg-primary/10 text-primary rounded px-2 py-1 whitespace-nowrap">
+                        {v.nome}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground">{v.quantidade}</p>
+                        <p className="text-xs text-foreground">{v.beneficio}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Minerais
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {analise.minerais.map((m, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2 rounded-md bg-muted/30">
+                      <span className="text-xs font-semibold bg-primary/10 text-primary rounded px-2 py-1 whitespace-nowrap">
+                        {m.nome}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground">{m.quantidade}</p>
+                        <p className="text-xs text-foreground">{m.beneficio}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Feedback */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Leaf className="h-5 w-5 text-primary" />
+                Feedback Nutricional
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {analise.feedback.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                    <span className="text-primary mt-0.5">✦</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
