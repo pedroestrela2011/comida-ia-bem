@@ -207,11 +207,11 @@ export default function Cardapio() {
       if (!user) return;
       const { data, error } = await supabase
         .from("cardapios_salvos")
-        .select("id, dados, created_at")
+        .select("id, dados, created_at, tipo")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      setSavedCardapios((data || []).map(d => ({ id: d.id, dados: d.dados as unknown as CardapioData, created_at: d.created_at })));
+      setSavedCardapios((data || []).map(d => ({ id: d.id, dados: d.dados as unknown as CardapioData, created_at: d.created_at, tipo: d.tipo || "normal" })));
     } catch (e: any) {
       console.error("Erro ao carregar cardápios:", e.message);
     } finally {
