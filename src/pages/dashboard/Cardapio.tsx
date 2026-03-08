@@ -263,11 +263,11 @@ export default function Cardapio() {
       if (!user) { toast({ title: "Faça login para salvar", variant: "destructive" }); return; }
       const { data, error } = await supabase
         .from("cardapios_salvos")
-        .insert({ user_id: user.id, dados: cardapio as unknown as Record<string, unknown> } as any)
-        .select("id, dados, created_at")
+        .insert({ user_id: user.id, dados: cardapio as unknown as Record<string, unknown>, tipo: "normal" } as any)
+        .select("id, dados, created_at, tipo")
         .single();
       if (error) throw error;
-      setSavedCardapios(prev => [{ id: data.id, dados: data.dados as unknown as CardapioData, created_at: data.created_at }, ...prev]);
+      setSavedCardapios(prev => [{ id: data.id, dados: data.dados as unknown as CardapioData, created_at: data.created_at, tipo: data.tipo || "normal" }, ...prev]);
       toast({ title: "Cardápio salvo!" });
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
