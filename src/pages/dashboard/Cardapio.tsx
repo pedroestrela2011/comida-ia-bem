@@ -22,6 +22,7 @@ const DIAS_LABEL: Record<string, string> = {
   segunda: "Seg", terca: "Ter", quarta: "Qua", quinta: "Qui",
   sexta: "Sex", sabado: "Sáb", domingo: "Dom",
 };
+const REFEICOES_ORDER = ["cafe_da_manha", "lanche_manha", "almoco", "lanche_tarde", "jantar"];
 const REFEICOES_LABEL: Record<string, string> = {
   cafe_da_manha: "Café da Manhã", lanche_manha: "Lanche da Manhã",
   almoco: "Almoço", lanche_tarde: "Lanche da Tarde", jantar: "Jantar",
