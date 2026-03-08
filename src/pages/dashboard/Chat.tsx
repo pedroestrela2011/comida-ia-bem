@@ -12,7 +12,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant
 
 export default function Chat() {
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: "Olá! Sou o Conversa Saudável, seu assistente de nutrição. Pergunte-me qualquer coisa sobre alimentos e saúde!" },
+    { role: "assistant", content: "Olá! Sou a Ali, sua assistente de nutrição. Pergunte-me qualquer coisa sobre alimentos e saúde!" },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
