@@ -188,6 +188,7 @@ function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label
 
 export default function Cardapio() {
   const [loading, setLoading] = useState(false);
+  const [swapping, setSwapping] = useState<string | null>(null);
   const [cardapio, setCardapio] = useState<CardapioData | null>(null);
   const [showList, setShowList] = useState(false);
   const [mainTab, setMainTab] = useState("criar");
