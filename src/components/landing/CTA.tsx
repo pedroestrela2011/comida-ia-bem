@@ -11,11 +11,11 @@ const perks = [
 
 const CTA = () => {
   return (
-    <section className="py-20 bg-gradient-to-br from-primary via-green-600 to-green-700">
+    <section className="py-12 md:py-20 bg-gradient-to-br from-primary via-green-600 to-green-700">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           {/* Title */}
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-primary-foreground mb-6">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-primary-foreground mb-4 md:mb-6">
             Pronto para transformar sua alimentação?
           </h2>
 
@@ -41,7 +41,7 @@ const CTA = () => {
             <Button 
               size="lg" 
               variant="secondary"
-              className="text-lg px-10 py-7 font-semibold shadow-2xl hover:shadow-3xl transition-all group bg-background text-primary hover:bg-background/90"
+              className="text-base md:text-lg px-8 md:px-10 py-6 md:py-7 font-semibold shadow-2xl hover:shadow-3xl transition-all group bg-background text-primary hover:bg-background/90"
             >
               Comece Grátis Agora
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
