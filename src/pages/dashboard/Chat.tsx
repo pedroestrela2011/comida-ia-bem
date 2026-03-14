@@ -156,22 +156,22 @@ export default function Chat() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <TabsList>
-            <TabsTrigger value="chat" className="gap-1.5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="chat" className="gap-1.5 text-xs sm:text-sm">
               <MessageCircle className="h-3.5 w-3.5" /> Chat
             </TabsTrigger>
-            <TabsTrigger value="historico" className="gap-1.5">
+            <TabsTrigger value="historico" className="gap-1.5 text-xs sm:text-sm">
               <History className="h-3.5 w-3.5" /> Histórico ({savedConversas.length})
             </TabsTrigger>
           </TabsList>
           {activeTab === "chat" && (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={salvarConversa} disabled={messages.length <= 1}>
-                <History className="mr-1.5 h-3.5 w-3.5" /> Salvar
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" size="sm" onClick={salvarConversa} disabled={messages.length <= 1} className="flex-1 sm:flex-initial text-xs">
+                <History className="mr-1 h-3.5 w-3.5" /> Salvar
               </Button>
-              <Button variant="outline" size="sm" onClick={novaConversa}>
-                <PlusCircle className="mr-1.5 h-3.5 w-3.5" /> Nova
+              <Button variant="outline" size="sm" onClick={novaConversa} className="flex-1 sm:flex-initial text-xs">
+                <PlusCircle className="mr-1 h-3.5 w-3.5" /> Nova
               </Button>
             </div>
           )}

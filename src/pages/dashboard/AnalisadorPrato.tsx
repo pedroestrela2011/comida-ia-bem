@@ -270,7 +270,7 @@ export default function AnalisadorPrato() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
                 {[
                   { label: "Calorias", value: analise.macronutrientes.calorias, icon: Flame, color: "text-orange-500" },
                   { label: "Proteínas", value: analise.macronutrientes.proteinas, icon: Beef, color: "text-red-500" },

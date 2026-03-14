@@ -171,10 +171,10 @@ export default function Progresso() {
   const exerciciosConfig = { exercicios: { label: "Exercícios/semana", color: "hsl(var(--primary))" } };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Rastreador de Progresso</h1>
-        <p className="text-muted-foreground">Acompanhe sua evolução física e de saúde ao longo do tempo.</p>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">Rastreador de Progresso</h1>
+        <p className="text-sm text-muted-foreground">Acompanhe sua evolução física e de saúde ao longo do tempo.</p>
       </div>
 
       {/* Motivational Feedback */}
