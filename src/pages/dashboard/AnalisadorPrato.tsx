@@ -133,13 +133,13 @@ export default function AnalisadorPrato() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-4 md:space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
-          <UtensilsCrossed className="h-7 w-7 text-primary" />
+        <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+          <UtensilsCrossed className="h-6 w-6 md:h-7 md:w-7 text-primary" />
           Analisador de Prato
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Descubra os nutrientes da sua refeição e receba feedback nutricional.
         </p>
       </div>
