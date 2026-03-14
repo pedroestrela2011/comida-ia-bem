@@ -329,12 +329,12 @@ export default function ModoEsporte() {
   );
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center gap-3">
-        <Dumbbell className="h-7 w-7 text-primary" />
+    <div className="space-y-4 md:space-y-6 max-w-4xl">
+      <div className="flex items-center gap-2 md:gap-3">
+        <Dumbbell className="h-6 w-6 md:h-7 md:w-7 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Modo Esporte</h1>
-          <p className="text-sm text-muted-foreground">Cardápio personalizado para seu desempenho esportivo</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Modo Esporte</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Cardápio personalizado para seu desempenho esportivo</p>
         </div>
       </div>
 

@@ -146,10 +146,10 @@ export default function Receitas() {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center gap-3">
-        <ChefHat className="h-7 w-7 text-primary" />
-        <h1 className="text-2xl font-bold text-foreground">Receitas</h1>
+    <div className="space-y-4 md:space-y-6 max-w-3xl">
+      <div className="flex items-center gap-2 md:gap-3">
+        <ChefHat className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">Receitas</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
