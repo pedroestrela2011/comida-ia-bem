@@ -41,7 +41,7 @@ const CTA = () => {
             <Button 
               size="lg" 
               variant="secondary"
-              className="text-lg px-10 py-7 font-semibold shadow-2xl hover:shadow-3xl transition-all group bg-background text-primary hover:bg-background/90"
+              className="text-base md:text-lg px-8 md:px-10 py-6 md:py-7 font-semibold shadow-2xl hover:shadow-3xl transition-all group bg-background text-primary hover:bg-background/90"
             >
               Comece Grátis Agora
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
