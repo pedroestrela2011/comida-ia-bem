@@ -62,7 +62,7 @@ const Hero = () => {
               <p className="text-sm text-muted-foreground">Usuários ativos</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">50k+</p>
+              <p className="text-2xl md:text-3xl font-bold text-primary">50k+</p>
               <p className="text-sm text-muted-foreground">Cardápios criados</p>
             </div>
             <div>
