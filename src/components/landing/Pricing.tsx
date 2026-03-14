@@ -65,7 +65,7 @@ const Pricing = () => {
               key={plan.name}
               className={`relative rounded-2xl p-6 lg:p-8 animate-fade-in ${
                 plan.highlighted
-                  ? "bg-primary text-primary-foreground shadow-2xl scale-105 z-10"
+                  ? "bg-primary text-primary-foreground shadow-2xl md:scale-105 z-10"
                   : "bg-card shadow-lg"
               }`}
               style={{ animationDelay: `${index * 100}ms` }}
