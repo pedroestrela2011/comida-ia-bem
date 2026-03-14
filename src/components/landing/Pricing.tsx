@@ -46,7 +46,7 @@ const plans = [
 
 const Pricing = () => {
   return (
-    <section id="precos" className="py-20 bg-secondary/30 scroll-mt-20">
+    <section id="precos" className="py-12 md:py-20 bg-secondary/30 scroll-mt-20">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">

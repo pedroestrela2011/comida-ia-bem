@@ -11,7 +11,7 @@ const perks = [
 
 const CTA = () => {
   return (
-    <section className="py-20 bg-gradient-to-br from-primary via-green-600 to-green-700">
+    <section className="py-12 md:py-20 bg-gradient-to-br from-primary via-green-600 to-green-700">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           {/* Title */}

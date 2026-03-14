@@ -66,7 +66,7 @@ const Hero = () => {
               <p className="text-sm text-muted-foreground">Cardápios criados</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">4.9★</p>
+              <p className="text-2xl md:text-3xl font-bold text-primary">4.9★</p>
               <p className="text-sm text-muted-foreground">Avaliação média</p>
             </div>
           </div>
