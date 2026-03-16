@@ -1,45 +1,38 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const VerificarEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const email = (location.state as { email?: string })?.email || "";
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
-  const handleVerify = async () => {
-    if (code.length !== 6) return;
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: code,
-        type: "signup",
-      });
-      if (error) throw error;
-      toast({ title: "Email verificado!", description: "Conta criada com sucesso." });
-      navigate("/planos");
-    } catch (err: any) {
-      toast({ title: "Código inválido", description: err.message || "Tente novamente.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Listen for auth state changes (user clicks link and gets verified)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        toast({ title: "Email verificado!", description: "Conta criada com sucesso." });
+        navigate("/planos");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
 
   const handleResend = async () => {
+    setResending(true);
     try {
       const { error } = await supabase.auth.resend({ type: "signup", email });
       if (error) throw error;
-      toast({ title: "Código reenviado!", description: "Verifique sua caixa de entrada." });
+      toast({ title: "Email reenviado!", description: "Verifique sua caixa de entrada." });
     } catch (err: any) {
       toast({ title: "Erro ao reenviar", description: err.message, variant: "destructive" });
+    } finally {
+      setResending(false);
     }
   };
 
@@ -62,36 +55,33 @@ const VerificarEmail = () => {
           Verifique seu email
         </h2>
         <p className="text-muted-foreground mb-2">
-          Enviamos um código de 6 dígitos para
+          Enviamos um link de confirmação para
         </p>
-        <p className="text-foreground font-medium mb-8">{email}</p>
+        <p className="text-foreground font-medium mb-6">{email}</p>
 
-        <div className="flex justify-center mb-6">
-          <InputOTP maxLength={6} value={code} onChange={setCode}>
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
+        <div className="bg-muted/50 rounded-lg p-4 mb-6 text-left space-y-3">
+          <div className="flex items-start gap-3">
+            <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground">Abra seu email e clique no link de confirmação</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground">Você será redirecionado automaticamente após confirmar</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground">Verifique também a pasta de spam</p>
+          </div>
         </div>
 
-        <Button
-          onClick={handleVerify}
-          disabled={code.length !== 6 || loading}
-          size="lg"
-          className="w-full font-semibold text-base mb-4"
-        >
-          {loading ? "Verificando..." : "Verificar"}
-        </Button>
-
         <p className="text-sm text-muted-foreground">
-          Não recebeu o código?{" "}
-          <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Reenviar
+          Não recebeu o email?{" "}
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="text-primary font-medium hover:underline disabled:opacity-50"
+          >
+            {resending ? "Reenviando..." : "Reenviar"}
           </button>
         </p>
       </div>
