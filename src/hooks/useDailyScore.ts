@@ -47,10 +47,10 @@ export function useDailyScore() {
   const fetchScore = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) { setLoading(false); return; }
 
-      // Fetch today's score
-      const { data: scoreData } = await supabase
+      // Fetch today's score - use type cast since tables may not be in generated types yet
+      const { data: scoreData } = await (supabase as any)
         .from("daily_scores")
         .select("*")
         .eq("user_id", session.user.id)
@@ -73,7 +73,7 @@ export function useDailyScore() {
       }
 
       // Fetch today's actions
-      const { data: actionsData } = await supabase
+      const { data: actionsData } = await (supabase as any)
         .from("daily_actions")
         .select("action_type, points, created_at")
         .eq("user_id", session.user.id)
@@ -88,7 +88,7 @@ export function useDailyScore() {
   }, [today]);
 
   const calculateStreak = useCallback(async (userId: string): Promise<number> => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("daily_scores")
       .select("score_date, total_score")
       .eq("user_id", userId)
@@ -106,10 +106,9 @@ export function useDailyScore() {
       checkDate.setDate(checkDate.getDate() - i);
       const dateStr = checkDate.toISOString().split("T")[0];
       
-      // Skip today if no score yet (still in progress)
-      if (i === 0 && !data.find(d => d.score_date === dateStr)) continue;
+      if (i === 0 && !data.find((d: any) => d.score_date === dateStr)) continue;
       
-      if (data.find(d => d.score_date === dateStr)) {
+      if (data.find((d: any) => d.score_date === dateStr)) {
         streak++;
       } else {
         break;
@@ -127,8 +126,7 @@ export function useDailyScore() {
       const userId = session.user.id;
       const points = POINTS_MAP[actionType];
 
-      // Try to insert (upsert) the action - unique constraint prevents duplicates
-      const { error: actionError } = await supabase
+      const { error: actionError } = await (supabase as any)
         .from("daily_actions")
         .upsert(
           {
@@ -147,14 +145,15 @@ export function useDailyScore() {
       }
 
       // Recalculate today's score
-      const { data: todayActions } = await supabase
+      const { data: todayActions } = await (supabase as any)
         .from("daily_actions")
         .select("action_type, points")
         .eq("user_id", userId)
         .eq("action_date", today);
 
-      const actionPoints = (todayActions || []).reduce((sum, a) => sum + a.points, 0);
-      const actionTypes = new Set((todayActions || []).map(a => a.action_type));
+      const items = (todayActions || []) as any[];
+      const actionPoints = items.reduce((sum: number, a: any) => sum + a.points, 0);
+      const actionTypes = new Set(items.map((a: any) => a.action_type));
       const consistencia = actionTypes.size >= 2 ? 10 : 0;
       const totalScore = Math.min(actionPoints + consistencia, 100);
 
@@ -164,16 +163,16 @@ export function useDailyScore() {
         user_id: userId,
         score_date: today,
         total_score: totalScore,
-        cardapio_points: (todayActions || []).find(a => a.action_type === "cardapio")?.points || 0,
-        progresso_points: (todayActions || []).find(a => a.action_type === "progresso")?.points || 0,
-        analisador_points: (todayActions || []).find(a => a.action_type === "analisador")?.points || 0,
-        exercicio_points: (todayActions || []).find(a => a.action_type === "exercicio")?.points || 0,
+        cardapio_points: items.find((a: any) => a.action_type === "cardapio")?.points || 0,
+        progresso_points: items.find((a: any) => a.action_type === "progresso")?.points || 0,
+        analisador_points: items.find((a: any) => a.action_type === "analisador")?.points || 0,
+        exercicio_points: items.find((a: any) => a.action_type === "exercicio")?.points || 0,
         consistencia_points: consistencia,
         streak_count: streak,
         updated_at: new Date().toISOString(),
       };
 
-      await supabase
+      await (supabase as any)
         .from("daily_scores")
         .upsert(scorePayload, { onConflict: "user_id,score_date" });
 
@@ -197,7 +196,7 @@ export function useDailyScore() {
     if (total_score === 0) return "Comece a registrar suas atividades para ganhar pontos hoje!";
     if (total_score < 60) return "Você ainda pode melhorar seu score hoje. Não perca sua sequência!";
     if (total_score >= 60 && total_score < 100) return "Ótimo progresso! Complete mais ações para atingir 100.";
-    return `Parabéns! Score perfeito hoje! 🎉`;
+    return "Parabéns! Score perfeito hoje! 🎉";
   }, [score]);
 
   useEffect(() => {
