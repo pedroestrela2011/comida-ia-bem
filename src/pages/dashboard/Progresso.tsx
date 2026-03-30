@@ -100,6 +100,7 @@ export default function Progresso() {
       toast({ title: "Erro ao salvar registro.", variant: "destructive" });
     } else {
       toast({ title: "Registro salvo com sucesso! 🎉" });
+      await registerAction("progresso", 20, { action: "registro_progresso" });
       setPeso(""); setCintura(""); setBraco(""); setQuadril(""); setPerna("");
       setNivelEnergia("medio"); setFreqExercicios(""); setQualidadeSono("regular"); setObservacoes("");
       fetchRecords();

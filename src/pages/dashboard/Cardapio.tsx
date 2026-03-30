@@ -271,6 +271,7 @@ export default function Cardapio() {
         .single();
       if (error) throw error;
       setSavedCardapios(prev => [{ id: data.id, dados: data.dados as unknown as CardapioData, created_at: data.created_at, tipo: data.tipo || "normal" }, ...prev]);
+      await registerAction("cardapio", 40, { action: "salvar_cardapio" });
       toast({ title: "Cardápio salvo!" });
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });

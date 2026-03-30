@@ -258,6 +258,7 @@ export default function ModoEsporte() {
         }
       }
 
+      await registerAction("exercicio", 15, { action: "cardapio_esporte", esporte: prefs.esporte });
       toast({ title: "Cardápio esportivo gerado e salvo!" });
     } catch (e: any) {
       toast({ title: "Erro ao gerar cardápio", description: e.message, variant: "destructive" });
