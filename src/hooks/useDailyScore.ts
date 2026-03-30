@@ -101,7 +101,7 @@ export function useDailyScore() {
     const { error: actionError } = await supabase
       .from("daily_actions")
       .upsert(
-        { user_id: user.id, action_type: actionType, action_date: today, points, metadata },
+        [{ user_id: user.id, action_type: actionType, action_date: today, points, metadata }] as any,
         { onConflict: "user_id,action_type,action_date" }
       );
 
