@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useDailyScore } from "@/hooks/useDailyScore";
 
 type Refeicao = {
   nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;

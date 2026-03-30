@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2 } from "lucide-react";
+import { useDailyScore } from "@/hooks/useDailyScore";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
