@@ -40,6 +40,7 @@ export default function Progresso() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("registro");
+  const { registerAction } = useDailyScore();
 
   // Form state
   const [peso, setPeso] = useState("");
