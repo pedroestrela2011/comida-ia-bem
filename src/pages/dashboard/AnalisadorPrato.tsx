@@ -30,6 +30,7 @@ export default function AnalisadorPrato() {
   const [analise, setAnalise] = useState<Analise | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { registerAction } = useDailyScore();
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
