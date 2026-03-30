@@ -38,6 +38,81 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_actions: {
+        Row: {
+          action_date: string
+          action_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          points: number
+          user_id: string
+        }
+        Insert: {
+          action_date?: string
+          action_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          points?: number
+          user_id: string
+        }
+        Update: {
+          action_date?: string
+          action_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          points?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_scores: {
+        Row: {
+          analisador_points: number
+          cardapio_points: number
+          consistencia_points: number
+          created_at: string
+          exercicio_points: number
+          id: string
+          progresso_points: number
+          score_date: string
+          streak: number
+          total_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analisador_points?: number
+          cardapio_points?: number
+          consistencia_points?: number
+          created_at?: string
+          exercicio_points?: number
+          id?: string
+          progresso_points?: number
+          score_date?: string
+          streak?: number
+          total_score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analisador_points?: number
+          cardapio_points?: number
+          consistencia_points?: number
+          created_at?: string
+          exercicio_points?: number
+          id?: string
+          progresso_points?: number
+          score_date?: string
+          streak?: number
+          total_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
