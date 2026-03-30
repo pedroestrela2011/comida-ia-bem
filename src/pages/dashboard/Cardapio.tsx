@@ -197,6 +197,7 @@ export default function Cardapio() {
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string }[]>([]);
   const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const { registerAction } = useDailyScore();
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
     gosta: "", nao_gosta: "",
