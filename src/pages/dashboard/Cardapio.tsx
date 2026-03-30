@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useDailyScore } from "@/hooks/useDailyScore";
 
 type Refeicao = {
   nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;
@@ -196,6 +197,7 @@ export default function Cardapio() {
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string }[]>([]);
   const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const { registerAction } = useDailyScore();
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
     gosta: "", nao_gosta: "",
@@ -270,6 +272,7 @@ export default function Cardapio() {
         .single();
       if (error) throw error;
       setSavedCardapios(prev => [{ id: data.id, dados: data.dados as unknown as CardapioData, created_at: data.created_at, tipo: data.tipo || "normal" }, ...prev]);
+      await registerAction("cardapio", 40, { action: "salvar_cardapio" });
       toast({ title: "Cardápio salvo!" });
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });

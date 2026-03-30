@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2 } from "lucide-react";
+import { useDailyScore } from "@/hooks/useDailyScore";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -39,6 +40,7 @@ export default function Progresso() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("registro");
+  const { registerAction } = useDailyScore();
 
   // Form state
   const [peso, setPeso] = useState("");
@@ -98,6 +100,7 @@ export default function Progresso() {
       toast({ title: "Erro ao salvar registro.", variant: "destructive" });
     } else {
       toast({ title: "Registro salvo com sucesso! 🎉" });
+      await registerAction("progresso", 20, { action: "registro_progresso" });
       setPeso(""); setCintura(""); setBraco(""); setQuadril(""); setPerna("");
       setNivelEnergia("medio"); setFreqExercicios(""); setQualidadeSono("regular"); setObservacoes("");
       fetchRecords();

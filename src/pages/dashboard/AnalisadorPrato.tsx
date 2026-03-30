@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useDailyScore } from "@/hooks/useDailyScore";
 import { Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star, Camera, X, ImageIcon } from "lucide-react";
 
 interface Analise {
@@ -29,6 +30,7 @@ export default function AnalisadorPrato() {
   const [analise, setAnalise] = useState<Analise | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { registerAction } = useDailyScore();
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -117,6 +119,7 @@ export default function AnalisadorPrato() {
 
       const parsed: Analise = JSON.parse(jsonMatch[0]);
       setAnalise(parsed);
+      await registerAction("analisador", 15, { action: "analise_prato", prato: parsed.nome_prato });
       toast({ title: "Análise concluída!" });
     } catch (e: any) {
       console.error(e);
