@@ -143,7 +143,7 @@ export function useDailyScore() {
     await supabase
       .from("daily_scores")
       .upsert(
-        {
+        [{
           user_id: user.id,
           score_date: today,
           total_score: totalScore,
@@ -154,7 +154,7 @@ export function useDailyScore() {
           consistencia_points: consistencia,
           streak: newStreak,
           updated_at: new Date().toISOString(),
-        },
+        }] as any,
         { onConflict: "user_id,score_date" }
       );
 

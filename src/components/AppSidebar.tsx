@@ -19,6 +19,7 @@ import {
 
 const menuItems = [
   { title: "Meu Cardápio", url: "/dashboard/cardapio", icon: CalendarDays },
+  { title: "Score Diário", url: "/dashboard/score", icon: Star },
   { title: "Modo Esporte", url: "/dashboard/modo-esporte", icon: Dumbbell },
   { title: "Receitas", url: "/dashboard/receitas", icon: ChefHat },
   { title: "Analisador de Prato", url: "/dashboard/analisador-prato", icon: UtensilsCrossed },
