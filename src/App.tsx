@@ -18,6 +18,7 @@ import ModoEsporte from "./pages/dashboard/ModoEsporte";
 import Progresso from "./pages/dashboard/Progresso";
 import AnalisadorPrato from "./pages/dashboard/AnalisadorPrato";
 import ScoreDiario from "./pages/dashboard/ScoreDiario";
+import Conquistas from "./pages/dashboard/Conquistas";
 
 const queryClient = new QueryClient();
 
