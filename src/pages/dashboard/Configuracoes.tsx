@@ -93,6 +93,8 @@ export default function Configuracoes() {
         setDarkMode(true);
         document.documentElement.classList.add("dark");
       }
+
+      setNotificacoesScore((data as any)?.notificacoes_score ?? true);
     } catch (e: any) {
       console.error("Erro ao carregar perfil:", e.message);
     } finally {
