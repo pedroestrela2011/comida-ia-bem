@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { ScoreReminders } from "@/components/dashboard/ScoreReminders";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
