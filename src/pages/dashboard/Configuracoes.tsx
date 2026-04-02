@@ -53,6 +53,7 @@ export default function Configuracoes() {
 
   // Appearance
   const [darkMode, setDarkMode] = useState(false);
+  const [notificacoesScore, setNotificacoesScore] = useState(true);
 
   useEffect(() => {
     loadProfile();
