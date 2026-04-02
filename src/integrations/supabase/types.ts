@@ -120,6 +120,7 @@ export type Database = {
           data_nascimento: string | null
           id: string
           nome: string
+          notificacoes_score: boolean
           pais: string | null
           tema: string
           two_fa_enabled: boolean
@@ -132,6 +133,7 @@ export type Database = {
           data_nascimento?: string | null
           id?: string
           nome: string
+          notificacoes_score?: boolean
           pais?: string | null
           tema?: string
           two_fa_enabled?: boolean
@@ -144,6 +146,7 @@ export type Database = {
           data_nascimento?: string | null
           id?: string
           nome?: string
+          notificacoes_score?: boolean
           pais?: string | null
           tema?: string
           two_fa_enabled?: boolean
