@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN notificacoes_score boolean NOT NULL DEFAULT true;

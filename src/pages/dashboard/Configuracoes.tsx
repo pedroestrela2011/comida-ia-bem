@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check } from "lucide-react";
+import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +53,7 @@ export default function Configuracoes() {
 
   // Appearance
   const [darkMode, setDarkMode] = useState(false);
+  const [notificacoesScore, setNotificacoesScore] = useState(true);
 
   useEffect(() => {
     loadProfile();
@@ -92,6 +93,8 @@ export default function Configuracoes() {
         setDarkMode(true);
         document.documentElement.classList.add("dark");
       }
+
+      setNotificacoesScore((data as any)?.notificacoes_score ?? true);
     } catch (e: any) {
       console.error("Erro ao carregar perfil:", e.message);
     } finally {
@@ -458,6 +461,45 @@ export default function Configuracoes() {
                 </div>
               </div>
               <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
+            </div>
+          </div>
+
+          {/* Notificações do Score */}
+          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" /> Lembretes do Score Diário
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Receba lembretes inteligentes no dashboard quando puder melhorar seu score ou estiver prestes a perder seu streak.
+            </p>
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${notificacoesScore ? "bg-primary/10" : "bg-muted"}`}>
+                  <Bell className={`h-5 w-5 ${notificacoesScore ? "text-primary" : "text-muted-foreground"}`} />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{notificacoesScore ? "Ativados" : "Desativados"}</p>
+                  <p className="text-xs text-muted-foreground">Lembretes no dashboard</p>
+                </div>
+              </div>
+              <Switch
+                checked={notificacoesScore}
+                onCheckedChange={async (checked) => {
+                  setNotificacoesScore(checked);
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    await supabase
+                      .from("profiles")
+                      .update({ notificacoes_score: checked } as any)
+                      .eq("user_id", user.id);
+                    toast({ title: checked ? "Lembretes ativados" : "Lembretes desativados" });
+                  } catch (e: any) {
+                    toast({ title: "Erro", description: e.message, variant: "destructive" });
+                    setNotificacoesScore(!checked);
+                  }
+                }}
+              />
             </div>
           </div>
         </TabsContent>
