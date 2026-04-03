@@ -1,55 +1,63 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, ArrowLeft, Crown, Star, Zap } from "lucide-react";
+import { Check, X, ArrowLeft, Crown, Star, Zap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const plans = [
   {
-    id: "basico",
-    name: "Básico",
-    price: "19,99",
-    description: "Ideal para começar sua jornada saudável",
+    id: "essencial",
+    name: "Essencial",
+    price: "19,90",
+    description: "Comece sua jornada com o básico",
     icon: Zap,
     features: [
-      "Cardápio semanal personalizado",
-      "Lista de compras automática",
-      "Receitas com IA",
-      "Chatbot de nutrição",
-      "Histórico de cardápios",
+      { text: "Cardápios semanais completos", included: true },
+      { text: "Até 3 cardápios por conta", included: true },
+      { text: "Lista de compras automática", included: true },
+      { text: "Criação de receitas com IA", included: true },
+      { text: "Chatbot com limite de uso", included: true },
+      { text: "Marcar refeições como concluídas", included: false },
+      { text: "Score Diário e Conquistas", included: false },
+      { text: "Modo Esporte", included: false },
+      { text: "Analisador de Prato", included: false },
     ],
     highlighted: false,
   },
   {
-    id: "pro",
-    name: "Pro",
-    price: "49,90",
-    description: "O mais escolhido! Tudo que você precisa",
+    id: "equilibrio",
+    name: "Equilíbrio",
+    price: "27,90",
+    description: "Melhor custo-benefício",
     icon: Star,
     features: [
-      "Tudo do plano Básico",
-      "Cardápios ilimitados",
-      "Receitas premium",
-      "Suporte prioritário",
-      "Modo escuro",
-      "Exportar lista de compras",
+      { text: "Cardápios ilimitados", included: true },
+      { text: "Lista de compras completa", included: true },
+      { text: "Marcar refeições como concluídas", included: true },
+      { text: "Score Diário, streak e níveis", included: true },
+      { text: "Rastreador de Progresso", included: true },
+      { text: "Modo Esporte completo", included: true },
+      { text: "Chatbot ilimitado", included: true },
+      { text: "Feedback nutricional automático", included: true },
+      { text: "Analisador de Prato", included: false },
     ],
     highlighted: true,
   },
   {
-    id: "premium",
-    name: "Premium",
-    price: "69,90",
-    description: "Experiência completa para toda a família",
+    id: "performance",
+    name: "Performance",
+    price: "35,90",
+    description: "Desbloqueie todo o potencial",
     icon: Crown,
     features: [
-      "Tudo do plano Pro",
-      "Perfis familiares (até 5)",
-      "Acompanhamento nutricional",
-      "Receitas exclusivas de chefs",
-      "Consultoria nutricional IA",
-      "Acesso antecipado a novidades",
+      { text: "Tudo do Equilíbrio", included: true },
+      { text: "Analisador de Prato completo", included: true },
+      { text: "Sugestões nutricionais avançadas", included: true },
+      { text: "Ajuste automático de cardápio", included: true },
+      { text: "Insights personalizados com IA", included: true },
+      { text: "Prioridade no chatbot", included: true },
+      { text: "Acesso antecipado a novidades", included: true },
     ],
     highlighted: false,
   },
@@ -72,7 +80,6 @@ const Planos = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="container mx-auto px-4 py-6">
         <Link
           to="/cadastro"
@@ -83,7 +90,6 @@ const Planos = () => {
         </Link>
       </div>
 
-      {/* Content */}
       <div className="container mx-auto px-4 pb-20">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-6">
@@ -97,7 +103,6 @@ const Planos = () => {
           </p>
         </div>
 
-        {/* Plans Grid */}
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {plans.map((plan) => {
             const Icon = plan.icon;
@@ -111,7 +116,8 @@ const Planos = () => {
                 }`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
+                    <Star size={12} className="fill-current" />
                     Mais Popular
                   </div>
                 )}
@@ -136,9 +142,15 @@ const Planos = () => {
                   </div>
                   <ul className="space-y-3">
                     {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2 text-sm">
-                        <Check size={16} className="text-primary mt-0.5 shrink-0" />
-                        <span className="text-foreground/80">{f}</span>
+                      <li key={f.text} className="flex items-start gap-2 text-sm">
+                        {f.included ? (
+                          <Check size={16} className="text-primary mt-0.5 shrink-0" />
+                        ) : (
+                          <X size={16} className="text-muted-foreground mt-0.5 shrink-0" />
+                        )}
+                        <span className={f.included ? "text-foreground/80" : "text-muted-foreground line-through"}>
+                          {f.text}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -151,7 +163,7 @@ const Planos = () => {
                     variant={plan.highlighted ? "default" : "outline"}
                     size="lg"
                   >
-                    {selectedPlan === plan.id ? "Selecionado!" : "Escolher plano"}
+                    {selectedPlan === plan.id ? "Selecionado!" : "Começar Agora"}
                   </Button>
                 </CardFooter>
               </Card>
