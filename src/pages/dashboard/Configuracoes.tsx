@@ -559,7 +559,8 @@ const plansData = [
     icon: Crown,
     features: [
       { text: "Tudo do Equilíbrio", included: true },
-      { text: "Analisador de Prato completo", included: true },
+      { text: "Score Diário, streak e níveis", included: true },
+      { text: "Sistema de Conquistas completo", included: true },
       { text: "Sugestões nutricionais avançadas", included: true },
       { text: "Ajuste automático de cardápio", included: true },
       { text: "Insights personalizados com IA", included: true },
