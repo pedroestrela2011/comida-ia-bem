@@ -570,7 +570,7 @@ const plansData = [
 ];
 
 function PlanosTab() {
-  const [currentPlan, setCurrentPlan] = useState("basico");
+  const [currentPlan, setCurrentPlan] = useState("essencial");
   const [changing, setChanging] = useState(false);
 
   const handleChangePlan = (planId: string) => {
