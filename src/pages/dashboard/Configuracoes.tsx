@@ -640,9 +640,15 @@ function PlanosTab() {
 
               <ul className="space-y-2">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm">
-                    <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                    <span className="text-foreground/80">{f}</span>
+                  <li key={f.text} className="flex items-start gap-2 text-sm">
+                    {f.included ? (
+                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    ) : (
+                      <X className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    )}
+                    <span className={f.included ? "text-foreground/80" : "text-muted-foreground line-through"}>
+                      {f.text}
+                    </span>
                   </li>
                 ))}
               </ul>
