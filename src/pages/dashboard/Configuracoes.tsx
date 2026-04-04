@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, X, Bell } from "lucide-react";
+import { useSubscription, PLAN_CONFIG } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -571,18 +572,42 @@ const plansData = [
 ];
 
 function PlanosTab() {
-  const [currentPlan, setCurrentPlan] = useState("essencial");
-  const [changing, setChanging] = useState(false);
+  const { plan: currentPlan, subscribed, subscriptionEnd, loading: subLoading, refreshSubscription } = useSubscription();
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [managingPortal, setManagingPortal] = useState(false);
 
-  const handleChangePlan = (planId: string) => {
+  const handleCheckout = async (planId: string) => {
     if (planId === currentPlan) return;
-    setChanging(true);
-    // Simulated plan change
-    setTimeout(() => {
-      setCurrentPlan(planId);
-      setChanging(false);
-      toast({ title: `Plano alterado para ${plansData.find(p => p.id === planId)?.name}!` });
-    }, 1000);
+    setCheckingOut(planId);
+    try {
+      const config = PLAN_CONFIG[planId as keyof typeof PLAN_CONFIG];
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId: config.price_id },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (e: any) {
+      toast({ title: "Erro ao iniciar checkout", description: e.message, variant: "destructive" });
+    } finally {
+      setCheckingOut(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setManagingPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } finally {
+      setManagingPortal(false);
+    }
   };
 
   const current = plansData.find(p => p.id === currentPlan);
@@ -598,17 +623,34 @@ function PlanosTab() {
           <p className="text-sm text-muted-foreground">Seu plano atual</p>
           <p className="text-xl font-bold text-foreground">{current?.name}</p>
           <p className="text-sm text-muted-foreground">R$ {current?.price}/mês</p>
+          {subscriptionEnd && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Próxima cobrança: {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
+            </p>
+          )}
         </div>
-        <span className="text-xs bg-primary text-primary-foreground font-semibold px-3 py-1 rounded-full">
-          Ativo
-        </span>
+        <div className="flex flex-col gap-2">
+          <span className="text-xs bg-primary text-primary-foreground font-semibold px-3 py-1 rounded-full text-center">
+            {subscribed ? "Ativo" : "Gratuito"}
+          </span>
+          {subscribed && (
+            <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={managingPortal}>
+              {managingPortal ? <Loader2 className="h-3 w-3 animate-spin" /> : "Gerenciar"}
+            </Button>
+          )}
+        </div>
       </div>
+
+      <Button variant="ghost" size="sm" onClick={() => refreshSubscription()}>
+        Atualizar status da assinatura
+      </Button>
 
       {/* Plans grid */}
       <div className="grid gap-4 md:grid-cols-3">
         {plansData.map((plan) => {
           const Icon = plan.icon;
           const isCurrent = plan.id === currentPlan;
+          const isCheckingOut = checkingOut === plan.id;
           return (
             <div
               key={plan.id}
@@ -657,15 +699,15 @@ function PlanosTab() {
               <Button
                 variant={isCurrent ? "secondary" : "default"}
                 className="w-full"
-                disabled={isCurrent || changing}
-                onClick={() => handleChangePlan(plan.id)}
+                disabled={isCurrent || !!checkingOut}
+                onClick={() => handleCheckout(plan.id)}
               >
-                {changing && !isCurrent ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Alterando...</>
+                {isCheckingOut ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Redirecionando...</>
                 ) : isCurrent ? (
                   "Plano atual"
                 ) : (
-                  "Mudar para este plano"
+                  "Assinar este plano"
                 )}
               </Button>
             </div>
@@ -674,7 +716,7 @@ function PlanosTab() {
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        A alteração de plano entra em vigor imediatamente. Sem taxas de cancelamento.
+        Pagamento seguro via Stripe. Cancele a qualquer momento.
       </p>
     </div>
   );
