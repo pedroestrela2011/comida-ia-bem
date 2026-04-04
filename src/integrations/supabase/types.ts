@@ -122,6 +122,7 @@ export type Database = {
           nome: string
           notificacoes_score: boolean
           pais: string | null
+          plano: string
           tema: string
           two_fa_enabled: boolean
           updated_at: string
@@ -135,6 +136,7 @@ export type Database = {
           nome: string
           notificacoes_score?: boolean
           pais?: string | null
+          plano?: string
           tema?: string
           two_fa_enabled?: boolean
           updated_at?: string
@@ -148,6 +150,7 @@ export type Database = {
           nome?: string
           notificacoes_score?: boolean
           pais?: string | null
+          plano?: string
           tema?: string
           two_fa_enabled?: boolean
           updated_at?: string

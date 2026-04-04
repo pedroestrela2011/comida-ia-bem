@@ -19,6 +19,7 @@ import Progresso from "./pages/dashboard/Progresso";
 import AnalisadorPrato from "./pages/dashboard/AnalisadorPrato";
 import ScoreDiario from "./pages/dashboard/ScoreDiario";
 import Conquistas from "./pages/dashboard/Conquistas";
+import { PlanGate } from "./components/dashboard/PlanGate";
 
 const queryClient = new QueryClient();
 
@@ -37,14 +38,14 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Navigate to="cardapio" replace />} />
             <Route path="cardapio" element={<Cardapio />} />
-            <Route path="modo-esporte" element={<ModoEsporte />} />
-            <Route path="analisador-prato" element={<AnalisadorPrato />} />
-            <Route path="progresso" element={<Progresso />} />
+            <Route path="modo-esporte" element={<PlanGate feature="modoEsporte" requiredPlan="Equilíbrio"><ModoEsporte /></PlanGate>} />
+            <Route path="analisador-prato" element={<PlanGate feature="analisadorPrato" requiredPlan="Equilíbrio"><AnalisadorPrato /></PlanGate>} />
+            <Route path="progresso" element={<PlanGate feature="progresso" requiredPlan="Equilíbrio"><Progresso /></PlanGate>} />
             <Route path="receitas" element={<Receitas />} />
             <Route path="chat" element={<Chat />} />
             <Route path="configuracoes" element={<Configuracoes />} />
-            <Route path="score" element={<ScoreDiario />} />
-            <Route path="conquistas" element={<Conquistas />} />
+            <Route path="score" element={<PlanGate feature="scoreDiario" requiredPlan="Performance"><ScoreDiario /></PlanGate>} />
+            <Route path="conquistas" element={<PlanGate feature="conquistas" requiredPlan="Performance"><Conquistas /></PlanGate>} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
