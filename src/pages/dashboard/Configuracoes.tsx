@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, X, Bell } from "lucide-react";
+import { useSubscription, PLAN_CONFIG } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
