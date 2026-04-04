@@ -19,6 +19,7 @@ import Progresso from "./pages/dashboard/Progresso";
 import AnalisadorPrato from "./pages/dashboard/AnalisadorPrato";
 import ScoreDiario from "./pages/dashboard/ScoreDiario";
 import Conquistas from "./pages/dashboard/Conquistas";
+import { PlanGate } from "./components/dashboard/PlanGate";
 
 const queryClient = new QueryClient();
 
