@@ -1,7 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-
-export type PlanType = "essencial" | "equilibrio" | "performance";
+import { useSubscription, PlanType } from "@/contexts/SubscriptionContext";
 
 interface FeatureAccess {
   cardapio: boolean;
@@ -18,7 +15,7 @@ const planFeatures: Record<PlanType, FeatureAccess> = {
   essencial: {
     cardapio: true,
     receitas: true,
-    chat: true, // limited but accessible
+    chat: true,
     modoEsporte: false,
     progresso: false,
     analisadorPrato: false,
@@ -48,28 +45,7 @@ const planFeatures: Record<PlanType, FeatureAccess> = {
 };
 
 export function useUserPlan() {
-  const [plan, setPlan] = useState<PlanType>("essencial");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPlan = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("plano")
-        .eq("user_id", user.id)
-        .single();
-
-      if (data?.plano) {
-        setPlan(data.plano as PlanType);
-      }
-      setLoading(false);
-    };
-
-    fetchPlan();
-  }, []);
+  const { plan, loading } = useSubscription();
 
   return {
     plan,
@@ -78,3 +54,5 @@ export function useUserPlan() {
     planLabel: plan === "essencial" ? "Essencial" : plan === "equilibrio" ? "Equilíbrio" : "Performance",
   };
 }
+
+export type { PlanType };
