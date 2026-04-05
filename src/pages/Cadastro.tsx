@@ -60,6 +60,7 @@ const Cadastro = () => {
             nome: form.nome,
             data_nascimento: dataNascimento,
             pais: form.pais,
+            plano: form.plano,
           },
         },
       });
