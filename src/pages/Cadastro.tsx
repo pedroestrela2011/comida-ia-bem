@@ -241,6 +241,48 @@ const Cadastro = () => {
               {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
             </div>
 
+            {/* Plano */}
+            <div className="space-y-3">
+              <Label>Escolha seu plano</Label>
+              <div className="grid gap-3">
+                {(Object.entries(PLAN_CONFIG) as [string, typeof PLAN_CONFIG.essencial][]).map(([key, config]) => {
+                  const isSelected = form.plano === key;
+                  const features: Record<string, string[]> = {
+                    essencial: ["Cardápios personalizados", "Receitas saudáveis", "Chat com IA"],
+                    equilibrio: ["Tudo do Essencial", "Modo Esporte", "Analisador de Prato", "Progresso"],
+                    performance: ["Tudo do Equilíbrio", "Score Diário", "Conquistas", "Insights avançados"],
+                  };
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setForm({ ...form, plano: key as typeof form.plano })}
+                      className={`relative text-left rounded-lg border-2 p-4 transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold text-foreground">{config.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-primary">R$ {config.price}/mês</span>
+                          {isSelected && (
+                            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                              <Check size={12} className="text-primary-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {features[key]?.join(" · ")}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <Button type="submit" size="lg" className="w-full font-semibold text-base" disabled={loading}>
               {loading ? "Criando conta..." : "Criar conta"}
             </Button>
