@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PLAN_CONFIG } from "@/contexts/SubscriptionContext";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",
@@ -27,6 +28,7 @@ const Cadastro = () => {
     pais: "",
     email: "",
     senha: "",
+    plano: "essencial" as "essencial" | "equilibrio" | "performance",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -58,6 +60,7 @@ const Cadastro = () => {
             nome: form.nome,
             data_nascimento: dataNascimento,
             pais: form.pais,
+            plano: form.plano,
           },
         },
       });
@@ -237,6 +240,48 @@ const Cadastro = () => {
                 </button>
               </div>
               {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
+            </div>
+
+            {/* Plano */}
+            <div className="space-y-3">
+              <Label>Escolha seu plano</Label>
+              <div className="grid gap-3">
+                {(Object.entries(PLAN_CONFIG) as [string, typeof PLAN_CONFIG.essencial][]).map(([key, config]) => {
+                  const isSelected = form.plano === key;
+                  const features: Record<string, string[]> = {
+                    essencial: ["Cardápios personalizados", "Receitas saudáveis", "Chat com IA"],
+                    equilibrio: ["Tudo do Essencial", "Modo Esporte", "Analisador de Prato", "Progresso"],
+                    performance: ["Tudo do Equilíbrio", "Score Diário", "Conquistas", "Insights avançados"],
+                  };
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setForm({ ...form, plano: key as typeof form.plano })}
+                      className={`relative text-left rounded-lg border-2 p-4 transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold text-foreground">{config.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-primary">R$ {config.price}/mês</span>
+                          {isSelected && (
+                            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                              <Check size={12} className="text-primary-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {features[key]?.join(" · ")}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <Button type="submit" size="lg" className="w-full font-semibold text-base" disabled={loading}>
