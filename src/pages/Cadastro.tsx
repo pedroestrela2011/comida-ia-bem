@@ -28,6 +28,7 @@ const Cadastro = () => {
     pais: "",
     email: "",
     senha: "",
+    plano: "essencial" as "essencial" | "equilibrio" | "performance",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
