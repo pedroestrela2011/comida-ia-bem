@@ -8,6 +8,8 @@ import { toast } from "@/hooks/use-toast";
 type Msg = { role: "user" | "assistant"; content: string };
 type Conversa = { id: number; titulo: string; messages: Msg[] };
 
+import { supabase } from "@/integrations/supabase/client";
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
 
 export default function Chat() {
