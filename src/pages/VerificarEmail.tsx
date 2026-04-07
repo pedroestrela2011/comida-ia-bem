@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PLAN_CONFIG } from "@/contexts/SubscriptionContext";
 
 const VerificarEmail = () => {
   const navigate = useNavigate();
@@ -14,10 +15,31 @@ const VerificarEmail = () => {
 
   // Listen for auth state changes (user clicks link and gets verified)
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
-        toast({ title: "Email verificado!", description: "Conta criada com sucesso." });
-        navigate("/planos");
+        toast({ title: "Email verificado!", description: "Redirecionando para o pagamento..." });
+
+        // Get the plan from user metadata
+        const plano = (session.user.user_metadata?.plano || "essencial") as keyof typeof PLAN_CONFIG;
+        const priceId = PLAN_CONFIG[plano]?.price_id;
+
+        if (priceId) {
+          try {
+            const { data, error } = await supabase.functions.invoke("create-checkout", {
+              body: { priceId },
+            });
+            if (error) throw error;
+            if (data?.url) {
+              window.location.href = data.url;
+              return;
+            }
+          } catch (err) {
+            console.error("Checkout error:", err);
+            toast({ title: "Erro ao redirecionar para pagamento", description: "Você pode assinar depois nas configurações.", variant: "destructive" });
+          }
+        }
+
+        navigate("/dashboard");
       }
     });
     return () => subscription.unsubscribe();
