@@ -120,7 +120,7 @@ Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_pr
       });
     } else if (type === "analisador_prato") {
       systemPrompt = `Você é um nutricionista brasileiro especializado em análise nutricional de refeições.
-Analise os alimentos informados pelo usuário e forneça uma análise nutricional estimada completa.
+Analise os alimentos informados pelo usuário e forneça uma análise nutricional estimada completa, ALÉM de uma receita prática para preparar este prato.
 Responda APENAS com JSON válido no formato:
 {
   "nome_prato": "nome descritivo do prato",
@@ -143,11 +143,21 @@ Responda APENAS com JSON válido no formato:
     "feedback positivo ou sugestão 3"
   ],
   "pontuacao_saude": 7,
-  "resumo": "Um breve resumo geral sobre a qualidade nutricional do prato"
+  "resumo": "Um breve resumo geral sobre a qualidade nutricional do prato",
+  "receita": {
+    "tempo_preparo": "ex: 25 minutos",
+    "porcoes": "ex: Serve 2 pessoas",
+    "dificuldade": "fácil" ou "médio" ou "difícil",
+    "ingredientes": ["100g de macarrão", "150g de frango", "molho de tomate", "temperos"],
+    "modo_preparo": ["Passo 1 detalhado", "Passo 2 detalhado", "..."],
+    "dicas": "dica útil e saudável de preparo"
+  }
 }
 A pontuacao_saude deve ser de 1 a 10 (10 = muito saudável).
+A receita deve ser COERENTE com os alimentos informados, focada em alimentação saudável e adaptada ao objetivo do usuário (se informado: emagrecimento → menos gordura; ganho de massa → mais proteína).
+Os passos do modo_preparo devem ser claros, com técnica, tempos e indicações visuais quando relevante.
 Seja preciso nas estimativas e educativo nos feedbacks. Use português do Brasil.`;
-      userPrompt = `Analise nutricionalmente o seguinte prato com estes alimentos: ${preferences.alimentos}`;
+      userPrompt = `Analise nutricionalmente e gere a receita do seguinte prato com estes alimentos: ${preferences.alimentos}${preferences.objetivo ? `\nObjetivo do usuário: ${preferences.objetivo}` : ""}`;
     } else if (type === "chat") {
       systemPrompt = `Você é o "Conversa Saudável", um assistente de saúde amigável e educativo. 
 Responda dúvidas sobre alimentos, nutrição e hábitos alimentares saudáveis.
