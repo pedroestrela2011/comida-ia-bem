@@ -153,6 +153,37 @@ export default function AnalisadorPrato() {
     }
   };
 
+  const salvarReceita = () => {
+    if (!analise?.receita) return;
+    const r = analise.receita;
+    const novaReceita = {
+      nome: analise.nome_prato,
+      descricao: analise.resumo,
+      tempo_preparo: r.tempo_preparo,
+      porcoes: r.porcoes,
+      dificuldade: r.dificuldade,
+      ingredientes: r.ingredientes,
+      modo_preparo: r.modo_preparo,
+      dicas: r.dicas || "",
+      informacoes_nutricionais: {
+        calorias: analise.macronutrientes.calorias,
+        proteinas: analise.macronutrientes.proteinas,
+        carboidratos: analise.macronutrientes.carboidratos,
+        gorduras: analise.macronutrientes.gorduras,
+        fibras: analise.macronutrientes.fibras,
+      },
+    };
+    try {
+      const raw = localStorage.getItem(RECEITAS_STORAGE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      list.unshift(novaReceita);
+      localStorage.setItem(RECEITAS_STORAGE_KEY, JSON.stringify(list));
+      toast({ title: "Receita salva!", description: "Acesse na aba Receitas." });
+    } catch {
+      toast({ title: "Não foi possível salvar a receita.", variant: "destructive" });
+    }
+  };
+
   const scoreColor = (score: number) => {
     if (score >= 8) return "text-green-600";
     if (score >= 5) return "text-yellow-600";
