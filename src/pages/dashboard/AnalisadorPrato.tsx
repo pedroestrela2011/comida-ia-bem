@@ -2,10 +2,23 @@ import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useDailyScore } from "@/hooks/useDailyScore";
-import { Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star, Camera, X, ImageIcon } from "lucide-react";
+import {
+  Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star,
+  Camera, X, ChefHat, Clock, Users, BookmarkPlus, Lightbulb,
+} from "lucide-react";
+
+interface ReceitaPrato {
+  tempo_preparo: string;
+  porcoes: string;
+  dificuldade?: string;
+  ingredientes: string[];
+  modo_preparo: string[];
+  dicas?: string;
+}
 
 interface Analise {
   nome_prato: string;
@@ -21,7 +34,18 @@ interface Analise {
   feedback: string[];
   pontuacao_saude: number;
   resumo: string;
+  receita?: ReceitaPrato;
 }
+
+const RECEITAS_STORAGE_KEY = "saved_recipes_v1";
+
+const difficultyVariant = (d?: string) => {
+  if (!d) return "secondary" as const;
+  const l = d.toLowerCase();
+  if (l.includes("fácil") || l.includes("facil")) return "default" as const;
+  if (l.includes("médio") || l.includes("medio")) return "secondary" as const;
+  return "destructive" as const;
+};
 
 export default function AnalisadorPrato() {
   const [alimentos, setAlimentos] = useState("");
