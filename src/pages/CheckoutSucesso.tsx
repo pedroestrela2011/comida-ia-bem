@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { PLAN_CONFIG, PlanType } from "@/contexts/SubscriptionContext";
@@ -23,6 +24,7 @@ const CheckoutSucesso = () => {
           setPlan(data.plan as PlanType);
           setSubscribed(true);
           setLoading(false);
+          fireConfetti();
           return;
         }
       } catch (e) {
