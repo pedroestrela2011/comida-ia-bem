@@ -1,10 +1,32 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CheckCircle2, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import { CheckCircle2, Sparkles, ArrowRight, Loader2, Check } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { PLAN_CONFIG, PlanType } from "@/contexts/SubscriptionContext";
+
+const PLAN_FEATURES: Record<PlanType, string[]> = {
+  essencial: [
+    "Até 3 cardápios personalizados",
+    "Acesso à biblioteca de receitas",
+    "Chat nutricional com limite diário",
+  ],
+  equilibrio: [
+    "Cardápios ilimitados",
+    "Modo Esporte com cardápios para treino",
+    "Rastreador de Progresso completo",
+    "Analisador de Prato por foto",
+    "Chat nutricional sem limites",
+  ],
+  performance: [
+    "Tudo do plano Equilíbrio",
+    "Score Diário de hábitos",
+    "Sistema de Conquistas e badges",
+    "Lembretes personalizados",
+    "Suporte prioritário",
+  ],
+};
 
 const CheckoutSucesso = () => {
   const navigate = useNavigate();
@@ -109,18 +131,36 @@ const CheckoutSucesso = () => {
         </p>
 
         {subscribed && (
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6 mb-8">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Sparkles className="text-primary" size={18} />
-              <span className="text-sm font-medium text-muted-foreground">Plano ativado</span>
+          <>
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Sparkles className="text-primary" size={18} />
+                <span className="text-sm font-medium text-muted-foreground">Plano ativado</span>
+              </div>
+              <h2 className="text-2xl font-display font-bold text-foreground mb-1">
+                {planInfo.label}
+              </h2>
+              <p className="text-muted-foreground">
+                R$ {planInfo.price} <span className="text-sm">/mês</span>
+              </p>
             </div>
-            <h2 className="text-2xl font-display font-bold text-foreground mb-1">
-              {planInfo.label}
-            </h2>
-            <p className="text-muted-foreground">
-              R$ {planInfo.price} <span className="text-sm">/mês</span>
-            </p>
-          </div>
+
+            <div className="bg-card border border-border rounded-xl p-5 mb-8 text-left">
+              <p className="text-sm font-semibold text-foreground mb-3 text-center">
+                Recursos desbloqueados
+              </p>
+              <ul className="space-y-2.5">
+                {PLAN_FEATURES[plan].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                      <Check className="text-primary" size={12} strokeWidth={3} />
+                    </span>
+                    <span className="text-sm text-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
         )}
 
         <div className="space-y-3">
