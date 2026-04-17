@@ -416,6 +416,79 @@ export default function AnalisadorPrato() {
               </ul>
             </CardContent>
           </Card>
+
+          {/* Receita */}
+          {analise.receita && (
+            <Card className="border-primary/30">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ChefHat className="h-5 w-5 text-primary" />
+                    Como preparar este prato
+                  </CardTitle>
+                  <Button size="sm" variant="outline" onClick={salvarReceita} className="shrink-0">
+                    <BookmarkPlus className="mr-1.5 h-4 w-4" />
+                    Salvar receita
+                  </Button>
+                </div>
+                <CardDescription>Receita sugerida com base na análise do prato.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="flex flex-wrap gap-3 text-sm">
+                  {analise.receita.tempo_preparo && (
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Clock className="h-4 w-4" /> {analise.receita.tempo_preparo}
+                    </div>
+                  )}
+                  {analise.receita.porcoes && (
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Users className="h-4 w-4" /> {analise.receita.porcoes}
+                    </div>
+                  )}
+                  {analise.receita.dificuldade && (
+                    <Badge variant={difficultyVariant(analise.receita.dificuldade)}>
+                      {analise.receita.dificuldade}
+                    </Badge>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2 text-sm">Ingredientes</h3>
+                  <ul className="space-y-1.5">
+                    {analise.receita.ingredientes.map((ing, i) => (
+                      <li key={i} className="text-sm flex items-center gap-2 text-foreground">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                        {ing}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2 text-sm">Modo de preparo</h3>
+                  <ol className="space-y-3">
+                    {analise.receita.modo_preparo.map((step, i) => (
+                      <li key={i} className="text-sm flex gap-3 text-foreground">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                          {i + 1}
+                        </span>
+                        <span className="pt-0.5">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {analise.receita.dicas && (
+                  <div className="rounded-lg bg-muted p-3 flex gap-2">
+                    <Lightbulb className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <p className="text-sm text-foreground">
+                      <strong>Dica:</strong> {analise.receita.dicas}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </div>
