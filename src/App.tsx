@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Cadastro from "./pages/Cadastro";
 import Login from "./pages/Login";
 import VerificarEmail from "./pages/VerificarEmail";
+import CheckoutSucesso from "./pages/CheckoutSucesso";
 import Planos from "./pages/Planos";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/verificar-email" element={<VerificarEmail />} />
           <Route path="/planos" element={<Planos />} />
+          <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Navigate to="cardapio" replace />} />
             <Route path="cardapio" element={<Cardapio />} />
