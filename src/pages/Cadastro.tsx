@@ -4,10 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { PLAN_CONFIG } from "@/contexts/SubscriptionContext";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",
@@ -15,11 +13,12 @@ const countries = [
   "Argentina", "Chile", "Colômbia", "México", "Japão",
 ];
 
+export const PENDING_SIGNUP_KEY = "pending_signup_v1";
+
 const Cadastro = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     nome: "",
     dia: "",
@@ -28,7 +27,6 @@ const Cadastro = () => {
     pais: "",
     email: "",
     senha: "",
-    plano: "essencial" as "essencial" | "equilibrio" | "performance",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -43,40 +41,31 @@ const Cadastro = () => {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    setLoading(true);
+    if (!validate()) {
+      toast({
+        title: "Verifique os dados",
+        description: "Alguns campos precisam ser corrigidos.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const dataNascimento = `${form.ano}-${form.mes.padStart(2, "0")}-${form.dia.padStart(2, "0")}`;
 
-    try {
-      const { error } = await supabase.auth.signUp({
+    sessionStorage.setItem(
+      PENDING_SIGNUP_KEY,
+      JSON.stringify({
+        nome: form.nome,
         email: form.email,
-        password: form.senha,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            nome: form.nome,
-            data_nascimento: dataNascimento,
-            pais: form.pais,
-            plano: form.plano,
-          },
-        },
-      });
+        senha: form.senha,
+        data_nascimento: dataNascimento,
+        pais: form.pais,
+      })
+    );
 
-      if (error) throw error;
-
-      navigate("/verificar-email", { state: { email: form.email } });
-    } catch (err: any) {
-      toast({
-        title: "Erro ao criar conta",
-        description: err.message || "Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    navigate("/escolher-plano");
   };
 
   return (
@@ -130,14 +119,21 @@ const Cadastro = () => {
             <span className="font-display font-bold text-xl text-foreground">ComaBem</span>
           </div>
 
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-6 text-xs font-medium">
+            <span className="px-2.5 py-1 rounded-full bg-primary text-primary-foreground">1. Cadastro</span>
+            <span className="h-px flex-1 bg-border" />
+            <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground">2. Plano</span>
+          </div>
+
           <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
             Crie sua conta
           </h2>
           <p className="text-muted-foreground mb-8">
-            Preencha seus dados para começar a usar o ComaBem
+            Preencha seus dados para começar
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleNext} className="space-y-5">
             {/* Nome */}
             <div className="space-y-2">
               <Label htmlFor="nome">Nome completo</Label>
@@ -242,50 +238,9 @@ const Cadastro = () => {
               {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
             </div>
 
-            {/* Plano */}
-            <div className="space-y-3">
-              <Label>Escolha seu plano</Label>
-              <div className="grid gap-3">
-                {(Object.entries(PLAN_CONFIG) as [string, typeof PLAN_CONFIG.essencial][]).map(([key, config]) => {
-                  const isSelected = form.plano === key;
-                  const features: Record<string, string[]> = {
-                    essencial: ["Cardápios personalizados", "Receitas saudáveis", "Chat com IA"],
-                    equilibrio: ["Tudo do Essencial", "Modo Esporte", "Analisador de Prato", "Progresso"],
-                    performance: ["Tudo do Equilíbrio", "Score Diário", "Conquistas", "Insights avançados"],
-                  };
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setForm({ ...form, plano: key as typeof form.plano })}
-                      className={`relative text-left rounded-lg border-2 p-4 transition-all ${
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-muted-foreground/30"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-foreground">{config.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-primary">R$ {config.price}/mês</span>
-                          {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                              <Check size={12} className="text-primary-foreground" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {features[key]?.join(" · ")}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Button type="submit" size="lg" className="w-full font-semibold text-base" disabled={loading}>
-              {loading ? "Criando conta..." : "Criar conta"}
+            <Button type="submit" size="lg" className="w-full font-semibold text-base gap-2">
+              Próximo
+              <ArrowRight size={18} />
             </Button>
           </form>
 
