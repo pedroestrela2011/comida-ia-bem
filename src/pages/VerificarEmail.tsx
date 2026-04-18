@@ -1,26 +1,31 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
+import { ArrowLeft, Mail, CheckCircle, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { PLAN_CONFIG } from "@/contexts/SubscriptionContext";
+import { PLAN_CONFIG, PlanType } from "@/contexts/SubscriptionContext";
 
 const VerificarEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const email = (location.state as { email?: string })?.email || "";
+  const state = (location.state as { email?: string; plano?: PlanType }) || {};
+  const email = state.email || "";
+  const planoFromState = state.plano;
   const [resending, setResending] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   // Listen for auth state changes (user clicks link and gets verified)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
+        setRedirecting(true);
         toast({ title: "Email verificado!", description: "Redirecionando para o pagamento..." });
 
-        // Get the plan from user metadata
-        const plano = (session.user.user_metadata?.plano || "essencial") as keyof typeof PLAN_CONFIG;
+        // Get the plan: prefer state, fallback to user metadata
+        const plano = (planoFromState ||
+          (session.user.user_metadata?.plano as PlanType) ||
+          "essencial") as keyof typeof PLAN_CONFIG;
         const priceId = PLAN_CONFIG[plano]?.price_id;
 
         if (priceId) {
@@ -35,7 +40,11 @@ const VerificarEmail = () => {
             }
           } catch (err) {
             console.error("Checkout error:", err);
-            toast({ title: "Erro ao redirecionar para pagamento", description: "Você pode assinar depois nas configurações.", variant: "destructive" });
+            toast({
+              title: "Erro ao redirecionar para pagamento",
+              description: "Você pode assinar depois nas configurações.",
+              variant: "destructive",
+            });
           }
         }
 
@@ -43,7 +52,7 @@ const VerificarEmail = () => {
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, [navigate, toast, planoFromState]);
 
   const handleResend = async () => {
     setResending(true);
@@ -57,6 +66,8 @@ const VerificarEmail = () => {
       setResending(false);
     }
   };
+
+  const planLabel = planoFromState ? PLAN_CONFIG[planoFromState].label : null;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -74,12 +85,26 @@ const VerificarEmail = () => {
         </div>
 
         <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
-          Verifique seu email
+          {redirecting ? "Redirecionando..." : "Verifique seu email"}
         </h2>
         <p className="text-muted-foreground mb-2">
           Enviamos um link de confirmação para
         </p>
         <p className="text-foreground font-medium mb-6">{email}</p>
+
+        {planLabel && (
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6 flex items-center gap-3 text-left">
+            <CreditCard className="text-primary shrink-0" size={20} />
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                Plano {planLabel} selecionado
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Após confirmar o email, você irá direto para o pagamento.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="bg-muted/50 rounded-lg p-4 mb-6 text-left space-y-3">
           <div className="flex items-start gap-3">
@@ -88,7 +113,7 @@ const VerificarEmail = () => {
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
-            <p className="text-sm text-muted-foreground">Você será redirecionado automaticamente após confirmar</p>
+            <p className="text-sm text-muted-foreground">Você será redirecionado automaticamente para o checkout</p>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
