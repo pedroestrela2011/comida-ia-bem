@@ -30,11 +30,36 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.senha,
       });
       if (error) throw error;
+
+      // Check if user already has an active subscription
+      try {
+        const { data: subData } = await supabase.functions.invoke("check-subscription");
+        if (subData?.subscribed) {
+          navigate("/dashboard");
+          return;
+        }
+
+        // No active subscription → send to checkout for the plan chosen at signup
+        const plano = (signInData.user?.user_metadata?.plano as PlanType) || "essencial";
+        const priceId = PLAN_CONFIG[plano]?.price_id;
+        if (priceId) {
+          const { data: checkoutData } = await supabase.functions.invoke("create-checkout", {
+            body: { priceId },
+          });
+          if (checkoutData?.url) {
+            window.location.href = checkoutData.url;
+            return;
+          }
+        }
+      } catch (subErr) {
+        console.error("Subscription check error:", subErr);
+      }
+
       navigate("/dashboard");
     } catch (err: any) {
       toast({
