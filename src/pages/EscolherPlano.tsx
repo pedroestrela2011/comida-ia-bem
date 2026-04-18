@@ -126,10 +126,10 @@ const EscolherPlano = () => {
 
       toast({
         title: `Plano ${PLAN_CONFIG[planId].label} selecionado!`,
-        description: "Verifique seu email para ativar a conta.",
+        description: "Confirme seu email para liberar o pagamento e ativar seu plano.",
       });
 
-      navigate("/verificar-email", { state: { email: pending.email } });
+      navigate("/verificar-email", { state: { email: pending.email, plano: planId } });
     } catch (err: any) {
       toast({
         title: "Erro ao criar conta",
