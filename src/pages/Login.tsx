@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PLAN_CONFIG, PlanType } from "@/contexts/SubscriptionContext";
 
 const Login = () => {
   const navigate = useNavigate();
