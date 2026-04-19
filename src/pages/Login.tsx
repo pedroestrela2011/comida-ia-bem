@@ -13,6 +13,7 @@ const Login = () => {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkoutFailed, setCheckoutFailed] = useState(false);
   const [form, setForm] = useState({ email: "", senha: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
