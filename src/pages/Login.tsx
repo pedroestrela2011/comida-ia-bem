@@ -38,7 +38,9 @@ const Login = () => {
 
       // Check if user already has an active subscription
       try {
-        const { data: subData } = await supabase.functions.invoke("check-subscription");
+        const { data: subData, error: subError } = await supabase.functions.invoke("check-subscription");
+        if (subError) throw subError;
+
         if (subData?.subscribed) {
           navigate("/dashboard");
           return;
@@ -47,27 +49,43 @@ const Login = () => {
         // No active subscription → send to checkout for the plan chosen at signup
         const plano = (signInData.user?.user_metadata?.plano as PlanType) || "essencial";
         const priceId = PLAN_CONFIG[plano]?.price_id;
+
         if (priceId) {
-          const { data: checkoutData } = await supabase.functions.invoke("create-checkout", {
+          toast({
+            title: "Redirecionando para o pagamento...",
+            description: "Aguarde, você será levado ao checkout em instantes.",
+          });
+          const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke("create-checkout", {
             body: { priceId },
           });
+          if (checkoutError) throw checkoutError;
+
           if (checkoutData?.url) {
-            window.location.href = checkoutData.url;
+            // Keep loading state active while redirecting
+            window.location.assign(checkoutData.url);
             return;
           }
         }
-      } catch (subErr) {
-        console.error("Subscription check error:", subErr);
-      }
 
-      navigate("/dashboard");
+        // Fallback: no priceId or no checkout URL → let user pick a plan
+        navigate("/escolher-plano");
+        return;
+      } catch (subErr: any) {
+        console.error("Subscription/checkout error:", subErr);
+        toast({
+          title: "Erro ao verificar assinatura",
+          description: "Você será direcionado para escolher um plano.",
+          variant: "destructive",
+        });
+        navigate("/escolher-plano");
+        return;
+      }
     } catch (err: any) {
       toast({
         title: "Erro ao entrar",
         description: err.message || "Email ou senha incorretos.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
