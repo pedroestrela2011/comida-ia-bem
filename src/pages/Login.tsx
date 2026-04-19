@@ -75,11 +75,12 @@ const Login = () => {
       } catch (subErr: any) {
         console.error("Subscription/checkout error:", subErr);
         toast({
-          title: "Erro ao verificar assinatura",
-          description: "Você será direcionado para escolher um plano.",
+          title: "Não foi possível abrir o pagamento",
+          description: "Tente novamente ou continue sem pagar com o plano gratuito.",
           variant: "destructive",
         });
-        navigate("/escolher-plano");
+        setCheckoutFailed(true);
+        setLoading(false);
         return;
       }
     } catch (err: any) {
