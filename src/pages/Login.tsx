@@ -13,6 +13,7 @@ const Login = () => {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkoutFailed, setCheckoutFailed] = useState(false);
   const [form, setForm] = useState({ email: "", senha: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -27,6 +28,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    setCheckoutFailed(false);
     setLoading(true);
 
     try {
@@ -73,11 +75,12 @@ const Login = () => {
       } catch (subErr: any) {
         console.error("Subscription/checkout error:", subErr);
         toast({
-          title: "Erro ao verificar assinatura",
-          description: "Você será direcionado para escolher um plano.",
+          title: "Não foi possível abrir o pagamento",
+          description: "Tente novamente ou continue sem pagar com o plano gratuito.",
           variant: "destructive",
         });
-        navigate("/escolher-plano");
+        setCheckoutFailed(true);
+        setLoading(false);
         return;
       }
     } catch (err: any) {
@@ -154,6 +157,23 @@ const Login = () => {
           <Button type="submit" size="lg" className="w-full font-semibold text-base" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </Button>
+
+          {checkoutFailed && (
+            <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-sm text-muted-foreground">
+                Tivemos um problema ao abrir o checkout. Você pode continuar agora com o plano gratuito e fazer o upgrade depois.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full font-semibold"
+                onClick={() => navigate("/dashboard")}
+              >
+                Continuar sem pagar
+              </Button>
+            </div>
+          )}
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
