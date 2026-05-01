@@ -35,7 +35,13 @@ const VerificarEmail = () => {
             });
             if (error) throw error;
             if (data?.url) {
-              window.location.href = data.url;
+              const win = window.open(data.url, "_blank", "noopener,noreferrer");
+              if (!win) {
+                window.top
+                  ? (window.top.location.href = data.url)
+                  : (window.location.href = data.url);
+              }
+              navigate("/dashboard");
               return;
             }
           } catch (err) {
