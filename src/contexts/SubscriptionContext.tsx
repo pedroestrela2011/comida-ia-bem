@@ -7,6 +7,9 @@ interface SubscriptionState {
   plan: PlanType;
   subscribed: boolean;
   subscriptionEnd: string | null;
+  trialEndsAt: string | null;
+  trialExpired: boolean;
+  daysLeftInTrial: number | null;
   loading: boolean;
   refreshSubscription: () => Promise<void>;
 }
@@ -15,6 +18,9 @@ const SubscriptionContext = createContext<SubscriptionState>({
   plan: "essencial",
   subscribed: false,
   subscriptionEnd: null,
+  trialEndsAt: null,
+  trialExpired: false,
+  daysLeftInTrial: null,
   loading: true,
   refreshSubscription: async () => {},
 });
@@ -47,6 +53,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [plan, setPlan] = useState<PlanType>("essencial");
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refreshSubscription = useCallback(async () => {
@@ -56,6 +63,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setPlan(data.plan || "essencial");
       setSubscribed(data.subscribed || false);
       setSubscriptionEnd(data.subscription_end || null);
+      setTrialEndsAt(data.trial_ends_at || null);
     } catch (e) {
       console.error("Error checking subscription:", e);
     } finally {
@@ -64,25 +72,39 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Check on mount
     refreshSubscription();
-
-    // Check every 60 seconds
     const interval = setInterval(refreshSubscription, 60000);
-
-    // Check on auth state change
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) refreshSubscription();
     });
-
     return () => {
       clearInterval(interval);
       subscription.unsubscribe();
     };
   }, [refreshSubscription]);
 
+  const now = Date.now();
+  const trialMs = trialEndsAt ? new Date(trialEndsAt).getTime() : null;
+  const trialExpired =
+    !subscribed && plan === "essencial" && trialMs !== null && now > trialMs;
+  const daysLeftInTrial =
+    !subscribed && plan === "essencial" && trialMs !== null
+      ? Math.max(0, Math.ceil((trialMs - now) / (1000 * 60 * 60 * 24)))
+      : null;
+
   return (
-    <SubscriptionContext.Provider value={{ plan, subscribed, subscriptionEnd, loading, refreshSubscription }}>
+    <SubscriptionContext.Provider
+      value={{
+        plan,
+        subscribed,
+        subscriptionEnd,
+        trialEndsAt,
+        trialExpired,
+        daysLeftInTrial,
+        loading,
+        refreshSubscription,
+      }}
+    >
       {children}
     </SubscriptionContext.Provider>
   );
