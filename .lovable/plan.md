@@ -1,85 +1,46 @@
+## Trial gratuito de 7 dias com bloqueio do dashboard
 
+Implementar um período de teste de 7 dias para o plano gratuito (Essencial). Após esse prazo, sem assinatura ativa no Stripe, o dashboard fica bloqueado e o usuário é direcionado a uma tela de "Assine para continuar".
 
-# ComaBem - Plano de Implementação
+### 1. Banco de dados (migração)
 
-## 🎯 Visão Geral
-Site de nutrição e planejamento alimentar com IA, visual verde e natural, focado em usabilidade e conversão.
+Adicionar coluna na tabela `profiles`:
+- `trial_ends_at` (timestamp with time zone, nullable) — data/hora em que o trial expira.
 
----
+Atualizar a função `handle_new_user()` para preencher `trial_ends_at = now() + interval '7 days'` automaticamente em todo novo cadastro.
 
-## 📄 Fase 1: Landing Page
-Uma página inicial atraente e focada em conversão:
+Backfill: para perfis existentes sem `trial_ends_at`, definir como `created_at + 7 days` (apenas para usuários no plano `essencial`).
 
-- **Header fixo** com navegação: Preços, Como Funciona, Benefícios + botão destacado "Comece Já"
-- **Hero section** com imagem apetitosa de comida saudável, título impactante e chamada para ação
-- **Seção de avaliações** com depoimentos de usuários satisfeitos
-- **Benefícios do ComaBem** em cards visuais (economia de tempo, alimentação personalizada, praticidade)
-- **Como funciona** em 3 passos simples ilustrados
-- **Demonstração visual** com capturas de tela do dashboard
-- **CTA final** incentivando o cadastro
+### 2. Lógica de acesso (frontend)
 
----
+**`SubscriptionContext`**: incluir `trialEndsAt` e `trialExpired` no estado. Buscar `trial_ends_at` da tabela `profiles` em paralelo ao `check-subscription`. Considerar:
+- `trialExpired = true` quando `plano === 'essencial'`, `subscribed === false` e `now > trial_ends_at`.
+- Assinantes pagos (Equilíbrio/Performance) nunca ficam expirados.
 
-## 🔐 Fase 2: Autenticação e Planos
+**Novo componente `TrialGuard`** (em `src/layouts/DashboardLayout.tsx`): se `trialExpired`, em vez de renderizar `<Outlet />`, mostra uma tela cheia "Seu período gratuito terminou" com:
+- Resumo dos 3 planos (reaproveitar dados de `PLAN_CONFIG`).
+- Botões para assinar cada plano (chama `create-checkout` e abre Stripe em nova aba).
+- Botão "Sair".
+- A sidebar continua visível mas todos os links ficam desabilitados/com cadeado.
 
-**Cadastro com os campos:**
-- Nome, Data de nascimento, País, Email e Senha
+**Banner de aviso**: quando faltarem ≤3 dias para expirar e o usuário ainda for `essencial`, mostrar banner no topo do dashboard com contador "Faltam X dias do seu período gratuito" + CTA "Assinar agora".
 
-**Tela de seleção de planos:**
-- Básico (R$19,99), Pro (R$49,90) em destaque, Premium (R$69,90)
-- Visual de cards comparativos
-- Checkout simulado (sem integração real por enquanto)
+### 3. Edge function
 
----
+Atualizar `check-subscription` para também retornar `trial_ends_at` (lendo de `profiles`), para manter uma única fonte de verdade no contexto.
 
-## 🏠 Fase 3: Dashboard Interno
-Interface com sidebar (menu lateral) e área de conteúdo principal:
+### 4. Pontos técnicos
 
-### 🥗 Meu Cardápio
-- Formulário de preferências: objetivo, orçamento, pessoas, gostos/restrições, deficiências
-- Geração de cardápio semanal com IA (segunda a domingo)
-- Cada refeição com: foto, nome do prato, receita detalhada
-- Lista de compras automática gerada a partir do cardápio
-- Histórico de cardápios salvos automaticamente
+- O bloqueio é **client-side** (UX). RLS continua permitindo acesso aos dados do próprio usuário — isso é aceitável porque o objetivo é forçar a conversão, não esconder dados sensíveis.
+- O cálculo de expiração usa o relógio do servidor via `trial_ends_at` retornado pelo backend, evitando manipulação no cliente.
+- Após o pagamento bem-sucedido, `check-subscription` detecta a assinatura ativa e `trialExpired` passa a ser `false` automaticamente (já que assinantes pagos são imunes).
+- A tela de bloqueio reaproveita o fluxo de checkout existente (`supabase.functions.invoke("create-checkout", { body: { priceId } })`).
 
-### 🍝 Receitas
-- Campo para inserir ingredientes disponíveis
-- IA cria receita completa: nome, ingredientes, modo de preparo, foto
-- Biblioteca de receitas salvas pelo usuário
+### Arquivos a alterar/criar
 
-### 💬 Conversa Saudável
-- Chatbot com visual amigável de mensagens
-- Respostas educativas sobre nutrição e alimentos
-- Tom acolhedor e acessível
-
-### ⚙️ Configurações
-- Edição de dados pessoais e foto de perfil
-- Alteração de senha
-- Toggle de modo escuro
-- Gerenciamento de preferências
-
----
-
-## 🤖 Fase 4: Integração com IA
-Usando Lovable AI (Google Gemini) para:
-- Gerar cardápios semanais personalizados
-- Criar receitas a partir de ingredientes
-- Responder dúvidas sobre nutrição no chatbot
-
----
-
-## 🎨 Design
-- **Paleta:** Tons de verde, bege, cores terrosas e naturais
-- **Tipografia:** Moderna e legível
-- **Visual:** Limpo, acolhedor, com fotos de alimentos frescos
-- **Responsivo:** Funciona perfeitamente em desktop e mobile
-
----
-
-## 💾 Dados (Backend)
-O projeto usará Lovable Cloud para:
-- Autenticação de usuários
-- Armazenamento de perfis e preferências
-- Salvamento de cardápios e receitas criados
-- Histórico de conversas do chatbot
-
+- Migração SQL (nova): adicionar coluna + atualizar `handle_new_user` + backfill.
+- `supabase/functions/check-subscription/index.ts`: incluir `trial_ends_at` na resposta.
+- `src/contexts/SubscriptionContext.tsx`: novos campos `trialEndsAt`, `trialExpired`, `daysLeftInTrial`.
+- `src/layouts/DashboardLayout.tsx`: integrar `TrialGuard`.
+- `src/components/dashboard/TrialExpired.tsx` (novo): tela de bloqueio com planos.
+- `src/components/dashboard/TrialBanner.tsx` (novo): banner de contagem regressiva.

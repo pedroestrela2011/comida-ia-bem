@@ -124,6 +124,7 @@ export type Database = {
           pais: string | null
           plano: string
           tema: string
+          trial_ends_at: string | null
           two_fa_enabled: boolean
           updated_at: string
           user_id: string
@@ -138,6 +139,7 @@ export type Database = {
           pais?: string | null
           plano?: string
           tema?: string
+          trial_ends_at?: string | null
           two_fa_enabled?: boolean
           updated_at?: string
           user_id: string
@@ -152,6 +154,7 @@ export type Database = {
           pais?: string | null
           plano?: string
           tema?: string
+          trial_ends_at?: string | null
           two_fa_enabled?: boolean
           updated_at?: string
           user_id?: string
