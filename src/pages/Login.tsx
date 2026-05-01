@@ -54,8 +54,8 @@ const Login = () => {
 
         if (priceId) {
           toast({
-            title: "Redirecionando para o pagamento...",
-            description: "Aguarde, você será levado ao checkout em instantes.",
+            title: "Abrindo o pagamento...",
+            description: "O checkout abrirá em uma nova aba.",
           });
           const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke("create-checkout", {
             body: { priceId },
@@ -63,8 +63,16 @@ const Login = () => {
           if (checkoutError) throw checkoutError;
 
           if (checkoutData?.url) {
-            // Keep loading state active while redirecting
-            window.location.assign(checkoutData.url);
+            // Open Stripe in a new tab (more reliable inside iframes/preview)
+            const win = window.open(checkoutData.url, "_blank", "noopener,noreferrer");
+            if (!win) {
+              // Popup blocked → fall back to top-level redirect
+              window.top
+                ? (window.top.location.href = checkoutData.url)
+                : (window.location.href = checkoutData.url);
+            }
+            // Send user into the app; they can complete payment in the other tab
+            navigate("/dashboard");
             return;
           }
         }

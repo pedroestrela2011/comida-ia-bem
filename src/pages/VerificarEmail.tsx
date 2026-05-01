@@ -9,9 +9,10 @@ const VerificarEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const state = (location.state as { email?: string; plano?: PlanType }) || {};
+  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean }) || {};
   const email = state.email || "";
   const planoFromState = state.plano;
+  const skipCheckout = state.skipCheckout === true;
   const [resending, setResending] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
@@ -20,7 +21,14 @@ const VerificarEmail = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         setRedirecting(true);
-        toast({ title: "Email verificado!", description: "Redirecionando para o pagamento..." });
+
+        if (skipCheckout) {
+          toast({ title: "Email verificado!", description: "Bem-vindo ao ComaBem." });
+          navigate("/dashboard");
+          return;
+        }
+
+        toast({ title: "Email verificado!", description: "Abrindo o pagamento..." });
 
         // Get the plan: prefer state, fallback to user metadata
         const plano = (planoFromState ||
@@ -35,7 +43,13 @@ const VerificarEmail = () => {
             });
             if (error) throw error;
             if (data?.url) {
-              window.location.href = data.url;
+              const win = window.open(data.url, "_blank", "noopener,noreferrer");
+              if (!win) {
+                window.top
+                  ? (window.top.location.href = data.url)
+                  : (window.location.href = data.url);
+              }
+              navigate("/dashboard");
               return;
             }
           } catch (err) {
@@ -52,7 +66,7 @@ const VerificarEmail = () => {
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate, toast, planoFromState]);
+  }, [navigate, toast, planoFromState, skipCheckout]);
 
   const handleResend = async () => {
     setResending(true);
@@ -131,6 +145,18 @@ const VerificarEmail = () => {
             {resending ? "Reenviando..." : "Reenviar"}
           </button>
         </p>
+
+        <div className="mt-8 pt-6 border-t border-border">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4"
+          >
+            Pular pagamento e entrar com plano gratuito
+          </button>
+          <p className="text-xs text-muted-foreground/80 mt-2">
+            Você pode fazer upgrade a qualquer momento nas configurações.
+          </p>
+        </div>
       </div>
     </div>
   );

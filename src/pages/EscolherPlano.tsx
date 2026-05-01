@@ -100,7 +100,7 @@ const EscolherPlano = () => {
     }
   }, [navigate, toast]);
 
-  const handleSelect = async (planId: PlanType) => {
+  const createAccount = async (planId: PlanType, opts: { skipCheckout: boolean }) => {
     if (!pending) return;
     setSelectedPlan(planId);
     setLoading(true);
@@ -116,6 +116,7 @@ const EscolherPlano = () => {
             data_nascimento: pending.data_nascimento,
             pais: pending.pais,
             plano: planId,
+            skip_checkout: opts.skipCheckout,
           },
         },
       });
@@ -125,11 +126,21 @@ const EscolherPlano = () => {
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);
 
       toast({
-        title: `Plano ${PLAN_CONFIG[planId].label} selecionado!`,
-        description: "Confirme seu email para liberar o pagamento e ativar seu plano.",
+        title: opts.skipCheckout
+          ? "Conta criada!"
+          : `Plano ${PLAN_CONFIG[planId].label} selecionado!`,
+        description: opts.skipCheckout
+          ? "Confirme seu email para acessar sua conta."
+          : "Confirme seu email para liberar o pagamento e ativar seu plano.",
       });
 
-      navigate("/verificar-email", { state: { email: pending.email, plano: planId } });
+      navigate("/verificar-email", {
+        state: {
+          email: pending.email,
+          plano: planId,
+          skipCheckout: opts.skipCheckout,
+        },
+      });
     } catch (err: any) {
       toast({
         title: "Erro ao criar conta",
@@ -140,6 +151,9 @@ const EscolherPlano = () => {
       setLoading(false);
     }
   };
+
+  const handleSelect = (planId: PlanType) => createAccount(planId, { skipCheckout: false });
+  const handleSkip = () => createAccount("essencial", { skipCheckout: true });
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,9 +250,19 @@ const EscolherPlano = () => {
           })}
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          Após selecionar, confirme seu email para ativar a conta e ir para o pagamento.
-        </p>
+        <div className="text-center mt-8 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Após selecionar, confirme seu email para ativar a conta e ir para o pagamento.
+          </p>
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4 disabled:opacity-50"
+            disabled={loading}
+          >
+            Pular pagamento e criar conta gratuita
+          </button>
+        </div>
       </div>
     </div>
   );
