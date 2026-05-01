@@ -9,9 +9,10 @@ const VerificarEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const state = (location.state as { email?: string; plano?: PlanType }) || {};
+  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean }) || {};
   const email = state.email || "";
   const planoFromState = state.plano;
+  const skipCheckout = state.skipCheckout === true;
   const [resending, setResending] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
@@ -20,7 +21,14 @@ const VerificarEmail = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         setRedirecting(true);
-        toast({ title: "Email verificado!", description: "Redirecionando para o pagamento..." });
+
+        if (skipCheckout) {
+          toast({ title: "Email verificado!", description: "Bem-vindo ao ComaBem." });
+          navigate("/dashboard");
+          return;
+        }
+
+        toast({ title: "Email verificado!", description: "Abrindo o pagamento..." });
 
         // Get the plan: prefer state, fallback to user metadata
         const plano = (planoFromState ||
@@ -58,7 +66,7 @@ const VerificarEmail = () => {
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate, toast, planoFromState]);
+  }, [navigate, toast, planoFromState, skipCheckout]);
 
   const handleResend = async () => {
     setResending(true);
