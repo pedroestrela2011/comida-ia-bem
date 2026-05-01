@@ -41,11 +41,18 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
+    // Fetch trial_ends_at for this user
+    const { data: profileData } = await supabaseClient
+      .from("profiles")
+      .select("trial_ends_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const trialEndsAt = profileData?.trial_ends_at ?? null;
+
     if (customers.data.length === 0) {
       logStep("No Stripe customer found");
-      // Update profile to essencial
       await supabaseClient.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
-      return new Response(JSON.stringify({ subscribed: false, plan: "essencial" }), {
+      return new Response(JSON.stringify({ subscribed: false, plan: "essencial", trial_ends_at: trialEndsAt }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -62,7 +69,7 @@ serve(async (req) => {
     if (subscriptions.data.length === 0) {
       logStep("No active subscription");
       await supabaseClient.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
-      return new Response(JSON.stringify({ subscribed: false, plan: "essencial" }), {
+      return new Response(JSON.stringify({ subscribed: false, plan: "essencial", trial_ends_at: trialEndsAt }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -90,6 +97,7 @@ serve(async (req) => {
       plan,
       product_id: productId,
       subscription_end: subscriptionEnd,
+      trial_ends_at: trialEndsAt,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
