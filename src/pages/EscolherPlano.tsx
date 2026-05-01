@@ -256,14 +256,11 @@ const EscolherPlano = () => {
           </p>
           <button
             type="button"
-            onClick={() => {
-              sessionStorage.removeItem(PENDING_SIGNUP_KEY);
-              navigate("/cadastro");
-            }}
-            className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4"
+            onClick={handleSkip}
+            className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4 disabled:opacity-50"
             disabled={loading}
           >
-            Quero pular o pagamento e usar o plano gratuito
+            Pular pagamento e criar conta gratuita
           </button>
         </div>
       </div>
