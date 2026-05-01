@@ -137,6 +137,18 @@ const VerificarEmail = () => {
             {resending ? "Reenviando..." : "Reenviar"}
           </button>
         </p>
+
+        <div className="mt-8 pt-6 border-t border-border">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4"
+          >
+            Pular pagamento e entrar com plano gratuito
+          </button>
+          <p className="text-xs text-muted-foreground/80 mt-2">
+            Você pode fazer upgrade a qualquer momento nas configurações.
+          </p>
+        </div>
       </div>
     </div>
   );

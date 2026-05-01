@@ -236,9 +236,22 @@ const EscolherPlano = () => {
           })}
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          Após selecionar, confirme seu email para ativar a conta e ir para o pagamento.
-        </p>
+        <div className="text-center mt-8 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Após selecionar, confirme seu email para ativar a conta e ir para o pagamento.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+              navigate("/cadastro");
+            }}
+            className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4"
+            disabled={loading}
+          >
+            Quero pular o pagamento e usar o plano gratuito
+          </button>
+        </div>
       </div>
     </div>
   );
