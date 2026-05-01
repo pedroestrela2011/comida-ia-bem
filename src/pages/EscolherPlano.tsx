@@ -100,7 +100,7 @@ const EscolherPlano = () => {
     }
   }, [navigate, toast]);
 
-  const handleSelect = async (planId: PlanType) => {
+  const createAccount = async (planId: PlanType, opts: { skipCheckout: boolean }) => {
     if (!pending) return;
     setSelectedPlan(planId);
     setLoading(true);
@@ -116,6 +116,7 @@ const EscolherPlano = () => {
             data_nascimento: pending.data_nascimento,
             pais: pending.pais,
             plano: planId,
+            skip_checkout: opts.skipCheckout,
           },
         },
       });
@@ -125,11 +126,21 @@ const EscolherPlano = () => {
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);
 
       toast({
-        title: `Plano ${PLAN_CONFIG[planId].label} selecionado!`,
-        description: "Confirme seu email para liberar o pagamento e ativar seu plano.",
+        title: opts.skipCheckout
+          ? "Conta criada!"
+          : `Plano ${PLAN_CONFIG[planId].label} selecionado!`,
+        description: opts.skipCheckout
+          ? "Confirme seu email para acessar sua conta."
+          : "Confirme seu email para liberar o pagamento e ativar seu plano.",
       });
 
-      navigate("/verificar-email", { state: { email: pending.email, plano: planId } });
+      navigate("/verificar-email", {
+        state: {
+          email: pending.email,
+          plano: planId,
+          skipCheckout: opts.skipCheckout,
+        },
+      });
     } catch (err: any) {
       toast({
         title: "Erro ao criar conta",
@@ -140,6 +151,9 @@ const EscolherPlano = () => {
       setLoading(false);
     }
   };
+
+  const handleSelect = (planId: PlanType) => createAccount(planId, { skipCheckout: false });
+  const handleSkip = () => createAccount("essencial", { skipCheckout: true });
 
   return (
     <div className="min-h-screen bg-background">
