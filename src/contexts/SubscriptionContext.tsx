@@ -60,6 +60,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase.functions.invoke("check-subscription");
       if (error) throw error;
+      if (data?.user_missing) {
+        await supabase.auth.signOut();
+        return;
+      }
       setPlan(data.plan || "essencial");
       setSubscribed(data.subscribed || false);
       setSubscriptionEnd(data.subscription_end || null);
