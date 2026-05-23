@@ -238,16 +238,31 @@ const Cadastro = () => {
               {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
             </div>
 
-            <Button type="submit" size="lg" className="w-full font-semibold text-base gap-2">
+            <Button type="submit" size="lg" className="w-full font-semibold text-base gap-2 h-12">
               Próximo
               <ArrowRight size={18} />
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Já tem uma conta?{" "}
-            <Link to="/login" className="text-primary font-medium hover:underline">
-              Faça login
+          <div className="my-6 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">Já tem conta?</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="w-full font-semibold text-base h-12 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            <Link to="/login">Fazer login na minha conta</Link>
+          </Button>
+
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            <Link to="/login" className="hover:underline">
+              Ir direto para o login
+            </Link>
             </Link>
           </p>
         </div>
