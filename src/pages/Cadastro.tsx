@@ -259,11 +259,8 @@ const Cadastro = () => {
             <Link to="/login">Fazer login na minha conta</Link>
           </Button>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            <Link to="/login" className="hover:underline">
-              Ir direto para o login
-            </Link>
-            </Link>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Ao continuar, você concorda com nossos termos e política de privacidade.
           </p>
         </div>
       </div>
