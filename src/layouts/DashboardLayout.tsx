@@ -68,19 +68,23 @@ export default function DashboardLayout() {
       navigate("/login", { replace: true });
     };
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) {
-        await redirectToLogin();
-        return;
-      }
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        if (!session) {
+          await redirectToLogin();
+          return;
+        }
 
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (!user && (!error || isStaleAuthSessionError(error))) {
-        await redirectToLogin(Boolean(error));
-        return;
-      }
-      setAuthLoading(false);
-    });
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (!user) {
+          await redirectToLogin(Boolean(error && isStaleAuthSessionError(error)));
+          return;
+        }
+        setAuthLoading(false);
+      })
+      .catch(async (error) => {
+        await redirectToLogin(isStaleAuthSessionError(error));
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
