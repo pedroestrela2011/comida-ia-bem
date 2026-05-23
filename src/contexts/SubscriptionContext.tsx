@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { clearLocalAuthSession, isStaleAuthSessionError } from "@/lib/auth-session";
 
 export type PlanType = "essencial" | "equilibrio" | "performance";
 
@@ -58,10 +59,25 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const refreshSubscription = useCallback(async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setPlan("essencial");
+        setSubscribed(false);
+        setSubscriptionEnd(null);
+        setTrialEndsAt(null);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke("check-subscription");
-      if (error) throw error;
+      if (error) {
+        if (isStaleAuthSessionError(error)) {
+          await clearLocalAuthSession();
+          return;
+        }
+        throw error;
+      }
       if (data?.user_missing) {
-        await supabase.auth.signOut();
+        await clearLocalAuthSession();
         return;
       }
       setPlan(data.plan || "essencial");
@@ -69,6 +85,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setSubscriptionEnd(data.subscription_end || null);
       setTrialEndsAt(data.trial_ends_at || null);
     } catch (e) {
+      if (isStaleAuthSessionError(e)) {
+        await clearLocalAuthSession();
+        return;
+      }
       console.error("Error checking subscription:", e);
     } finally {
       setLoading(false);

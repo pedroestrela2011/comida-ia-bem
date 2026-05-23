@@ -8,6 +8,7 @@ import { SubscriptionProvider, useSubscription } from "@/contexts/SubscriptionCo
 import { TrialExpired } from "@/components/dashboard/TrialExpired";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { toast } from "@/hooks/use-toast";
+import { clearLocalAuthSession, isStaleAuthSessionError } from "@/lib/auth-session";
 
 function DashboardShell() {
   const { trialExpired, loading } = useSubscription();
@@ -56,9 +57,27 @@ export default function DashboardLayout() {
   }, [searchParams]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const redirectToLogin = async (showExpiredMessage = false) => {
+      await clearLocalAuthSession();
+      if (showExpiredMessage) {
+        toast({
+          title: "Sessão expirada",
+          description: "Entre novamente para acessar o dashboard.",
+        });
+      }
+      navigate("/login", { replace: true });
+    };
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
-        navigate("/login", { replace: true });
+        await redirectToLogin();
+        return;
+      }
+
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (!user && (!error || isStaleAuthSessionError(error))) {
+        await redirectToLogin(Boolean(error));
+        return;
       }
       setAuthLoading(false);
     });
