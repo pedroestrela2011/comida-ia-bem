@@ -44,9 +44,13 @@ function DashboardShell() {
   );
 }
 
+// Module-level cache so that navigating between dashboard pages doesn't
+// flash the "Carregando..." screen again after the first successful check.
+let authCheckedOnce = false;
+
 export default function DashboardLayout() {
   const navigate = useNavigate();
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(!authCheckedOnce);
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
