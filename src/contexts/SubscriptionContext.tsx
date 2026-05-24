@@ -96,10 +96,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         await clearLocalAuthSession();
         return;
       }
-      setPlan(data.plan || "essencial");
-      setSubscribed(data.subscribed || false);
-      setSubscriptionEnd(data.subscription_end || null);
-      setTrialEndsAt(data.trial_ends_at || null);
+      const nextPlan: PlanType = data.plan || "essencial";
+      const nextSubscribed = data.subscribed || false;
+      const nextSubEnd = data.subscription_end || null;
+      const nextTrial = data.trial_ends_at || null;
+      cache.plan = nextPlan;
+      cache.subscribed = nextSubscribed;
+      cache.subscriptionEnd = nextSubEnd;
+      cache.trialEndsAt = nextTrial;
+      setPlan(nextPlan);
+      setSubscribed(nextSubscribed);
+      setSubscriptionEnd(nextSubEnd);
+      setTrialEndsAt(nextTrial);
     } catch (e) {
       if (isStaleAuthSessionError(e)) {
         await clearLocalAuthSession();
@@ -107,6 +115,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
       console.error("Error checking subscription:", e);
     } finally {
+      cache.loaded = true;
       setLoading(false);
     }
   }, []);
