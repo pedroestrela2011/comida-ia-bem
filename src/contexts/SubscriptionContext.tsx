@@ -50,12 +50,28 @@ export const PLAN_CONFIG = {
   },
 } as const;
 
+// Module-level cache so remounting the provider (e.g. navigating back to
+// the dashboard) doesn't re-trigger the full-screen "Carregando..." gate.
+const cache: {
+  plan: PlanType;
+  subscribed: boolean;
+  subscriptionEnd: string | null;
+  trialEndsAt: string | null;
+  loaded: boolean;
+} = {
+  plan: "essencial",
+  subscribed: false,
+  subscriptionEnd: null,
+  trialEndsAt: null,
+  loaded: false,
+};
+
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const [plan, setPlan] = useState<PlanType>("essencial");
-  const [subscribed, setSubscribed] = useState(false);
-  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<PlanType>(cache.plan);
+  const [subscribed, setSubscribed] = useState(cache.subscribed);
+  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(cache.subscriptionEnd);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(cache.trialEndsAt);
+  const [loading, setLoading] = useState(!cache.loaded);
 
   const refreshSubscription = useCallback(async () => {
     try {
@@ -80,10 +96,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         await clearLocalAuthSession();
         return;
       }
-      setPlan(data.plan || "essencial");
-      setSubscribed(data.subscribed || false);
-      setSubscriptionEnd(data.subscription_end || null);
-      setTrialEndsAt(data.trial_ends_at || null);
+      const nextPlan: PlanType = data.plan || "essencial";
+      const nextSubscribed = data.subscribed || false;
+      const nextSubEnd = data.subscription_end || null;
+      const nextTrial = data.trial_ends_at || null;
+      cache.plan = nextPlan;
+      cache.subscribed = nextSubscribed;
+      cache.subscriptionEnd = nextSubEnd;
+      cache.trialEndsAt = nextTrial;
+      setPlan(nextPlan);
+      setSubscribed(nextSubscribed);
+      setSubscriptionEnd(nextSubEnd);
+      setTrialEndsAt(nextTrial);
     } catch (e) {
       if (isStaleAuthSessionError(e)) {
         await clearLocalAuthSession();
@@ -91,6 +115,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
       console.error("Error checking subscription:", e);
     } finally {
+      cache.loaded = true;
       setLoading(false);
     }
   }, []);
