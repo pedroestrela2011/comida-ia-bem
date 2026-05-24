@@ -84,6 +84,7 @@ export default function DashboardLayout() {
           await redirectToLogin(Boolean(error && isStaleAuthSessionError(error)));
           return;
         }
+        authCheckedOnce = true;
         setAuthLoading(false);
       })
       .catch(async (error) => {
