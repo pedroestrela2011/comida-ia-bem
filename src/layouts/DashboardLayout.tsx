@@ -12,6 +12,7 @@ import { clearLocalAuthSession, isStaleAuthSessionError } from "@/lib/auth-sessi
 
 function DashboardShell() {
   const { trialExpired, loading } = useSubscription();
+  const { isAdmin } = useUserPlan();
 
   if (loading) {
     return (
@@ -21,7 +22,7 @@ function DashboardShell() {
     );
   }
 
-  if (trialExpired) {
+  if (trialExpired && !isAdmin) {
     return <TrialExpired />;
   }
 
