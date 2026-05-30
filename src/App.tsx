@@ -21,6 +21,7 @@ import Progresso from "./pages/dashboard/Progresso";
 import AnalisadorPrato from "./pages/dashboard/AnalisadorPrato";
 import ScoreDiario from "./pages/dashboard/ScoreDiario";
 import Conquistas from "./pages/dashboard/Conquistas";
+import Admin from "./pages/dashboard/Admin";
 import { PlanGate } from "./components/dashboard/PlanGate";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="configuracoes" element={<Configuracoes />} />
             <Route path="score" element={<PlanGate feature="scoreDiario" requiredPlan="Performance"><ScoreDiario /></PlanGate>} />
             <Route path="conquistas" element={<PlanGate feature="conquistas" requiredPlan="Performance"><Conquistas /></PlanGate>} />
+            <Route path="admin" element={<Admin />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

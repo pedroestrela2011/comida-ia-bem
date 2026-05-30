@@ -1,4 +1,4 @@
-import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock } from "lucide-react";
+import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +34,7 @@ const menuItems: { title: string; url: string; icon: any; featureKey?: FeatureKe
 
 export function AppSidebar() {
   const navigate = useNavigate();
-  const { features } = useUserPlan();
+  const { features, isAdmin } = useUserPlan();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -77,6 +77,28 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/dashboard/admin"
+                      className="flex items-center gap-2"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Gerenciar admins</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-2">
