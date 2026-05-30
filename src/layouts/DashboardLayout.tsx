@@ -8,10 +8,12 @@ import { SubscriptionProvider, useSubscription } from "@/contexts/SubscriptionCo
 import { TrialExpired } from "@/components/dashboard/TrialExpired";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { toast } from "@/hooks/use-toast";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { clearLocalAuthSession, isStaleAuthSessionError } from "@/lib/auth-session";
 
 function DashboardShell() {
   const { trialExpired, loading } = useSubscription();
+  const { isAdmin } = useUserPlan();
 
   if (loading) {
     return (
@@ -21,7 +23,7 @@ function DashboardShell() {
     );
   }
 
-  if (trialExpired) {
+  if (trialExpired && !isAdmin) {
     return <TrialExpired />;
   }
 
