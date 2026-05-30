@@ -8,6 +8,7 @@ import { SubscriptionProvider, useSubscription } from "@/contexts/SubscriptionCo
 import { TrialExpired } from "@/components/dashboard/TrialExpired";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { toast } from "@/hooks/use-toast";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { clearLocalAuthSession, isStaleAuthSessionError } from "@/lib/auth-session";
 
 function DashboardShell() {
