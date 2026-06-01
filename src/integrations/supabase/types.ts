@@ -113,6 +113,33 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_recipes: {
+        Row: {
+          created_at: string
+          dados: Json
+          id: string
+          nome: string
+          origem: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dados: Json
+          id?: string
+          nome: string
+          origem?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dados?: Json
+          id?: string
+          nome?: string
+          origem?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
