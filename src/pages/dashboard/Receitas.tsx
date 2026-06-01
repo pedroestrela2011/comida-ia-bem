@@ -172,7 +172,7 @@ export default function Receitas() {
               {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando receita...</> : <><Sparkles className="mr-2 h-4 w-4" /> Criar Receita</>}
             </Button>
           </div>
-          {receita && <ReceitaDetail receita={receita} onSave={salvarReceita} />}
+          {receita && <ReceitaDetail receita={receita} />}
         </TabsContent>
 
         <TabsContent value="salvas" className="space-y-4">
