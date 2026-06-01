@@ -10,6 +10,7 @@ import {
   Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star,
   Camera, X, ChefHat, Clock, Users, BookmarkPlus, Lightbulb,
 } from "lucide-react";
+import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 
 interface ReceitaPrato {
   tempo_preparo: string;
@@ -426,10 +427,26 @@ export default function AnalisadorPrato() {
                     <ChefHat className="h-5 w-5 text-primary" />
                     Como preparar este prato
                   </CardTitle>
-                  <Button size="sm" variant="outline" onClick={salvarReceita} className="shrink-0">
-                    <BookmarkPlus className="mr-1.5 h-4 w-4" />
-                    Salvar receita
-                  </Button>
+                  <FavoriteButton
+                    recipe={{
+                      nome: analise.nome_prato,
+                      descricao: analise.resumo,
+                      tempo_preparo: analise.receita.tempo_preparo,
+                      porcoes: analise.receita.porcoes,
+                      dificuldade: analise.receita.dificuldade,
+                      ingredientes: analise.receita.ingredientes,
+                      modo_preparo: analise.receita.modo_preparo,
+                      dicas: analise.receita.dicas,
+                      informacoes_nutricionais: {
+                        calorias: analise.macronutrientes.calorias,
+                        proteinas: analise.macronutrientes.proteinas,
+                        carboidratos: analise.macronutrientes.carboidratos,
+                        gorduras: analise.macronutrientes.gorduras,
+                        fibras: analise.macronutrientes.fibras,
+                      },
+                    }}
+                    origem="analisador_prato"
+                  />
                 </div>
                 <CardDescription>Receita sugerida com base na análise do prato.</CardDescription>
               </CardHeader>
