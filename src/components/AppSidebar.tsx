@@ -1,4 +1,4 @@
-import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck } from "lucide-react";
+import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ const menuItems: { title: string; url: string; icon: any; featureKey?: FeatureKe
   { title: "Conquistas", url: "/dashboard/conquistas", icon: Trophy, featureKey: "conquistas" },
   { title: "Modo Esporte", url: "/dashboard/modo-esporte", icon: Dumbbell, featureKey: "modoEsporte" },
   { title: "Receitas", url: "/dashboard/receitas", icon: ChefHat },
+  { title: "Favoritos", url: "/dashboard/favoritos", icon: Heart },
   { title: "Analisador de Prato", url: "/dashboard/analisador-prato", icon: UtensilsCrossed, featureKey: "analisadorPrato" },
   { title: "Meu Progresso", url: "/dashboard/progresso", icon: TrendingUp, featureKey: "progresso" },
   { title: "Conversa Saudável", url: "/dashboard/chat", icon: MessageCircle },

@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 
 type Receita = {
   nome: string; descricao: string; tempo_preparo: string; porcoes: string;
@@ -21,19 +22,15 @@ const difficultyColor = (d?: string) => {
   return "destructive" as const;
 };
 
-function ReceitaDetail({ receita, onSave }: { receita: Receita; onSave?: () => void }) {
+function ReceitaDetail({ receita }: { receita: Receita }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-foreground">{receita.nome}</h2>
-          <p className="text-muted-foreground text-sm mt-1">{receita.descricao}</p>
-        </div>
-        {onSave && (
-          <Button variant="outline" size="sm" onClick={onSave} className="shrink-0">
-            <BookmarkPlus className="mr-1.5 h-4 w-4" /> Salvar
-          </Button>
-        )}
+    <div className="relative rounded-xl border border-border bg-card p-6 space-y-5">
+      <div className="absolute top-4 right-4">
+        <FavoriteButton recipe={receita} origem="receitas" />
+      </div>
+      <div className="pr-12">
+        <h2 className="text-xl font-bold text-foreground">{receita.nome}</h2>
+        <p className="text-muted-foreground text-sm mt-1">{receita.descricao}</p>
       </div>
 
       <div className="flex flex-wrap gap-3 text-sm">
@@ -175,7 +172,7 @@ export default function Receitas() {
               {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando receita...</> : <><Sparkles className="mr-2 h-4 w-4" /> Criar Receita</>}
             </Button>
           </div>
-          {receita && <ReceitaDetail receita={receita} onSave={salvarReceita} />}
+          {receita && <ReceitaDetail receita={receita} />}
         </TabsContent>
 
         <TabsContent value="salvas" className="space-y-4">

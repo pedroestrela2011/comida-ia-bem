@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyScore } from "@/hooks/useDailyScore";
+import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 
 type Refeicao = {
   nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;
@@ -96,9 +97,25 @@ function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label
   const steps = Array.isArray(refeicao.modo_preparo) ? refeicao.modo_preparo : refeicao.modo_preparo ? [refeicao.modo_preparo] : [];
 
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
+    <div className="rounded-lg border border-border bg-card overflow-hidden relative">
+      <div className="absolute top-2 right-2 z-10">
+        <FavoriteButton
+          recipe={{
+            nome: refeicao.nome,
+            descricao: refeicao.descricao,
+            tempo_preparo: refeicao.tempo_preparo,
+            dificuldade: refeicao.dificuldade,
+            ingredientes: refeicao.ingredientes,
+            modo_preparo: refeicao.modo_preparo,
+            dicas: refeicao.dicas,
+            informacoes_nutricionais: refeicao.informacoes_nutricionais,
+          }}
+          origem="cardapio"
+          size="sm"
+        />
+      </div>
       <button type="button" onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 text-left hover:bg-muted/30 transition-colors">
+        className="w-full p-4 pr-12 text-left hover:bg-muted/30 transition-colors">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
         <div className="flex items-center justify-between">
           <p className="font-semibold text-foreground">{refeicao.nome}</p>
