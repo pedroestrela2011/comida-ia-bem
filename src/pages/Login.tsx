@@ -32,69 +32,27 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.senha,
       });
       if (error) throw error;
 
-      // Check if user already has an active subscription
-      try {
-        const { data: subData, error: subError } = await supabase.functions.invoke("check-subscription");
-        if (subError) throw subError;
-
-        if (subData?.subscribed) {
-          navigate("/dashboard");
-          return;
-        }
-
-        // No active subscription → send to checkout for the plan chosen at signup
-        const plano = (signInData.user?.user_metadata?.plano as PlanType) || "essencial";
-        const priceId = PLAN_CONFIG[plano]?.price_id;
-
-        if (priceId) {
-          toast({
-            title: "Abrindo o pagamento...",
-            description: "O checkout abrirá em uma nova aba.",
-          });
-          const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke("create-checkout", {
-            body: { priceId },
-          });
-          if (checkoutError) throw checkoutError;
-
-          if (checkoutData?.url) {
-            // Open Stripe in a new tab (more reliable inside iframes/preview)
-            const win = window.open(checkoutData.url, "_blank", "noopener,noreferrer");
-            if (!win) {
-              // Popup blocked → fall back to top-level redirect
-              window.top
-                ? (window.top.location.href = checkoutData.url)
-                : (window.location.href = checkoutData.url);
-            }
-            // Send user into the app; they can complete payment in the other tab
-            navigate("/dashboard");
-            return;
-          }
-        }
-
-        // Fallback: no priceId or no checkout URL → let user pick a plan
-        navigate("/escolher-plano");
-        return;
-      } catch (subErr: any) {
-        console.error("Subscription/checkout error:", subErr);
-        toast({
-          title: "Não foi possível abrir o pagamento",
-          description: "Tente novamente ou continue sem pagar com o plano gratuito.",
-          variant: "destructive",
-        });
-        setCheckoutFailed(true);
-        setLoading(false);
-        return;
-      }
+      toast({ title: "Bem-vindo de volta!" });
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
+      const msg = (err?.message || "").toLowerCase();
+      let description = "Email ou senha incorretos.";
+      if (msg.includes("email not confirmed")) {
+        description = "Sua conta ainda não foi confirmada. Tente novamente em alguns instantes ou refaça o cadastro.";
+      } else if (msg.includes("invalid login")) {
+        description = "Email ou senha incorretos. Verifique e tente novamente.";
+      } else if (err?.message) {
+        description = err.message;
+      }
       toast({
-        title: "Erro ao entrar",
-        description: err.message || "Email ou senha incorretos.",
+        title: "Não foi possível entrar",
+        description,
         variant: "destructive",
       });
       setLoading(false);
