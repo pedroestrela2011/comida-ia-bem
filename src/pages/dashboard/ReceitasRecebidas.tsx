@@ -110,23 +110,43 @@ function Full({ rec, onBack, onRemove }: { rec: ReceivedRecipe; onBack: () => vo
   );
 }
 
+function ViewingScreen({
+  viewingId, items, fallback, markRead, onBack, onRemove,
+}: {
+  viewingId: string;
+  items: ReceivedRecipe[];
+  fallback: ReceivedRecipe;
+  markRead: (id: string) => void;
+  onBack: () => void;
+  onRemove: (id: string) => void;
+}) {
+  const current = items.find((i) => i.id === viewingId) ?? fallback;
+  useEffect(() => {
+    if (!current.read) markRead(current.id);
+  }, [current.id, current.read, markRead]);
+  return (
+    <div className="max-w-3xl space-y-4 md:space-y-6">
+      <Full rec={current} onBack={onBack} onRemove={() => onRemove(current.id)} />
+    </div>
+  );
+}
+
 export default function ReceitasRecebidas() {
   const { items, loading, markRead, remove } = useReceivedRecipes();
   const [viewing, setViewing] = useState<ReceivedRecipe | null>(null);
-
   const sorted = useMemo(() => items, [items]);
 
-  return viewing ? (
-    <ViewingScreen
-      key={viewing.id}
-      viewingId={viewing.id}
-      items={items}
-      onBack={() => setViewing(null)}
-      onRemove={async (id) => { await remove(id); setViewing(null); }}
-      markRead={markRead}
-      fallback={viewing}
-    />
-  ) : (
+  if (viewing) {
+    return (
+      <ViewingScreen
+        viewingId={viewing.id}
+        items={items}
+        fallback={viewing}
+        markRead={markRead}
+        onBack={() => setViewing(null)}
+        onRemove={async (id) => { await remove(id); setViewing(null); }}
+      />
+    );
   }
 
   return (
@@ -191,3 +211,4 @@ export default function ReceitasRecebidas() {
     </div>
   );
 }
+
