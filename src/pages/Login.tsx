@@ -26,7 +26,6 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    setCheckoutFailed(false);
     setLoading(true);
 
     try {
