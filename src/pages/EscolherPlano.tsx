@@ -106,7 +106,7 @@ const EscolherPlano = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email: pending.email,
         password: pending.senha,
         options: {
@@ -121,26 +121,46 @@ const EscolherPlano = () => {
         },
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      // Ensure session is active (auto-confirm is on, but signUp may not always set a session in all flows)
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: pending.email,
+          password: pending.senha,
+        });
+        if (signInError) throw signInError;
+      }
 
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);
 
       toast({
-        title: opts.skipCheckout
-          ? "Conta criada!"
-          : `Plano ${PLAN_CONFIG[planId].label} selecionado!`,
+        title: "Conta criada com sucesso!",
         description: opts.skipCheckout
-          ? "Confirme seu email para acessar sua conta."
-          : "Confirme seu email para liberar o pagamento e ativar seu plano.",
+          ? "Bem-vindo ao ComaBem."
+          : `Abrindo o pagamento do plano ${PLAN_CONFIG[planId].label}...`,
       });
 
-      navigate("/verificar-email", {
-        state: {
-          email: pending.email,
-          plano: planId,
-          skipCheckout: opts.skipCheckout,
-        },
-      });
+      if (!opts.skipCheckout) {
+        try {
+          const { data, error } = await supabase.functions.invoke("create-checkout", {
+            body: { priceId: PLAN_CONFIG[planId].price_id },
+          });
+          if (!error && data?.url) {
+            const win = window.open(data.url, "_blank", "noopener,noreferrer");
+            if (!win) {
+              window.top
+                ? (window.top.location.href = data.url)
+                : (window.location.href = data.url);
+            }
+          }
+        } catch (err) {
+          console.error("Checkout error:", err);
+        }
+      }
+
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
       toast({
         title: "Erro ao criar conta",
@@ -252,7 +272,7 @@ const EscolherPlano = () => {
 
         <div className="text-center mt-8 space-y-3">
           <p className="text-sm text-muted-foreground">
-            Após selecionar, confirme seu email para ativar a conta e ir para o pagamento.
+            Após selecionar, você será direcionado ao pagamento e poderá acessar o dashboard imediatamente.
           </p>
           <button
             type="button"

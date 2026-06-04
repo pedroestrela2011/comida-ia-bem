@@ -6,14 +6,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { PLAN_CONFIG, PlanType } from "@/contexts/SubscriptionContext";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checkoutFailed, setCheckoutFailed] = useState(false);
   const [form, setForm] = useState({ email: "", senha: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -28,73 +26,30 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    setCheckoutFailed(false);
     setLoading(true);
 
     try {
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.senha,
       });
       if (error) throw error;
 
-      // Check if user already has an active subscription
-      try {
-        const { data: subData, error: subError } = await supabase.functions.invoke("check-subscription");
-        if (subError) throw subError;
-
-        if (subData?.subscribed) {
-          navigate("/dashboard");
-          return;
-        }
-
-        // No active subscription → send to checkout for the plan chosen at signup
-        const plano = (signInData.user?.user_metadata?.plano as PlanType) || "essencial";
-        const priceId = PLAN_CONFIG[plano]?.price_id;
-
-        if (priceId) {
-          toast({
-            title: "Abrindo o pagamento...",
-            description: "O checkout abrirá em uma nova aba.",
-          });
-          const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke("create-checkout", {
-            body: { priceId },
-          });
-          if (checkoutError) throw checkoutError;
-
-          if (checkoutData?.url) {
-            // Open Stripe in a new tab (more reliable inside iframes/preview)
-            const win = window.open(checkoutData.url, "_blank", "noopener,noreferrer");
-            if (!win) {
-              // Popup blocked → fall back to top-level redirect
-              window.top
-                ? (window.top.location.href = checkoutData.url)
-                : (window.location.href = checkoutData.url);
-            }
-            // Send user into the app; they can complete payment in the other tab
-            navigate("/dashboard");
-            return;
-          }
-        }
-
-        // Fallback: no priceId or no checkout URL → let user pick a plan
-        navigate("/escolher-plano");
-        return;
-      } catch (subErr: any) {
-        console.error("Subscription/checkout error:", subErr);
-        toast({
-          title: "Não foi possível abrir o pagamento",
-          description: "Tente novamente ou continue sem pagar com o plano gratuito.",
-          variant: "destructive",
-        });
-        setCheckoutFailed(true);
-        setLoading(false);
-        return;
-      }
+      toast({ title: "Bem-vindo de volta!" });
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
+      const msg = (err?.message || "").toLowerCase();
+      let description = "Email ou senha incorretos.";
+      if (msg.includes("email not confirmed")) {
+        description = "Sua conta ainda não foi confirmada. Tente novamente em alguns instantes ou refaça o cadastro.";
+      } else if (msg.includes("invalid login")) {
+        description = "Email ou senha incorretos. Verifique e tente novamente.";
+      } else if (err?.message) {
+        description = err.message;
+      }
       toast({
-        title: "Erro ao entrar",
-        description: err.message || "Email ou senha incorretos.",
+        title: "Não foi possível entrar",
+        description,
         variant: "destructive",
       });
       setLoading(false);
@@ -166,22 +121,6 @@ const Login = () => {
             {loading ? "Entrando..." : "Entrar"}
           </Button>
 
-          {checkoutFailed && (
-            <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-sm text-muted-foreground">
-                Tivemos um problema ao abrir o checkout. Você pode continuar agora com o plano gratuito e fazer o upgrade depois.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="w-full font-semibold"
-                onClick={() => navigate("/dashboard")}
-              >
-                Continuar sem pagar
-              </Button>
-            </div>
-          )}
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
