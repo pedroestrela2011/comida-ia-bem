@@ -147,9 +147,12 @@ export default function Receitas() {
 
   return (
     <div className="space-y-4 md:space-y-6 max-w-3xl">
-      <div className="flex items-center gap-2 md:gap-3">
-        <ChefHat className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-        <h1 className="text-xl md:text-2xl font-bold text-foreground">Receitas</h1>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 md:gap-3">
+          <ChefHat className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Receitas</h1>
+        </div>
+        <ImportRecipeButton onImport={(r) => { setReceita(r as Receita); setActiveTab("criar"); }} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
