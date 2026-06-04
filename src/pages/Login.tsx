@@ -121,22 +121,6 @@ const Login = () => {
             {loading ? "Entrando..." : "Entrar"}
           </Button>
 
-          {checkoutFailed && (
-            <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-sm text-muted-foreground">
-                Tivemos um problema ao abrir o checkout. Você pode continuar agora com o plano gratuito e fazer o upgrade depois.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="w-full font-semibold"
-                onClick={() => navigate("/dashboard")}
-              >
-                Continuar sem pagar
-              </Button>
-            </div>
-          )}
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
