@@ -233,6 +233,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_recipes: {
+        Row: {
+          created_at: string
+          dados: Json
+          id: string
+          nome: string
+          read: boolean
+          recipient_id: string
+          sender_email: string | null
+          sender_id: string
+          sender_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          dados: Json
+          id?: string
+          nome: string
+          read?: boolean
+          recipient_id: string
+          sender_email?: string | null
+          sender_id: string
+          sender_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          dados?: Json
+          id?: string
+          nome?: string
+          read?: boolean
+          recipient_id?: string
+          sender_email?: string | null
+          sender_id?: string
+          sender_name?: string | null
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_key: string
