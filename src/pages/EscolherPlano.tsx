@@ -272,7 +272,7 @@ const EscolherPlano = () => {
 
         <div className="text-center mt-8 space-y-3">
           <p className="text-sm text-muted-foreground">
-            Após selecionar, confirme seu email para ativar a conta e ir para o pagamento.
+            Após selecionar, você será direcionado ao pagamento e poderá acessar o dashboard imediatamente.
           </p>
           <button
             type="button"
