@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Inbox, ArrowLeft, Trash2, Clock, Users, Flame, ChefHat, Lightbulb, Wheat, Droplets, Salad, Dumbbell, Mail, BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -116,18 +116,17 @@ export default function ReceitasRecebidas() {
 
   const sorted = useMemo(() => items, [items]);
 
-  if (viewing) {
-    const current = items.find((i) => i.id === viewing.id) ?? viewing;
-    if (!current.read) markRead(current.id);
-    return (
-      <div className="max-w-3xl space-y-4 md:space-y-6">
-        <Full
-          rec={current}
-          onBack={() => setViewing(null)}
-          onRemove={async () => { await remove(current.id); setViewing(null); }}
-        />
-      </div>
-    );
+  return viewing ? (
+    <ViewingScreen
+      key={viewing.id}
+      viewingId={viewing.id}
+      items={items}
+      onBack={() => setViewing(null)}
+      onRemove={async (id) => { await remove(id); setViewing(null); }}
+      markRead={markRead}
+      fallback={viewing}
+    />
+  ) : (
   }
 
   return (
