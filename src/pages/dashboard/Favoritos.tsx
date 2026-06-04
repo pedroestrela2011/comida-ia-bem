@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites, FAVORITES_LIMIT, type FavoriteRecord } from "@/hooks/useFavorites";
+import { ShareRecipeButton } from "@/components/dashboard/ShareRecipeButton";
 
 const origemLabel: Record<string, string> = {
   receitas: "Receitas",
@@ -17,13 +18,16 @@ function RecipeFull({ rec, onBack, onRemove }: { rec: FavoriteRecord; onBack: ()
   const nut = d.informacoes_nutricionais;
   return (
     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar
         </Button>
-        <Button variant="outline" size="sm" onClick={onRemove}>
-          <Trash2 className="mr-1.5 h-4 w-4" /> Remover
-        </Button>
+        <div className="flex items-center gap-2">
+          <ShareRecipeButton recipe={d} />
+          <Button variant="outline" size="sm" onClick={onRemove}>
+            <Trash2 className="mr-1.5 h-4 w-4" /> Remover
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
