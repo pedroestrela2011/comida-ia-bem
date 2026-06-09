@@ -8,14 +8,17 @@ import VisualDemo from "@/components/landing/VisualDemo";
 import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
+import SectionTransition from "@/components/landing/SectionTransition";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Header />
       <main>
-        <Hero />
-        <ProblemSolution />
+        <SectionTransition>
+          <Hero />
+          <ProblemSolution />
+        </SectionTransition>
         <Benefits />
         <Demo />
         <HowItWorks />

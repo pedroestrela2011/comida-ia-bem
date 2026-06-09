@@ -1,41 +1,57 @@
-# Reestruturação da Página Inicial
+# Transição Premium Hero → Próxima Seção
 
-Reorganizar `src/pages/Index.tsx` na ordem solicitada e criar as 2 seções que ainda não existem. As seções existentes serão mantidas como estão — apenas reordenadas.
+Criar uma transição cinematográfica entre o Hero e a seção ProblemSolution, usando uma onda luminosa vertical controlada pelo scroll, com saída suave dos elementos do Hero e entrada escalonada dos cards da próxima seção.
 
-## Nova ordem das seções
+## O que o usuário vai ver
 
-1. **Hero** (existe — `Hero.tsx`) — sem alterações
-2. **Problema + Solução** (NOVO — criar `ProblemSolution.tsx`)
-3. **Por que escolher a Coma Bem?** (existe — `Benefits.tsx`)
-4. **Tudo o que você encontra** (existe — `Demo.tsx`, atualmente é o grid de funcionalidades)
-5. **Como Funciona?** (existe — `HowItWorks.tsx`) — atualizar de 3 para 4 passos conforme pedido (Crie sua conta → Escolha seu objetivo → Receba seu plano → Acompanhe sua evolução)
-6. **Demonstração Visual** (NOVO — criar `VisualDemo.tsx` com mockups/prints das telas: cardápio, analisador, receitas, progresso)
-7. **Escolha seu Plano** (existe — `Pricing.tsx`)
-8. **CTA Final** (existe — `CTA.tsx`)
+1. Ao iniciar o scroll, uma faixa luminosa horizontal (gradiente verde→âmbar com leve blur) desce pela tela acompanhando o progresso do scroll.
+2. Conforme a onda avança, o conteúdo do Hero (título, subtítulo, botões, estatísticas) recua suavemente: leve translateY para cima + blur progressivo + fade.
+3. Atrás da onda, o background da nova seção é revelado por uma máscara (clip-path) que desce sincronizada à onda.
+4. Quando a onda termina de passar, os elementos da ProblemSolution entram em sequência:
+   - Título e subtítulo primeiro (fade + slide-up curto)
+   - Os 4 cards de problema em cascata (stagger ~80ms)
+   - Bloco de solução por último, com um brilho discreto pulsando uma vez nos ícones
+5. Ícones recebem um glow sutil (box-shadow com cor primária baixa opacidade) ao entrarem em viewport.
 
-Observação: `Reviews.tsx` (depoimentos) não está na nova ordem solicitada. Vou removê-lo da página inicial (o arquivo permanece no projeto caso queira reusar).
+Sensação: continuidade, como se a próxima seção fosse "pintada" pela luz, não uma troca de tela.
 
-## Novos componentes
+## Estrutura de implementação
 
-### `ProblemSolution.tsx`
-- Título: "Cansado de não saber o que comer?"
-- 4 cards de problemas com ícones Lucide: Falta de tempo (Clock), Dietas complicadas (AlertCircle), Gastos desnecessários (Wallet), Dificuldade para atingir objetivos (Target)
-- Bloco de fechamento destacado: "A Coma Bem resolve isso para você." com gradiente sutil em tons verdes/terra
+### Novo componente: `src/components/landing/SectionTransition.tsx`
+Wrapper de transição reutilizável. Renderiza:
+- Uma `div` fixa absoluta posicionada entre o Hero e a próxima seção
+- A "onda" = barra horizontal de ~120px de altura com gradiente luminoso e blur, animada via `transform: translateY()` controlado por scroll progress
+- Uma máscara/overlay que revela a seção de baixo conforme a onda passa
 
-### `VisualDemo.tsx`
-- Título: "Veja a Coma Bem em ação"
-- 4 cards em grid mostrando as funcionalidades-chave (Criação de Cardápio, Analisador de Pratos, Receitas, Progresso)
-- Como ainda não há vídeos/gifs reais, cada card terá um mockup visual estilizado (um frame com gradiente verde/terra, ícone grande Lucide e legenda) — pronto para o usuário substituir por GIFs/prints depois.
+Usa `framer-motion` (`useScroll` + `useTransform`) para mapear o progresso de scroll (do final do Hero até ~30% da próxima seção) em:
+- `y` da onda (0 → 100vh)
+- `opacity` e `filter: blur()` dos filhos do Hero
+- `clipPath` do reveal da nova seção
 
-## Atualização de `HowItWorks.tsx`
-- Trocar de 3 para 4 passos: Crie sua conta, Escolha seu objetivo, Receba seu plano, Acompanhe sua evolução
-- Manter o mesmo estilo visual (círculos com ícones, numeração, linha conectora) — ajustar grid para 4 colunas em desktop
+### Edição: `src/components/landing/Hero.tsx`
+- Envolver o bloco de conteúdo num `motion.div` que reage ao scroll progress compartilhado (via prop ou contexto leve), aplicando saída com translateY + blur + fade.
+- Sem mudar copy, imagens ou layout.
 
-## Arquivos alterados
+### Edição: `src/components/landing/ProblemSolution.tsx`
+- Trocar as `animate-fade-in` CSS atuais por `motion.div` com `whileInView` + `viewport={{ once: true, margin: "-10%" }}`.
+- Stagger nos 4 cards (delay incremental ~80ms).
+- Título/subtítulo entram primeiro; bloco "A solução" entra por último com um pulso de glow único nos ícones (`animate` em `boxShadow`).
 
-- `src/pages/Index.tsx` — nova ordem dos imports e seções, remover `<Reviews />`
-- `src/components/landing/HowItWorks.tsx` — 4 passos
-- `src/components/landing/ProblemSolution.tsx` — NOVO
-- `src/components/landing/VisualDemo.tsx` — NOVO
+### Edição: `src/pages/Index.tsx`
+- Inserir `<SectionTransition />` entre `<Hero />` e `<ProblemSolution />`, ou envolver os dois num container que provê o scroll progress.
 
-Sem mudanças em backend, rotas, ou outras páginas. Estilo segue os tokens existentes (verde/terra, sem emojis na UI, ícones Lucide).
+## Detalhes técnicos
+
+- Biblioteca: `framer-motion` (já compatível com o stack; instalar se ausente).
+- Performance:
+  - Apenas `transform`, `opacity`, `filter` e `clip-path` animados (GPU-friendly).
+  - `will-change` aplicado só durante a transição.
+  - Respeitar `prefers-reduced-motion`: desabilita onda e usa fade curto.
+- Cores: tokens existentes (`--primary`, `--accent`, `--green-300`) — sem cores hardcoded.
+- Mobile: onda com altura reduzida (~80px) e blur menor; mesmas animações com distâncias menores.
+- Sem mudanças de backend, schema, copy ou assets.
+
+## Arquivos
+- Criar: `src/components/landing/SectionTransition.tsx`
+- Editar: `src/components/landing/Hero.tsx`, `src/components/landing/ProblemSolution.tsx`, `src/pages/Index.tsx`
+- Dependência: garantir `framer-motion` instalado
