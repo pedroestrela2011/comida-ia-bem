@@ -26,8 +26,8 @@ const Hero = () => {
 
           {/* Title */}
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight mb-4 md:mb-6">
-            Coma bem,{" "}
-            <span className="text-primary">viva melhor.</span>
+            Ser Saudavel,{" "}
+            <span className="text-primary">Nunca foi tao facil</span>
           </h1>
 
           {/* Subtitle */}
@@ -58,16 +58,16 @@ const Hero = () => {
           {/* Stats */}
           <div className="flex flex-wrap gap-6 md:gap-8 mt-8 md:mt-12 pt-6 md:pt-8 border-t border-border/50">
             <div>
-              <p className="text-2xl md:text-3xl font-bold text-primary">10k+</p>
-              <p className="text-sm text-muted-foreground">Usuários ativos</p>
+              <p className="text-2xl md:text-3xl font-bold text-primary">Cardápios Inteligentes</p>
+              <p className="text-sm text-muted-foreground">Criados com base nos seus objetivos.</p>
             </div>
             <div>
-              <p className="text-2xl md:text-3xl font-bold text-primary">50k+</p>
-              <p className="text-sm text-muted-foreground">Cardápios criados</p>
+              <p className="text-2xl md:text-3xl font-bold text-primary">Análise de Pratos</p>
+              <p className="text-sm text-muted-foreground">Descubra nutrientes e receitas.</p>
             </div>
             <div>
-              <p className="text-2xl md:text-3xl font-bold text-primary">4.9★</p>
-              <p className="text-sm text-muted-foreground">Avaliação média</p>
+              <p className="text-2xl md:text-3xl font-bold text-primary">Modo Esporte</p>
+              <p className="text-sm text-muted-foreground">Nutrição adaptada ao seu desempenho.</p>
             </div>
           </div>
         </div>
