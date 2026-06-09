@@ -26,8 +26,8 @@ const Hero = () => {
 
           {/* Title */}
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight mb-4 md:mb-6">
-            Ser Saudavel,{" "}
-            <span className="text-primary">Nunca foi tao facil</span>
+            Ser saudável,{" "}
+            <span className="text-primary">Nunca foi tão fácil.</span>
           </h1>
 
           {/* Subtitle */}
