@@ -1,46 +1,41 @@
-## Trial gratuito de 7 dias com bloqueio do dashboard
+# Reestruturação da Página Inicial
 
-Implementar um período de teste de 7 dias para o plano gratuito (Essencial). Após esse prazo, sem assinatura ativa no Stripe, o dashboard fica bloqueado e o usuário é direcionado a uma tela de "Assine para continuar".
+Reorganizar `src/pages/Index.tsx` na ordem solicitada e criar as 2 seções que ainda não existem. As seções existentes serão mantidas como estão — apenas reordenadas.
 
-### 1. Banco de dados (migração)
+## Nova ordem das seções
 
-Adicionar coluna na tabela `profiles`:
-- `trial_ends_at` (timestamp with time zone, nullable) — data/hora em que o trial expira.
+1. **Hero** (existe — `Hero.tsx`) — sem alterações
+2. **Problema + Solução** (NOVO — criar `ProblemSolution.tsx`)
+3. **Por que escolher a Coma Bem?** (existe — `Benefits.tsx`)
+4. **Tudo o que você encontra** (existe — `Demo.tsx`, atualmente é o grid de funcionalidades)
+5. **Como Funciona?** (existe — `HowItWorks.tsx`) — atualizar de 3 para 4 passos conforme pedido (Crie sua conta → Escolha seu objetivo → Receba seu plano → Acompanhe sua evolução)
+6. **Demonstração Visual** (NOVO — criar `VisualDemo.tsx` com mockups/prints das telas: cardápio, analisador, receitas, progresso)
+7. **Escolha seu Plano** (existe — `Pricing.tsx`)
+8. **CTA Final** (existe — `CTA.tsx`)
 
-Atualizar a função `handle_new_user()` para preencher `trial_ends_at = now() + interval '7 days'` automaticamente em todo novo cadastro.
+Observação: `Reviews.tsx` (depoimentos) não está na nova ordem solicitada. Vou removê-lo da página inicial (o arquivo permanece no projeto caso queira reusar).
 
-Backfill: para perfis existentes sem `trial_ends_at`, definir como `created_at + 7 days` (apenas para usuários no plano `essencial`).
+## Novos componentes
 
-### 2. Lógica de acesso (frontend)
+### `ProblemSolution.tsx`
+- Título: "Cansado de não saber o que comer?"
+- 4 cards de problemas com ícones Lucide: Falta de tempo (Clock), Dietas complicadas (AlertCircle), Gastos desnecessários (Wallet), Dificuldade para atingir objetivos (Target)
+- Bloco de fechamento destacado: "A Coma Bem resolve isso para você." com gradiente sutil em tons verdes/terra
 
-**`SubscriptionContext`**: incluir `trialEndsAt` e `trialExpired` no estado. Buscar `trial_ends_at` da tabela `profiles` em paralelo ao `check-subscription`. Considerar:
-- `trialExpired = true` quando `plano === 'essencial'`, `subscribed === false` e `now > trial_ends_at`.
-- Assinantes pagos (Equilíbrio/Performance) nunca ficam expirados.
+### `VisualDemo.tsx`
+- Título: "Veja a Coma Bem em ação"
+- 4 cards em grid mostrando as funcionalidades-chave (Criação de Cardápio, Analisador de Pratos, Receitas, Progresso)
+- Como ainda não há vídeos/gifs reais, cada card terá um mockup visual estilizado (um frame com gradiente verde/terra, ícone grande Lucide e legenda) — pronto para o usuário substituir por GIFs/prints depois.
 
-**Novo componente `TrialGuard`** (em `src/layouts/DashboardLayout.tsx`): se `trialExpired`, em vez de renderizar `<Outlet />`, mostra uma tela cheia "Seu período gratuito terminou" com:
-- Resumo dos 3 planos (reaproveitar dados de `PLAN_CONFIG`).
-- Botões para assinar cada plano (chama `create-checkout` e abre Stripe em nova aba).
-- Botão "Sair".
-- A sidebar continua visível mas todos os links ficam desabilitados/com cadeado.
+## Atualização de `HowItWorks.tsx`
+- Trocar de 3 para 4 passos: Crie sua conta, Escolha seu objetivo, Receba seu plano, Acompanhe sua evolução
+- Manter o mesmo estilo visual (círculos com ícones, numeração, linha conectora) — ajustar grid para 4 colunas em desktop
 
-**Banner de aviso**: quando faltarem ≤3 dias para expirar e o usuário ainda for `essencial`, mostrar banner no topo do dashboard com contador "Faltam X dias do seu período gratuito" + CTA "Assinar agora".
+## Arquivos alterados
 
-### 3. Edge function
+- `src/pages/Index.tsx` — nova ordem dos imports e seções, remover `<Reviews />`
+- `src/components/landing/HowItWorks.tsx` — 4 passos
+- `src/components/landing/ProblemSolution.tsx` — NOVO
+- `src/components/landing/VisualDemo.tsx` — NOVO
 
-Atualizar `check-subscription` para também retornar `trial_ends_at` (lendo de `profiles`), para manter uma única fonte de verdade no contexto.
-
-### 4. Pontos técnicos
-
-- O bloqueio é **client-side** (UX). RLS continua permitindo acesso aos dados do próprio usuário — isso é aceitável porque o objetivo é forçar a conversão, não esconder dados sensíveis.
-- O cálculo de expiração usa o relógio do servidor via `trial_ends_at` retornado pelo backend, evitando manipulação no cliente.
-- Após o pagamento bem-sucedido, `check-subscription` detecta a assinatura ativa e `trialExpired` passa a ser `false` automaticamente (já que assinantes pagos são imunes).
-- A tela de bloqueio reaproveita o fluxo de checkout existente (`supabase.functions.invoke("create-checkout", { body: { priceId } })`).
-
-### Arquivos a alterar/criar
-
-- Migração SQL (nova): adicionar coluna + atualizar `handle_new_user` + backfill.
-- `supabase/functions/check-subscription/index.ts`: incluir `trial_ends_at` na resposta.
-- `src/contexts/SubscriptionContext.tsx`: novos campos `trialEndsAt`, `trialExpired`, `daysLeftInTrial`.
-- `src/layouts/DashboardLayout.tsx`: integrar `TrialGuard`.
-- `src/components/dashboard/TrialExpired.tsx` (novo): tela de bloqueio com planos.
-- `src/components/dashboard/TrialBanner.tsx` (novo): banner de contagem regressiva.
+Sem mudanças em backend, rotas, ou outras páginas. Estilo segue os tokens existentes (verde/terra, sem emojis na UI, ícones Lucide).
