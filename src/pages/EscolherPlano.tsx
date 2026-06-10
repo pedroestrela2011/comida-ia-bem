@@ -162,9 +162,28 @@ const EscolherPlano = () => {
 
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
+      const raw = (err?.message || "").toLowerCase();
+      let description = "Tente novamente.";
+      if (raw.includes("user already registered") || raw.includes("already registered") || raw.includes("already exists")) {
+        description = "Este email já está cadastrado. Faça login na sua conta.";
+      } else if (raw.includes("invalid email")) {
+        description = "Email inválido. Verifique e tente novamente.";
+      } else if (raw.includes("password") && raw.includes("short")) {
+        description = "A senha é muito curta. Use ao menos 6 caracteres.";
+      } else if (raw.includes("weak password")) {
+        description = "Senha fraca. Escolha uma senha mais forte.";
+      } else if (raw.includes("rate limit") || raw.includes("too many")) {
+        description = "Muitas tentativas. Aguarde alguns instantes e tente novamente.";
+      } else if (raw.includes("network") || raw.includes("failed to fetch")) {
+        description = "Falha de conexão. Verifique sua internet e tente novamente.";
+      } else if (raw.includes("invalid login")) {
+        description = "Email ou senha incorretos.";
+      } else if (err?.message) {
+        description = err.message;
+      }
       toast({
         title: "Erro ao criar conta",
-        description: err.message || "Tente novamente.",
+        description,
         variant: "destructive",
       });
       setSelectedPlan(null);
