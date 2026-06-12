@@ -7,46 +7,33 @@ interface SectionTransitionProps {
 
 /**
  * Premium scroll-driven transition between Hero and the next section.
- * A luminous horizontal "wave" descends with scroll, fading/blurring the
- * first child (Hero) and revealing the second child via a vertical clip.
- *
- * Usage:
- *   <SectionTransition>
- *     <Hero />
- *     <ProblemSolution />
- *   </SectionTransition>
+ * A luminous horizontal "wave" travels across the boundary between
+ * sections as the user scrolls, with a subtle lift/blur on the first
+ * child. No clip-path is used so the next section never leaves a blank
+ * gap below the Hero.
  */
 const SectionTransition = ({ children }: SectionTransitionProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
 
-  // Track scroll across the wrapper. Transition happens while the Hero
-  // exits viewport and the next section comes in.
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
 
-  // Wave runs from -10vh to 110vh (fully covers the screen once).
-  const waveY = useTransform(scrollYProgress, [0, 0.5], ["-10vh", "110vh"]);
+  // Wave travels across the viewport as the user scrolls through Hero.
+  const waveY = useTransform(scrollYProgress, [0, 0.9], ["-10vh", "110vh"]);
   const waveOpacity = useTransform(
     scrollYProgress,
-    [0, 0.05, 0.45, 0.55],
+    [0, 0.08, 0.75, 0.9],
     [0, 1, 1, 0]
   );
 
-  // Hero exit: fade + lift + blur as the wave passes through it.
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
-  const heroY = useTransform(scrollYProgress, [0, 0.5], [0, -60]);
-  const heroBlur = useTransform(scrollYProgress, [0, 0.5], [0, 8]);
+  // Subtle hero treatment — stays visible, just a soft lift + blur so
+  // the next section can flow up against it without a blank area.
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, -40]);
+  const heroBlur = useTransform(scrollYProgress, [0.5, 1], [0, 4]);
   const heroFilter = useTransform(heroBlur, (b) => `blur(${b}px)`);
-
-  // Reveal mask for the next section (clipped from top as wave descends).
-  const revealClip = useTransform(
-    scrollYProgress,
-    [0, 0.5],
-    ["inset(100% 0 0 0)", "inset(0% 0 0 0)"]
-  );
 
   const childArray = Array.isArray(children) ? children : [children];
   const [first, ...rest] = childArray as React.ReactNode[];
@@ -57,17 +44,13 @@ const SectionTransition = ({ children }: SectionTransitionProps) => {
 
   return (
     <div ref={ref} className="relative">
-      {/* Hero with progressive exit */}
       <motion.div
-        style={{ opacity: heroOpacity, y: heroY, filter: heroFilter, willChange: "transform, opacity, filter" }}
+        style={{ y: heroY, filter: heroFilter, willChange: "transform, filter" }}
       >
         {first}
       </motion.div>
 
-      {/* Next section revealed by descending clip */}
-      <motion.div style={{ clipPath: revealClip, WebkitClipPath: revealClip as unknown as string }}>
-        {rest}
-      </motion.div>
+      {rest}
 
       {/* Luminous wave */}
       <motion.div
@@ -76,7 +59,6 @@ const SectionTransition = ({ children }: SectionTransitionProps) => {
         style={{ top: 0, y: waveY, opacity: waveOpacity, willChange: "transform, opacity" }}
       >
         <div className="relative w-full h-full">
-          {/* Soft glow halo */}
           <div
             className="absolute inset-0 blur-2xl opacity-70"
             style={{
@@ -84,7 +66,6 @@ const SectionTransition = ({ children }: SectionTransitionProps) => {
                 "linear-gradient(to bottom, transparent 0%, hsl(var(--primary) / 0.35) 45%, hsl(var(--accent) / 0.35) 55%, transparent 100%)",
             }}
           />
-          {/* Crisp luminous line */}
           <div
             className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px"
             style={{
