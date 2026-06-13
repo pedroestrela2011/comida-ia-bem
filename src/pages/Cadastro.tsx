@@ -30,6 +30,29 @@ const Cadastro = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const [checkingPassword, setCheckingPassword] = useState(false);
+
+  const isPasswordPwned = async (password: string): Promise<boolean> => {
+    try {
+      const buf = await crypto.subtle.digest(
+        "SHA-1",
+        new TextEncoder().encode(password)
+      );
+      const hash = Array.from(new Uint8Array(buf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+      const prefix = hash.slice(0, 5);
+      const suffix = hash.slice(5);
+      const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+      if (!res.ok) return false;
+      const text = await res.text();
+      return text.split("\n").some((line) => line.split(":")[0].trim() === suffix);
+    } catch {
+      return false;
+    }
+  };
+
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.nome.trim()) e.nome = "Nome é obrigatório";
@@ -49,12 +72,29 @@ const Cadastro = () => {
     return Object.keys(e).length === 0;
   };
 
-  const handleNext = (e: React.FormEvent) => {
+  const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
       toast({
         title: "Verifique os dados",
         description: "Alguns campos precisam ser corrigidos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCheckingPassword(true);
+    const pwned = await isPasswordPwned(form.senha);
+    setCheckingPassword(false);
+    if (pwned) {
+      setErrors((prev) => ({
+        ...prev,
+        senha:
+          "Esta senha aparece em vazamentos conhecidos e é fácil de adivinhar. Escolha outra.",
+      }));
+      toast({
+        title: "Senha insegura",
+        description: "Escolha uma senha diferente para continuar.",
         variant: "destructive",
       });
       return;
