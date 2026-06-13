@@ -286,9 +286,14 @@ const Cadastro = () => {
               {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
             </div>
 
-            <Button type="submit" size="lg" className="w-full font-semibold text-base gap-2 h-12">
-              Próximo
-              <ArrowRight size={18} />
+            <Button
+              type="submit"
+              size="lg"
+              disabled={checkingPassword}
+              className="w-full font-semibold text-base gap-2 h-12"
+            >
+              {checkingPassword ? "Verificando senha..." : "Próximo"}
+              {!checkingPassword && <ArrowRight size={18} />}
             </Button>
           </form>
 
