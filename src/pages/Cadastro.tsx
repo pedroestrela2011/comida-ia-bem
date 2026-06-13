@@ -36,7 +36,15 @@ const Cadastro = () => {
     if (!form.dia || !form.mes || !form.ano) e.nascimento = "Data de nascimento é obrigatória";
     if (!form.pais) e.pais = "Selecione seu país";
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Email inválido";
-    if (form.senha.length < 6) e.senha = "Senha deve ter pelo menos 6 caracteres";
+    if (form.senha.length < 6) {
+      e.senha = "Senha deve ter pelo menos 6 caracteres";
+    } else if (
+      form.senha.length < 8 ||
+      !/[A-Za-z]/.test(form.senha) ||
+      !/[0-9]/.test(form.senha)
+    ) {
+      e.senha = "Senha fraca. Use ao menos 8 caracteres, com letras e números.";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
