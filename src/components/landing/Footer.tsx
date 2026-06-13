@@ -36,10 +36,10 @@ const Footer = () => {
           <div className="col-span-2 lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">C</span>
+                <span className="text-primary-foreground font-bold text-lg">N</span>
               </div>
               <span className="font-display font-bold text-xl text-foreground">
-                ComaBem
+                NutriPlus
               </span>
             </Link>
             <p className="text-muted-foreground mb-4 max-w-xs">
@@ -103,7 +103,7 @@ const Footer = () => {
 
         {/* Bottom */}
         <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>© {currentYear} ComaBem. Todos os direitos reservados.</p>
+          <p>© {currentYear} NutriPlus. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

@@ -40,7 +40,7 @@ export function ShareRecipeButton({ recipe, variant = "outline", size = "sm", cl
       const file = new File([blob], `${recipe.nome}.png`, { type: "image/png" });
       const nav: any = navigator;
       if (nav.canShare && nav.canShare({ files: [file] })) {
-        await nav.share({ files: [file], title: recipe.nome, text: `Confira essa receita no ComaBem 🌿` });
+        await nav.share({ files: [file], title: recipe.nome, text: `Confira essa receita no NutriPlus 🌿` });
         setSuccess("Card compartilhado!");
       } else {
         const url = URL.createObjectURL(blob);
@@ -123,7 +123,7 @@ export function ShareRecipeButton({ recipe, variant = "outline", size = "sm", cl
             <div className="flex-1">
               <p className="font-medium text-sm">Exportar arquivo .cbrecipe</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Formato exclusivo ComaBem. Compartilhe por WhatsApp, e-mail, Telegram…
+                Formato exclusivo NutriPlus. Compartilhe por WhatsApp, e-mail, Telegram…
               </p>
             </div>
           </button>
@@ -151,7 +151,7 @@ export function ShareRecipeButton({ recipe, variant = "outline", size = "sm", cl
                 <Send className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-sm">Enviar para outro usuário ComaBem</p>
+                <p className="font-medium text-sm">Enviar para outro usuário NutriPlus</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   A receita chegará na aba "Receitas Recebidas" da pessoa.
                 </p>

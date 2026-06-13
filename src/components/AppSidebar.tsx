@@ -51,7 +51,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
           <Leaf className="h-6 w-6 text-primary" />
-          <span className="text-lg font-bold text-primary">ComaBem</span>
+          <span className="text-lg font-bold text-primary">NutriPlus</span>
         </div>
       </SidebarHeader>
 

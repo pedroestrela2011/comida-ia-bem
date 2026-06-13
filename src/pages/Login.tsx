@@ -69,9 +69,9 @@ const Login = () => {
 
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">C</span>
+            <span className="text-primary-foreground font-bold text-lg">N</span>
           </div>
-          <span className="font-display font-bold text-xl text-foreground">ComaBem</span>
+          <span className="font-display font-bold text-xl text-foreground">NutriPlus</span>
         </div>
 
         <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">

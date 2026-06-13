@@ -93,7 +93,7 @@ const ProblemSolution = () => {
             <span className="text-xs md:text-sm font-medium">A solução</span>
           </div>
           <h3 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-3">
-            A Coma Bem resolve isso para você.
+            A NutriPlus resolve isso para você.
           </h3>
           <p className="text-base md:text-lg text-muted-foreground">
             Cardápios, receitas e acompanhamento criados por inteligência artificial — adaptados à sua rotina, ao seu bolso e aos seus objetivos.

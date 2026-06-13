@@ -1,14 +1,14 @@
-# ComaBem
+# NutriPlus
 
 > Plataforma de nutrição inteligente com IA: cardápios personalizados, análise de pratos por foto, receitas, acompanhamento de progresso e modo esporte.
 
-ComaBem ajuda usuários a comer melhor através de planos alimentares gerados por IA, análise nutricional de refeições, sugestões de receitas, gamificação por score diário e suporte para atletas via modo esporte.
+NutriPlus ajuda usuários a comer melhor através de planos alimentares gerados por IA, análise nutricional de refeições, sugestões de receitas, gamificação por score diário e suporte para atletas via modo esporte.
 
 ## Pages
 
-- [Home](/): Visão geral do ComaBem, benefícios e como funciona.
+- [Home](/): Visão geral do NutriPlus, benefícios e como funciona.
 - [Planos](/planos): Comparativo dos planos Essencial, Equilíbrio e Performance.
-- [Cadastro](/cadastro): Criar uma nova conta no ComaBem.
+- [Cadastro](/cadastro): Criar uma nova conta no NutriPlus.
 - [Login](/login): Acessar sua conta.
 
 ## Optional
