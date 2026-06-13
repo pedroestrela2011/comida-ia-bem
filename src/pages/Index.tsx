@@ -18,13 +18,13 @@ const Index = () => {
         <SectionTransition>
           <Hero />
           <ProblemSolution />
+          <Benefits />
+          <Demo />
+          <HowItWorks />
+          <VisualDemo />
+          <Pricing />
+          <CTA />
         </SectionTransition>
-        <Benefits />
-        <Demo />
-        <HowItWorks />
-        <VisualDemo />
-        <Pricing />
-        <CTA />
       </main>
       <Footer />
     </div>
