@@ -137,7 +137,7 @@ const Cadastro = () => {
         </div>
         <div className="relative z-10 text-center max-w-md">
           <div className="w-20 h-20 bg-primary-foreground/20 rounded-full flex items-center justify-center mx-auto mb-8">
-            <span className="text-primary-foreground font-bold text-3xl font-display">C</span>
+            <span className="text-primary-foreground font-bold text-3xl font-display">N</span>
           </div>
           <h1 className="text-4xl font-display font-bold text-primary-foreground mb-4">
             Bem-vindo ao NutriPlus
@@ -162,7 +162,7 @@ const Cadastro = () => {
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">C</span>
+              <span className="text-primary-foreground font-bold text-lg">N</span>
             </div>
             <span className="font-display font-bold text-xl text-foreground">NutriPlus</span>
           </div>
