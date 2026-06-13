@@ -66,15 +66,6 @@ const SectionTransition = ({ children }: SectionTransitionProps) => {
                 "linear-gradient(to bottom, transparent 0%, hsl(var(--primary) / 0.35) 45%, hsl(var(--accent) / 0.35) 55%, transparent 100%)",
             }}
           />
-          <div
-            className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px"
-            style={{
-              background:
-                "linear-gradient(to right, transparent 0%, hsl(var(--primary) / 0.9) 30%, hsl(var(--accent) / 0.9) 70%, transparent 100%)",
-              boxShadow:
-                "0 0 24px hsl(var(--primary) / 0.55), 0 0 64px hsl(var(--accent) / 0.35)",
-            }}
-          />
         </div>
       </motion.div>
     </div>
