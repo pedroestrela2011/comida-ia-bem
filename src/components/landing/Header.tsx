@@ -37,7 +37,7 @@ const Header = () => {
               <span className="text-primary-foreground font-bold text-lg">C</span>
             </div>
             <span className="font-display font-bold text-xl text-foreground">
-              ComaBem
+              NutriPlus
             </span>
           </Link>
 

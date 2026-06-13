@@ -140,7 +140,7 @@ const Cadastro = () => {
             <span className="text-primary-foreground font-bold text-3xl font-display">C</span>
           </div>
           <h1 className="text-4xl font-display font-bold text-primary-foreground mb-4">
-            Bem-vindo ao ComaBem
+            Bem-vindo ao NutriPlus
           </h1>
           <p className="text-primary-foreground/80 text-lg leading-relaxed">
             Sua jornada para uma alimentação mais saudável, gostosa e sem complicação começa aqui.
@@ -164,7 +164,7 @@ const Cadastro = () => {
             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">C</span>
             </div>
-            <span className="font-display font-bold text-xl text-foreground">ComaBem</span>
+            <span className="font-display font-bold text-xl text-foreground">NutriPlus</span>
           </div>
 
           {/* Step indicator */}

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ComaBem Design System - Verde e Natural */
+/* NutriPlus Design System - Verde e Natural */
 
 @layer base {
   :root {
@@ -36,7 +36,7 @@
 
     --radius: 0.75rem;
 
-    /* Custom ComaBem tokens */
+    /* Custom NutriPlus tokens */
     --green-50: 142 40% 97%;
     --green-100: 142 40% 92%;
     --green-200: 142 40% 82%;

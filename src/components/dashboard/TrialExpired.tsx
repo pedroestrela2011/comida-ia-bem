@@ -72,7 +72,7 @@ export function TrialExpired() {
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Os 7 dias do plano Essencial chegaram ao fim. Escolha um plano abaixo para continuar
-            usando o ComaBem sem interrupções.
+            usando o NutriPlus sem interrupções.
           </p>
         </div>
 

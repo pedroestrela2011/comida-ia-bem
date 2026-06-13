@@ -157,7 +157,7 @@ export default function ReceitasRecebidas() {
           Receitas Recebidas
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Receitas enviadas por outros usuários ComaBem.
+          Receitas enviadas por outros usuários NutriPlus.
         </p>
       </div>
 

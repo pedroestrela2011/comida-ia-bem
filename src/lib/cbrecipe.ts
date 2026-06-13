@@ -1,4 +1,4 @@
-// Coma Bem Recipe format (.cbrecipe) — exclusive sharing format.
+// NutriPlus Recipe format (.cbrecipe) — exclusive sharing format.
 import type { FavoriteRecipeData } from "@/hooks/useFavorites";
 
 export const CBRECIPE_VERSION = 1;
@@ -7,7 +7,7 @@ export const CBRECIPE_EXT = ".cbrecipe";
 export type CbRecipe = {
   formato: "cbrecipe";
   versao: number;
-  origem: "Coma Bem";
+  origem: "NutriPlus";
   exportado_em: string;
   receita: FavoriteRecipeData & {
     vitaminas?: string;
@@ -19,7 +19,7 @@ export function buildCbRecipe(recipe: FavoriteRecipeData): CbRecipe {
   return {
     formato: "cbrecipe",
     versao: CBRECIPE_VERSION,
-    origem: "Coma Bem",
+    origem: "NutriPlus",
     exportado_em: new Date().toISOString(),
     receita: recipe,
   };
@@ -145,7 +145,7 @@ export async function generateRecipeCard(recipe: FavoriteRecipeData): Promise<Bl
   // Footer with brand
   ctx.fillStyle = "#2d4a1f";
   ctx.font = "700 32px system-ui, sans-serif";
-  ctx.fillText("🌿 ComaBem", 110, H - 100);
+  ctx.fillText("🌿 NutriPlus", 110, H - 100);
   ctx.fillStyle = "#6b8e4e";
   ctx.font = "400 24px system-ui, sans-serif";
   ctx.fillText("Sua nutrição inteligente", 110, H - 70);

@@ -138,7 +138,7 @@ const EscolherPlano = () => {
       toast({
         title: "Conta criada com sucesso!",
         description: opts.skipCheckout
-          ? "Bem-vindo ao ComaBem."
+          ? "Bem-vindo ao NutriPlus."
           : `Abrindo o pagamento do plano ${PLAN_CONFIG[planId].label}...`,
       });
 

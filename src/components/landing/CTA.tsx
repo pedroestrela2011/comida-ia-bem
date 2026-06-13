@@ -21,7 +21,7 @@ const CTA = () => {
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Junte-se a milhares de pessoas que já estão comendo melhor com a ajuda do ComaBem.
+            Junte-se a milhares de pessoas que já estão comendo melhor com a ajuda do NutriPlus.
           </p>
 
           {/* Perks */}
