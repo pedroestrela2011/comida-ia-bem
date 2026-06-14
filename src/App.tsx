@@ -26,7 +26,17 @@ import ReceitasRecebidas from "./pages/dashboard/ReceitasRecebidas";
 import Admin from "./pages/dashboard/Admin";
 import { PlanGate } from "./components/dashboard/PlanGate";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 min — instant back-navigation
+      gcTime: 1000 * 60 * 30, // 30 min in-memory cache
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

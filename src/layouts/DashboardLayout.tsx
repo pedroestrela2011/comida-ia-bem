@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ScoreReminders } from "@/components/dashboard/ScoreReminders";
+import { PageTransition } from "@/components/PageTransition";
 import { SubscriptionProvider, useSubscription } from "@/contexts/SubscriptionContext";
 import { TrialExpired } from "@/components/dashboard/TrialExpired";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
@@ -38,7 +39,7 @@ function DashboardShell() {
           <div className="flex-1 p-3 md:p-6 overflow-auto">
             <TrialBanner />
             <ScoreReminders />
-            <Outlet />
+            <PageTransition />
           </div>
         </main>
       </div>
