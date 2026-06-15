@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites, FAVORITES_LIMIT, type FavoriteRecord } from "@/hooks/useFavorites";
-import { ShareRecipeButton } from "@/components/dashboard/ShareRecipeButton";
+
 
 const origemLabel: Record<string, string> = {
   receitas: "Receitas",
