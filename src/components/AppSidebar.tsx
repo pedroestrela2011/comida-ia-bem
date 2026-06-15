@@ -70,11 +70,6 @@ export function AppSidebar() {
                       >
                         <item.icon className="h-4 w-4" />
                         <span className="flex-1">{item.title}</span>
-                        {item.url === "/dashboard/receitas-recebidas" && unreadCount > 0 && (
-                          <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
-                            {unreadCount}
-                          </span>
-                        )}
                         {locked && <Lock className="h-3 w-3 text-muted-foreground" />}
                       </NavLink>
                     </SidebarMenuButton>
