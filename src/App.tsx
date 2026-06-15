@@ -22,7 +22,7 @@ import AnalisadorPrato from "./pages/dashboard/AnalisadorPrato";
 import ScoreDiario from "./pages/dashboard/ScoreDiario";
 import Conquistas from "./pages/dashboard/Conquistas";
 import Favoritos from "./pages/dashboard/Favoritos";
-import ReceitasRecebidas from "./pages/dashboard/ReceitasRecebidas";
+
 import Admin from "./pages/dashboard/Admin";
 import { PlanGate } from "./components/dashboard/PlanGate";
 
