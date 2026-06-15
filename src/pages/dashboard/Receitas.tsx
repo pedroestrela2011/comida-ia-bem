@@ -27,7 +27,6 @@ function ReceitaDetail({ receita }: { receita: Receita }) {
     <div className="relative rounded-xl border border-border bg-card p-6 space-y-5">
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <FavoriteButton recipe={receita} origem="receitas" />
-        <ShareRecipeButton recipe={receita} />
       </div>
       <div className="pr-32">
         <h2 className="text-xl font-bold text-foreground">{receita.nome}</h2>
