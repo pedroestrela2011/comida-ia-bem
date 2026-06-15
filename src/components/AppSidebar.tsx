@@ -1,5 +1,4 @@
-import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart, Inbox } from "lucide-react";
-import { useReceivedRecipes } from "@/hooks/useReceivedRecipes";
+import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +27,6 @@ const menuItems: { title: string; url: string; icon: any; featureKey?: FeatureKe
   { title: "Modo Esporte", url: "/dashboard/modo-esporte", icon: Dumbbell, featureKey: "modoEsporte" },
   { title: "Receitas", url: "/dashboard/receitas", icon: ChefHat },
   { title: "Favoritos", url: "/dashboard/favoritos", icon: Heart },
-  { title: "Receitas Recebidas", url: "/dashboard/receitas-recebidas", icon: Inbox },
   { title: "Analisador de Prato", url: "/dashboard/analisador-prato", icon: UtensilsCrossed, featureKey: "analisadorPrato" },
   { title: "Meu Progresso", url: "/dashboard/progresso", icon: TrendingUp, featureKey: "progresso" },
   { title: "Conversa Saudável", url: "/dashboard/chat", icon: MessageCircle },
@@ -38,7 +36,7 @@ const menuItems: { title: string; url: string; icon: any; featureKey?: FeatureKe
 export function AppSidebar() {
   const navigate = useNavigate();
   const { features, isAdmin } = useUserPlan();
-  const { unreadCount } = useReceivedRecipes();
+  
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -72,11 +70,6 @@ export function AppSidebar() {
                       >
                         <item.icon className="h-4 w-4" />
                         <span className="flex-1">{item.title}</span>
-                        {item.url === "/dashboard/receitas-recebidas" && unreadCount > 0 && (
-                          <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
-                            {unreadCount}
-                          </span>
-                        )}
                         {locked && <Lock className="h-3 w-3 text-muted-foreground" />}
                       </NavLink>
                     </SidebarMenuButton>

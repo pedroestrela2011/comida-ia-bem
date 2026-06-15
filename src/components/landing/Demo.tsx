@@ -7,7 +7,6 @@ import {
   TrendingUp,
   Trophy,
   Star,
-  Share2,
   Award,
 } from "lucide-react";
 
@@ -74,13 +73,6 @@ const features = [
     description:
       "Salve suas receitas preferidas em uma biblioteca pessoal e acesse rapidamente quando quiser.",
     color: "bg-green-100 text-green-600",
-  },
-  {
-    icon: Share2,
-    title: "Compartilhar Receitas",
-    description:
-      "Envie receitas para amigos no formato exclusivo .cbrecipe ou gere cards prontos para redes sociais.",
-    color: "bg-earth-100 text-earth-500",
   },
 ];
 

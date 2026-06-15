@@ -7,8 +7,6 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
-import { ShareRecipeButton } from "@/components/dashboard/ShareRecipeButton";
-import { ImportRecipeButton } from "@/components/dashboard/ImportRecipeButton";
 
 type Receita = {
   nome: string; descricao: string; tempo_preparo: string; porcoes: string;
@@ -29,7 +27,6 @@ function ReceitaDetail({ receita }: { receita: Receita }) {
     <div className="relative rounded-xl border border-border bg-card p-6 space-y-5">
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <FavoriteButton recipe={receita} origem="receitas" />
-        <ShareRecipeButton recipe={receita} />
       </div>
       <div className="pr-32">
         <h2 className="text-xl font-bold text-foreground">{receita.nome}</h2>
@@ -152,7 +149,6 @@ export default function Receitas() {
           <ChefHat className="h-6 w-6 md:h-7 md:w-7 text-primary" />
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Receitas</h1>
         </div>
-        <ImportRecipeButton onImport={(r) => { setReceita(r as Receita); setActiveTab("criar"); }} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
