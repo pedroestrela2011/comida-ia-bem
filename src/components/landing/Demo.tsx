@@ -7,7 +7,6 @@ import {
   TrendingUp,
   Trophy,
   Star,
-  Share2,
   Award,
 } from "lucide-react";
 
