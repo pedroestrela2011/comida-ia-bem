@@ -23,7 +23,6 @@ function RecipeFull({ rec, onBack, onRemove }: { rec: FavoriteRecord; onBack: ()
           <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar
         </Button>
         <div className="flex items-center gap-2">
-          <ShareRecipeButton recipe={d} />
           <Button variant="outline" size="sm" onClick={onRemove}>
             <Trash2 className="mr-1.5 h-4 w-4" /> Remover
           </Button>
