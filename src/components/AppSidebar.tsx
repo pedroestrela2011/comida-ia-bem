@@ -36,7 +36,7 @@ const menuItems: { title: string; url: string; icon: any; featureKey?: FeatureKe
 export function AppSidebar() {
   const navigate = useNavigate();
   const { features, isAdmin } = useUserPlan();
-  const { unreadCount } = useReceivedRecipes();
+  
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
