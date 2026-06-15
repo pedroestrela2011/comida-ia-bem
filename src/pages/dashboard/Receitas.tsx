@@ -149,7 +149,6 @@ export default function Receitas() {
           <ChefHat className="h-6 w-6 md:h-7 md:w-7 text-primary" />
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Receitas</h1>
         </div>
-        <ImportRecipeButton onImport={(r) => { setReceita(r as Receita); setActiveTab("criar"); }} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
