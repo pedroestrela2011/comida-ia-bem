@@ -64,7 +64,7 @@ const App = () => (
             <Route path="score" element={<PlanGate feature="scoreDiario" requiredPlan="Performance"><ScoreDiario /></PlanGate>} />
             <Route path="conquistas" element={<PlanGate feature="conquistas" requiredPlan="Performance"><Conquistas /></PlanGate>} />
             <Route path="favoritos" element={<Favoritos />} />
-            <Route path="receitas-recebidas" element={<ReceitasRecebidas />} />
+            
             <Route path="admin" element={<Admin />} />
           </Route>
           <Route path="*" element={<NotFound />} />
