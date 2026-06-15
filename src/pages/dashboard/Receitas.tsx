@@ -7,8 +7,6 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
-import { ShareRecipeButton } from "@/components/dashboard/ShareRecipeButton";
-import { ImportRecipeButton } from "@/components/dashboard/ImportRecipeButton";
 
 type Receita = {
   nome: string; descricao: string; tempo_preparo: string; porcoes: string;
