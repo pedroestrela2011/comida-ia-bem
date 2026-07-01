@@ -428,6 +428,8 @@ export default function AdaptadorDieta() {
               onEditar={() => setEditing(true)}
               onConverter={converterEmCardapio}
               converting={converting}
+              onAdicionarAoCardapio={adicionarAoMeuCardapio}
+              adding={adding}
             />
           )}
           {result && editing && (
