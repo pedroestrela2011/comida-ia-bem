@@ -122,36 +122,89 @@ export default function AdaptadorDieta() {
     setSaved((data as any) || []);
   };
 
+  const readAsDataUrl = (f: File) => new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = () => reject(new Error("Não foi possível ler o arquivo. Ele pode estar corrompido ou muito grande."));
+    r.readAsDataURL(f);
+  });
+
   const handleFile = async (f: File) => {
+    resetSteps();
     setFileName(f.name);
+    setFileDataUrl("");
+
+    // Validate size (20MB max)
+    const MAX = 20 * 1024 * 1024;
+    if (f.size > MAX) {
+      setStep("upload", "error", `Arquivo muito grande (${(f.size / 1024 / 1024).toFixed(1)}MB). Máximo 20MB.`);
+      setFatalError(`O arquivo "${f.name}" tem ${(f.size / 1024 / 1024).toFixed(1)}MB. Envie um arquivo de até 20MB ou cole o texto do plano.`);
+      toast({ title: "Arquivo muito grande", description: "Máximo 20MB.", variant: "destructive" });
+      return;
+    }
+
+    setStep("upload", "active");
+
     if (f.type === "application/pdf") {
       setSourceType("pdf");
-      const reader = new FileReader();
-      reader.onload = () => setFileDataUrl(reader.result as string);
-      reader.readAsDataURL(f);
+      try {
+        const dataUrl = await readAsDataUrl(f);
+        setFileDataUrl(dataUrl);
+        setStep("upload", "done", `${(f.size / 1024).toFixed(0)} KB`);
+      } catch (e: any) {
+        setStep("upload", "error", e.message);
+        setFatalError(e.message);
+        toast({ title: "Erro no upload do PDF", description: e.message, variant: "destructive" });
+        return;
+      }
 
-      // Extract text client-side too to help IA
+      setStep("extract", "active", "Lendo páginas do PDF...");
       try {
         setExtracting(true);
         const buf = await f.arrayBuffer();
         const pdf = await (pdfjsLib as any).getDocument({ data: buf }).promise;
         let full = "";
-        for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+        const nPages = Math.min(pdf.numPages, 20);
+        for (let i = 1; i <= nPages; i++) {
           const page = await pdf.getPage(i);
           const txt = await page.getTextContent();
           full += txt.items.map((it: any) => it.str).join(" ") + "\n\n";
         }
-        if (full.trim()) setTextContent(full.trim());
-      } catch (e) {
-        console.warn("PDF text extraction failed, will send file as attachment", e);
+        if (full.trim().length < 20) {
+          setStep("extract", "done", "PDF sem texto legível — será analisado como imagem pela IA.");
+          toast({
+            title: "PDF parece ser escaneado",
+            description: "Não conseguimos extrair texto. A IA vai tentar ler o conteúdo diretamente.",
+          });
+        } else {
+          setTextContent(full.trim());
+          setStep("extract", "done", `${nPages} ${nPages === 1 ? "página lida" : "páginas lidas"} · ${full.length.toLocaleString("pt-BR")} caracteres`);
+        }
+      } catch (e: any) {
+        console.warn("PDF text extraction failed", e);
+        setStep("extract", "error", "Falha ao extrair texto. O arquivo será enviado como imagem para a IA.");
+        toast({
+          title: "Não foi possível ler o PDF",
+          description: "Vamos enviar o arquivo para a IA analisar. Se der erro, cole o texto do plano manualmente.",
+          variant: "destructive",
+        });
       } finally { setExtracting(false); }
     } else if (f.type.startsWith("image/")) {
       setSourceType("image");
-      const reader = new FileReader();
-      reader.onload = () => setFileDataUrl(reader.result as string);
-      reader.readAsDataURL(f);
+      try {
+        const dataUrl = await readAsDataUrl(f);
+        setFileDataUrl(dataUrl);
+        setStep("upload", "done", `${(f.size / 1024).toFixed(0)} KB`);
+        setStep("extract", "done", "Imagem pronta para análise pela IA.");
+      } catch (e: any) {
+        setStep("upload", "error", e.message);
+        setFatalError(e.message);
+        toast({ title: "Erro ao carregar imagem", description: e.message, variant: "destructive" });
+      }
     } else {
-      toast({ title: "Formato não suportado. Envie PDF, imagem ou cole o texto.", variant: "destructive" });
+      setStep("upload", "error", `Formato "${f.type || "desconhecido"}" não suportado.`);
+      setFatalError("Formato não suportado. Envie PDF, imagem (JPG/PNG) ou cole o texto.");
+      toast({ title: "Formato não suportado", description: "Envie PDF, imagem ou cole o texto.", variant: "destructive" });
     }
   };
 
