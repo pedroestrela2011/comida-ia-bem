@@ -218,6 +218,35 @@ export default function AdaptadorDieta() {
     setSaved((s) => s.filter((r) => r.id !== id));
   };
 
+  const converterEmCardapio = async () => {
+    if (!result?.plano_adaptado) return;
+    setConverting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sessão expirada");
+      const dados = {
+        titulo: result.plano_adaptado.resumo?.slice(0, 80) || "Dieta adaptada",
+        origem: "adaptador_dieta",
+        refeicoes: (result.plano_adaptado.refeicoes || []).map((r) => ({
+          nome: r.nome,
+          horario: r.horario,
+          itens: r.itens || [],
+          receita: r.receita || null,
+        })),
+      };
+      const { error } = await supabase.from("cardapios_salvos").insert({
+        user_id: user.id,
+        tipo: "adaptado",
+        dados,
+      });
+      if (error) throw error;
+      toast({ title: "Cardápio criado! Abrindo em Meu Cardápio..." });
+      navigate("/dashboard/cardapio");
+    } catch (e: any) {
+      toast({ title: "Erro ao criar cardápio.", description: e.message, variant: "destructive" });
+    } finally { setConverting(false); }
+  };
+
   const scoreColor = (n?: number) => !n ? "text-muted-foreground" : n >= 85 ? "text-green-600" : n >= 65 ? "text-yellow-600" : "text-red-500";
 
   return (
