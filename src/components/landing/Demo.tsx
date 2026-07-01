@@ -78,10 +78,10 @@ const features = [
 
 const Demo = () => {
   return (
-    <section className="py-12 md:py-20">
+    <section className="py-12 md:py-20" style={{ backgroundColor: "#f0f7f0" }}>
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-6">
           <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
             Tudo o que você encontra no NutriPlus
           </h2>
