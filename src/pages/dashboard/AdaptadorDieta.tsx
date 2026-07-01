@@ -12,7 +12,7 @@ import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 import {
   FileText, Image as ImageIcon, ClipboardPaste, Sparkles, Loader2, Save,
   ShoppingBasket, AlertTriangle, Wand2, ChefHat, Clock, Trash2, X, CheckCircle2,
-  Pencil, Plus, CalendarPlus, ArrowLeft, CalendarDays,
+  Pencil, Plus, CalendarPlus, ArrowLeft, CalendarDays, Upload, ScanText, Brain, Utensils,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -92,6 +92,23 @@ export default function AdaptadorDieta() {
   const [tab, setTab] = useState("nova");
   const navigate = useNavigate();
 
+  type StepStatus = "pending" | "active" | "done" | "error";
+  type Step = { key: string; label: string; icon: any; status: StepStatus; detail?: string };
+  const INITIAL_STEPS: Step[] = [
+    { key: "upload", label: "Upload do arquivo", icon: Upload, status: "pending" },
+    { key: "extract", label: "Extração do conteúdo", icon: ScanText, status: "pending" },
+    { key: "analyze", label: "Análise do plano original", icon: Brain, status: "pending" },
+    { key: "adapt", label: "Adaptação à sua rotina", icon: Wand2, status: "pending" },
+    { key: "recipes", label: "Geração das receitas", icon: Utensils, status: "pending" },
+    { key: "shopping", label: "Lista de compras", icon: ShoppingBasket, status: "pending" },
+  ];
+  const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
+  const [fatalError, setFatalError] = useState<string | null>(null);
+
+  const setStep = (key: string, status: StepStatus, detail?: string) =>
+    setSteps((prev) => prev.map((s) => (s.key === key ? { ...s, status, detail } : s)));
+  const resetSteps = () => { setSteps(INITIAL_STEPS.map((s) => ({ ...s }))); setFatalError(null); };
+
   useEffect(() => { loadSaved(); }, []);
 
   const loadSaved = async () => {
@@ -105,36 +122,89 @@ export default function AdaptadorDieta() {
     setSaved((data as any) || []);
   };
 
+  const readAsDataUrl = (f: File) => new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = () => reject(new Error("Não foi possível ler o arquivo. Ele pode estar corrompido ou muito grande."));
+    r.readAsDataURL(f);
+  });
+
   const handleFile = async (f: File) => {
+    resetSteps();
     setFileName(f.name);
+    setFileDataUrl("");
+
+    // Validate size (20MB max)
+    const MAX = 20 * 1024 * 1024;
+    if (f.size > MAX) {
+      setStep("upload", "error", `Arquivo muito grande (${(f.size / 1024 / 1024).toFixed(1)}MB). Máximo 20MB.`);
+      setFatalError(`O arquivo "${f.name}" tem ${(f.size / 1024 / 1024).toFixed(1)}MB. Envie um arquivo de até 20MB ou cole o texto do plano.`);
+      toast({ title: "Arquivo muito grande", description: "Máximo 20MB.", variant: "destructive" });
+      return;
+    }
+
+    setStep("upload", "active");
+
     if (f.type === "application/pdf") {
       setSourceType("pdf");
-      const reader = new FileReader();
-      reader.onload = () => setFileDataUrl(reader.result as string);
-      reader.readAsDataURL(f);
+      try {
+        const dataUrl = await readAsDataUrl(f);
+        setFileDataUrl(dataUrl);
+        setStep("upload", "done", `${(f.size / 1024).toFixed(0)} KB`);
+      } catch (e: any) {
+        setStep("upload", "error", e.message);
+        setFatalError(e.message);
+        toast({ title: "Erro no upload do PDF", description: e.message, variant: "destructive" });
+        return;
+      }
 
-      // Extract text client-side too to help IA
+      setStep("extract", "active", "Lendo páginas do PDF...");
       try {
         setExtracting(true);
         const buf = await f.arrayBuffer();
         const pdf = await (pdfjsLib as any).getDocument({ data: buf }).promise;
         let full = "";
-        for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+        const nPages = Math.min(pdf.numPages, 20);
+        for (let i = 1; i <= nPages; i++) {
           const page = await pdf.getPage(i);
           const txt = await page.getTextContent();
           full += txt.items.map((it: any) => it.str).join(" ") + "\n\n";
         }
-        if (full.trim()) setTextContent(full.trim());
-      } catch (e) {
-        console.warn("PDF text extraction failed, will send file as attachment", e);
+        if (full.trim().length < 20) {
+          setStep("extract", "done", "PDF sem texto legível — será analisado como imagem pela IA.");
+          toast({
+            title: "PDF parece ser escaneado",
+            description: "Não conseguimos extrair texto. A IA vai tentar ler o conteúdo diretamente.",
+          });
+        } else {
+          setTextContent(full.trim());
+          setStep("extract", "done", `${nPages} ${nPages === 1 ? "página lida" : "páginas lidas"} · ${full.length.toLocaleString("pt-BR")} caracteres`);
+        }
+      } catch (e: any) {
+        console.warn("PDF text extraction failed", e);
+        setStep("extract", "error", "Falha ao extrair texto. O arquivo será enviado como imagem para a IA.");
+        toast({
+          title: "Não foi possível ler o PDF",
+          description: "Vamos enviar o arquivo para a IA analisar. Se der erro, cole o texto do plano manualmente.",
+          variant: "destructive",
+        });
       } finally { setExtracting(false); }
     } else if (f.type.startsWith("image/")) {
       setSourceType("image");
-      const reader = new FileReader();
-      reader.onload = () => setFileDataUrl(reader.result as string);
-      reader.readAsDataURL(f);
+      try {
+        const dataUrl = await readAsDataUrl(f);
+        setFileDataUrl(dataUrl);
+        setStep("upload", "done", `${(f.size / 1024).toFixed(0)} KB`);
+        setStep("extract", "done", "Imagem pronta para análise pela IA.");
+      } catch (e: any) {
+        setStep("upload", "error", e.message);
+        setFatalError(e.message);
+        toast({ title: "Erro ao carregar imagem", description: e.message, variant: "destructive" });
+      }
     } else {
-      toast({ title: "Formato não suportado. Envie PDF, imagem ou cole o texto.", variant: "destructive" });
+      setStep("upload", "error", `Formato "${f.type || "desconhecido"}" não suportado.`);
+      setFatalError("Formato não suportado. Envie PDF, imagem (JPG/PNG) ou cole o texto.");
+      toast({ title: "Formato não suportado", description: "Envie PDF, imagem ou cole o texto.", variant: "destructive" });
     }
   };
 
@@ -153,12 +223,30 @@ export default function AdaptadorDieta() {
       toast({ title: "Envie ou cole o plano alimentar antes de continuar.", variant: "destructive" });
       return;
     }
-    setLoading(true); setResult(null);
+    setLoading(true); setResult(null); setFatalError(null);
+
+    // If text-only flow, mark upload/extract as done
+    if (sourceType === "text") {
+      setStep("upload", "done", "Texto colado");
+      setStep("extract", "done", `${textContent.trim().length.toLocaleString("pt-BR")} caracteres`);
+    }
+
+    // Simulate substep progression while the single edge-function call runs.
+    // The IA returns the full JSON, so we advance UI stages on a timer.
+    setStep("analyze", "active", "A IA está lendo seu plano...");
+    const t1 = setTimeout(() => { setStep("analyze", "done"); setStep("adapt", "active", "Ajustando refeições à sua rotina..."); }, 4000);
+    const t2 = setTimeout(() => { setStep("adapt", "done"); setStep("recipes", "active", "Criando receitas..."); }, 10000);
+    const t3 = setTimeout(() => { setStep("recipes", "done"); setStep("shopping", "active", "Montando lista de compras..."); }, 16000);
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: "Faça login para usar esta funcionalidade.", variant: "destructive" }); return; }
+      if (!session) {
+        setStep("analyze", "error", "Sessão expirada");
+        setFatalError("Faça login novamente para usar esta funcionalidade.");
+        toast({ title: "Faça login para usar esta funcionalidade.", variant: "destructive" });
+        return;
+      }
 
-      // Prefer text (works best). If PDF and we have extracted text, send text + also attach file.
       let source: any;
       if (sourceType === "text" || (sourceType === "pdf" && textContent.trim())) {
         source = { type: "text", content: textContent.trim() };
@@ -171,23 +259,40 @@ export default function AdaptadorDieta() {
       const { data, error } = await supabase.functions.invoke("adaptar-dieta", {
         body: {
           source,
-          personalization: {
-            horarios, gosta, nao_gosta: naoGosta, alergias,
-            rotina, tempo_cozinhar: tempoCozinhar, orcamento,
-          },
+          personalization: { horarios, gosta, nao_gosta: naoGosta, alergias, rotina, tempo_cozinhar: tempoCozinhar, orcamento },
         },
       });
       if (error) throw error;
 
       const content: string = data?.content || "";
       const match = content.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error("Resposta inválida da IA");
+      if (!match) throw new Error("A IA retornou uma resposta em formato inesperado. Tente novamente ou cole o texto do plano.");
       const parsed: AdaptedResult = JSON.parse(match[0]);
+
+      [t1, t2, t3].forEach(clearTimeout);
+      setStep("analyze", "done");
+      setStep("adapt", "done", parsed.plano_adaptado?.refeicoes?.length ? `${parsed.plano_adaptado.refeicoes.length} refeições adaptadas` : undefined);
+
+      const nReceitas = parsed.plano_adaptado?.refeicoes?.filter((r) => r.receita).length || 0;
+      setStep("recipes", nReceitas > 0 ? "done" : "error", nReceitas > 0 ? `${nReceitas} ${nReceitas === 1 ? "receita gerada" : "receitas geradas"}` : "Nenhuma receita gerada.");
+
+      const nItens = Object.values(parsed.lista_compras?.semanal || {}).reduce((acc: number, arr: any) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
+      setStep("shopping", nItens > 0 ? "done" : "error", nItens > 0 ? `${nItens} itens na lista` : "Lista de compras vazia.");
+
       setResult(parsed);
       toast({ title: "Dieta adaptada com sucesso!" });
     } catch (e: any) {
+      [t1, t2, t3].forEach(clearTimeout);
       console.error(e);
-      toast({ title: "Erro ao adaptar dieta.", description: e.message, variant: "destructive" });
+      const msg = e.message || "Erro desconhecido.";
+      const friendly =
+        msg.includes("Failed to fetch") ? "Sem conexão com o servidor. Verifique sua internet e tente novamente."
+        : msg.includes("timeout") || msg.includes("aborted") ? "A análise demorou demais. Tente reduzir o tamanho do arquivo ou colar o texto do plano."
+        : msg.includes("JSON") || msg.includes("formato") ? "A IA não conseguiu ler o conteúdo. Se enviou um PDF escaneado ou foto de baixa qualidade, tente colar o texto manualmente."
+        : msg;
+      setSteps((prev) => prev.map((s) => (s.status === "active" ? { ...s, status: "error", detail: friendly } : s)));
+      setFatalError(friendly);
+      toast({ title: "Erro ao adaptar dieta", description: friendly, variant: "destructive" });
     } finally { setLoading(false); }
   };
 
@@ -418,6 +523,10 @@ export default function AdaptadorDieta() {
           <Button size="lg" onClick={adaptar} disabled={loading || !canSubmit} className="w-full sm:w-auto">
             {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adaptando dieta...</> : <><Sparkles className="mr-2 h-4 w-4" /> Adaptar minha dieta</>}
           </Button>
+
+          {(loading || fatalError || steps.some((s) => s.status !== "pending")) && (
+            <ProgressStepper steps={steps} fatalError={fatalError} onRetry={() => { resetSteps(); }} />
+          )}
 
           {result && !editing && (
             <AdaptedResultView
@@ -823,5 +932,72 @@ function AdaptedDietEditor({ result, onCancel, onApply }: {
         <Button onClick={() => onApply(draft)}><CheckCircle2 className="mr-2 h-4 w-4" /> Aplicar ajustes</Button>
       </div>
     </div>
+  );
+}
+
+function ProgressStepper({
+  steps,
+  fatalError,
+  onRetry,
+}: {
+  steps: { key: string; label: string; icon: any; status: "pending" | "active" | "done" | "error"; detail?: string }[];
+  fatalError: string | null;
+  onRetry: () => void;
+}) {
+  const done = steps.filter((s) => s.status === "done").length;
+  const total = steps.length;
+  const pct = Math.round((done / total) * 100);
+
+  return (
+    <Card className="border-primary/30 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Progresso da adaptação
+            </CardTitle>
+            <CardDescription>{done} de {total} etapas concluídas</CardDescription>
+          </div>
+          <div className="text-2xl font-bold text-primary tabular-nums">{pct}%</div>
+        </div>
+        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div className="h-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {steps.map((s) => {
+          const Icon = s.icon;
+          const color =
+            s.status === "done" ? "text-green-600 border-green-500/40 bg-green-500/5"
+            : s.status === "active" ? "text-primary border-primary/50 bg-primary/5"
+            : s.status === "error" ? "text-destructive border-destructive/50 bg-destructive/5"
+            : "text-muted-foreground border-muted bg-muted/20";
+          return (
+            <div key={s.key} className={`flex items-start gap-3 rounded-md border p-2.5 ${color}`}>
+              <div className="mt-0.5">
+                {s.status === "active" ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : s.status === "done" ? <CheckCircle2 className="h-4 w-4" />
+                  : s.status === "error" ? <AlertTriangle className="h-4 w-4" />
+                  : <Icon className="h-4 w-4" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium leading-tight">{s.label}</p>
+                {s.detail && <p className="text-xs opacity-80 mt-0.5">{s.detail}</p>}
+              </div>
+            </div>
+          );
+        })}
+
+        {fatalError && (
+          <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+            <p className="font-semibold text-destructive flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Não foi possível concluir</p>
+            <p className="text-xs text-muted-foreground mt-1">{fatalError}</p>
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" variant="outline" onClick={onRetry}>Limpar e tentar de novo</Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
