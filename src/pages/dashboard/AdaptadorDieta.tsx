@@ -92,6 +92,23 @@ export default function AdaptadorDieta() {
   const [tab, setTab] = useState("nova");
   const navigate = useNavigate();
 
+  type StepStatus = "pending" | "active" | "done" | "error";
+  type Step = { key: string; label: string; icon: any; status: StepStatus; detail?: string };
+  const INITIAL_STEPS: Step[] = [
+    { key: "upload", label: "Upload do arquivo", icon: Upload, status: "pending" },
+    { key: "extract", label: "Extração do conteúdo", icon: ScanText, status: "pending" },
+    { key: "analyze", label: "Análise do plano original", icon: Brain, status: "pending" },
+    { key: "adapt", label: "Adaptação à sua rotina", icon: Wand2, status: "pending" },
+    { key: "recipes", label: "Geração das receitas", icon: Utensils, status: "pending" },
+    { key: "shopping", label: "Lista de compras", icon: ShoppingBasket, status: "pending" },
+  ];
+  const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
+  const [fatalError, setFatalError] = useState<string | null>(null);
+
+  const setStep = (key: string, status: StepStatus, detail?: string) =>
+    setSteps((prev) => prev.map((s) => (s.key === key ? { ...s, status, detail } : s)));
+  const resetSteps = () => { setSteps(INITIAL_STEPS.map((s) => ({ ...s }))); setFatalError(null); };
+
   useEffect(() => { loadSaved(); }, []);
 
   const loadSaved = async () => {
