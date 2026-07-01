@@ -6,7 +6,7 @@ const reviews = [
     name: "Maria Santos",
     avatar: "MS",
     rating: 5,
-    text: "O NutriPlus mudou minha vida! Perdi 8kg em 3 meses sem passar fome. As receitas são deliciosas e práticas.",
+    text: "O ComaFacil mudou minha vida! Perdi 8kg em 3 meses sem passar fome. As receitas são deliciosas e práticas.",
     role: "Empresária",
   },
   {
@@ -45,7 +45,7 @@ const Reviews = () => {
             O que nossos usuários dizem
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Milhares de pessoas já transformaram sua alimentação com o NutriPlus
+            Milhares de pessoas já transformaram sua alimentação com o ComaFacil
           </p>
         </div>
 

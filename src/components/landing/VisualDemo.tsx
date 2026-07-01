@@ -33,7 +33,7 @@ const VisualDemo = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-6">
           <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-            Veja a NutriPlus em ação
+            Veja a ComaFacil em ação
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Uma prévia de como a plataforma transforma sua rotina alimentar.

@@ -23,7 +23,7 @@ const VerificarEmail = () => {
         setRedirecting(true);
 
         if (skipCheckout) {
-          toast({ title: "Email verificado!", description: "Bem-vindo ao NutriPlus." });
+          toast({ title: "Email verificado!", description: "Bem-vindo ao ComaFacil." });
           navigate("/dashboard");
           return;
         }

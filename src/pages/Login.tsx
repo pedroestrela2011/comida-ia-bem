@@ -71,7 +71,7 @@ const Login = () => {
           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-lg">N</span>
           </div>
-          <span className="font-display font-bold text-xl text-foreground">NutriPlus</span>
+          <span className="font-display font-bold text-xl text-foreground">ComaFacil</span>
         </div>
 
         <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
