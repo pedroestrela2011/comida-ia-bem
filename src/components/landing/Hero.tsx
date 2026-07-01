@@ -37,21 +37,38 @@ const Hero = () => {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <Link to="/cadastro" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 font-semibold shadow-xl hover:shadow-2xl transition-all group">
+              <button
+                type="button"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 transition-all group hover:opacity-95"
+                style={{
+                  padding: "16px 32px",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                  backgroundColor: "#2d6a4f",
+                  color: "#ffffff",
+                  borderRadius: "12px",
+                  boxShadow: "0 4px 14px rgba(45, 106, 79, 0.4)",
+                }}
+              >
                 Comece Agora
-                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
+                <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+              </button>
             </Link>
             <a href="#como-funciona" className="w-full sm:w-auto">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 font-semibold border-2"
+              <button
+                type="button"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1 bg-transparent border-0 hover:underline underline-offset-4"
+                style={{
+                  color: "#2d6a4f",
+                  fontSize: "16px",
+                  padding: "16px 8px",
+                  fontWeight: 500,
+                }}
               >
-                Saiba Mais
-              </Button>
+                Saiba Mais →
+              </button>
             </a>
           </div>
 
