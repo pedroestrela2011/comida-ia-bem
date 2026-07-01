@@ -12,7 +12,7 @@ import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 import {
   FileText, Image as ImageIcon, ClipboardPaste, Sparkles, Loader2, Save,
   ShoppingBasket, AlertTriangle, Wand2, ChefHat, Clock, Trash2, X, CheckCircle2,
-  Pencil, Plus, CalendarPlus, ArrowLeft, CalendarDays,
+  Pencil, Plus, CalendarPlus, ArrowLeft, CalendarDays, Upload, ScanText, Brain, Utensils,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
