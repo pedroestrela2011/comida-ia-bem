@@ -95,13 +95,34 @@ const Demo = () => {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group relative bg-card rounded-2xl p-6 shadow-md hover:shadow-2xl border border-border hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 animate-fade-in"
-              style={{ animationDelay: `${index * 60}ms` }}
+              className="group relative hover:-translate-y-1 animate-fade-in"
+              style={{
+                background: "linear-gradient(to bottom, #e8f5e9 0%, #ffffff 60%)",
+                padding: "28px",
+                borderRadius: "16px",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                border: "1px solid transparent",
+                transition: "border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
+                animationDelay: `${index * 60}ms`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#2d6a4f";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "transparent";
+              }}
             >
               <div
-                className={`w-14 h-14 rounded-xl ${feature.color} flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform`}
+                className="flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "9999px",
+                  backgroundColor: "#2d6a4f",
+                  color: "#ffffff",
+                }}
               >
-                <feature.icon className="w-7 h-7" />
+                <feature.icon className="w-6 h-6" />
               </div>
 
               <h3 className="text-lg font-semibold text-foreground mb-2">
