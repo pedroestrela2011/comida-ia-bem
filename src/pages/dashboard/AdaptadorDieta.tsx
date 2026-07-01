@@ -234,9 +234,9 @@ export default function AdaptadorDieta() {
     // Simulate substep progression while the single edge-function call runs.
     // The IA returns the full JSON, so we advance UI stages on a timer.
     setStep("analyze", "active", "A IA está lendo seu plano...");
-    const t1 = setTimeout(() => setStep("analyze", "done") || setStep("adapt", "active", "Ajustando refeições à sua rotina..."), 4000);
-    const t2 = setTimeout(() => setStep("adapt", "done") || setStep("recipes", "active", "Criando receitas..."), 10000);
-    const t3 = setTimeout(() => setStep("recipes", "done") || setStep("shopping", "active", "Montando lista de compras..."), 16000);
+    const t1 = setTimeout(() => { setStep("analyze", "done"); setStep("adapt", "active", "Ajustando refeições à sua rotina..."); }, 4000);
+    const t2 = setTimeout(() => { setStep("adapt", "done"); setStep("recipes", "active", "Criando receitas..."); }, 10000);
+    const t3 = setTimeout(() => { setStep("recipes", "done"); setStep("shopping", "active", "Montando lista de compras..."); }, 16000);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
