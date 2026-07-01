@@ -934,3 +934,70 @@ function AdaptedDietEditor({ result, onCancel, onApply }: {
     </div>
   );
 }
+
+function ProgressStepper({
+  steps,
+  fatalError,
+  onRetry,
+}: {
+  steps: { key: string; label: string; icon: any; status: "pending" | "active" | "done" | "error"; detail?: string }[];
+  fatalError: string | null;
+  onRetry: () => void;
+}) {
+  const done = steps.filter((s) => s.status === "done").length;
+  const total = steps.length;
+  const pct = Math.round((done / total) * 100);
+
+  return (
+    <Card className="border-primary/30 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Progresso da adaptação
+            </CardTitle>
+            <CardDescription>{done} de {total} etapas concluídas</CardDescription>
+          </div>
+          <div className="text-2xl font-bold text-primary tabular-nums">{pct}%</div>
+        </div>
+        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div className="h-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {steps.map((s) => {
+          const Icon = s.icon;
+          const color =
+            s.status === "done" ? "text-green-600 border-green-500/40 bg-green-500/5"
+            : s.status === "active" ? "text-primary border-primary/50 bg-primary/5"
+            : s.status === "error" ? "text-destructive border-destructive/50 bg-destructive/5"
+            : "text-muted-foreground border-muted bg-muted/20";
+          return (
+            <div key={s.key} className={`flex items-start gap-3 rounded-md border p-2.5 ${color}`}>
+              <div className="mt-0.5">
+                {s.status === "active" ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : s.status === "done" ? <CheckCircle2 className="h-4 w-4" />
+                  : s.status === "error" ? <AlertTriangle className="h-4 w-4" />
+                  : <Icon className="h-4 w-4" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium leading-tight">{s.label}</p>
+                {s.detail && <p className="text-xs opacity-80 mt-0.5">{s.detail}</p>}
+              </div>
+            </div>
+          );
+        })}
+
+        {fatalError && (
+          <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+            <p className="font-semibold text-destructive flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Não foi possível concluir</p>
+            <p className="text-xs text-muted-foreground mt-1">{fatalError}</p>
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" variant="outline" onClick={onRetry}>Limpar e tentar de novo</Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
