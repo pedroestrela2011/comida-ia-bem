@@ -15,10 +15,10 @@ const fadeUp = {
 
 const ProblemSolution = () => {
   return (
-    <section className="py-12 md:py-20 bg-secondary/30">
+    <section className="py-12 md:py-20" style={{ backgroundColor: "#ffffff" }}>
       <div className="container mx-auto px-4">
         <motion.div
-          className="text-center mb-12"
+          className="text-center mb-6"
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-10%" }}

@@ -35,10 +35,10 @@ const benefits = [
 
 const Benefits = () => {
   return (
-    <section id="beneficios" className="py-12 md:py-20 scroll-mt-20">
+    <section id="beneficios" className="py-12 md:py-20 scroll-mt-20" style={{ backgroundColor: "#f0f7f0" }}>
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-6">
           <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
             Por que escolher o NutriPlus?
           </h2>

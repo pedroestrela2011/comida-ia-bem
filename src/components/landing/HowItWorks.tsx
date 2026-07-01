@@ -29,9 +29,9 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section id="como-funciona" className="py-12 md:py-20 bg-primary/5 scroll-mt-20">
+    <section id="como-funciona" className="py-12 md:py-20 scroll-mt-20" style={{ backgroundColor: "#ffffff" }}>
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <div className="text-center mb-6">
           <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
             Como funciona?
           </h2>
