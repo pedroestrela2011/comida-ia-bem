@@ -249,6 +249,86 @@ export default function AdaptadorDieta() {
     } finally { setConverting(false); }
   };
 
+  const [adding, setAdding] = useState(false);
+
+  const adicionarAoMeuCardapio = async (semanas: number) => {
+    if (!result?.plano_adaptado?.refeicoes?.length) return;
+    setAdding(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sessão expirada");
+
+      const DIAS = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+      const SLOT_ORDER = ["cafe_da_manha", "lanche_manha", "almoco", "lanche_tarde", "jantar"];
+      const parseHour = (h?: string): number | null => {
+        if (!h) return null;
+        const m = h.match(/(\d{1,2})/);
+        return m ? parseInt(m[1], 10) : null;
+      };
+      const slotFromHour = (h?: string): string => {
+        const n = parseHour(h);
+        if (n === null) return "lanche_tarde";
+        if (n < 10) return "cafe_da_manha";
+        if (n < 12) return "lanche_manha";
+        if (n < 15) return "almoco";
+        if (n < 18) return "lanche_tarde";
+        return "jantar";
+      };
+      const toRefeicao = (r: any) => {
+        const rec = r.receita || {};
+        const ingFromItens = (r.itens || []).map((i: any) => `${i.alimento}${i.quantidade ? ` — ${i.quantidade}` : ""}`);
+        return {
+          nome: rec.nome || r.nome || "Refeição",
+          descricao: rec.beneficios || (r.substituicoes_feitas?.join(" · ") ?? ""),
+          ingredientes: (rec.ingredientes && rec.ingredientes.length ? rec.ingredientes : ingFromItens),
+          modo_preparo: rec.modo_preparo || [],
+          tempo_preparo: rec.tempo_preparo || "",
+          dificuldade: rec.dificuldade || "",
+          dicas: r.horario ? `Horário sugerido: ${r.horario}` : undefined,
+        };
+      };
+
+      // Build one day of meals from adapted diet
+      const refeicoes = result.plano_adaptado.refeicoes;
+      const diaBase: Record<string, any> = {};
+      const usedSlots = new Set<string>();
+      refeicoes.forEach((r, idx) => {
+        let slot = slotFromHour(r.horario);
+        if (usedSlots.has(slot)) {
+          // fallback to first free ordered slot
+          slot = SLOT_ORDER.find((s) => !usedSlots.has(s)) || `refeicao_extra_${idx}`;
+        }
+        usedSlots.add(slot);
+        diaBase[slot] = toRefeicao(r);
+      });
+
+      const cardapio: Record<string, any> = {};
+      DIAS.forEach((d) => { cardapio[d] = { ...diaBase }; });
+
+      const listaCompras: string[] = [];
+      const semanal = result.lista_compras?.semanal || {};
+      Object.values(semanal).forEach((arr: any) => Array.isArray(arr) && listaCompras.push(...arr));
+
+      const tituloBase = result.plano_adaptado.resumo?.slice(0, 60) || "Dieta adaptada";
+      const rows = Array.from({ length: semanas }).map((_, i) => ({
+        user_id: user.id,
+        tipo: "normal" as const,
+        dados: {
+          cardapio,
+          lista_compras: listaCompras,
+          titulo: `Semana ${i + 1} · ${tituloBase}`,
+          origem: "adaptador_dieta",
+        } as any,
+      }));
+
+      const { error } = await supabase.from("cardapios_salvos").insert(rows);
+      if (error) throw error;
+      toast({ title: `${semanas} ${semanas === 1 ? "semana adicionada" : "semanas adicionadas"} ao seu cardápio!` });
+      navigate("/dashboard/cardapio");
+    } catch (e: any) {
+      toast({ title: "Erro ao adicionar ao cardápio.", description: e.message, variant: "destructive" });
+    } finally { setAdding(false); }
+
   const scoreColor = (n?: number) => !n ? "text-muted-foreground" : n >= 85 ? "text-green-600" : n >= 65 ? "text-yellow-600" : "text-red-500";
 
   return (
