@@ -223,12 +223,30 @@ export default function AdaptadorDieta() {
       toast({ title: "Envie ou cole o plano alimentar antes de continuar.", variant: "destructive" });
       return;
     }
-    setLoading(true); setResult(null);
+    setLoading(true); setResult(null); setFatalError(null);
+
+    // If text-only flow, mark upload/extract as done
+    if (sourceType === "text") {
+      setStep("upload", "done", "Texto colado");
+      setStep("extract", "done", `${textContent.trim().length.toLocaleString("pt-BR")} caracteres`);
+    }
+
+    // Simulate substep progression while the single edge-function call runs.
+    // The IA returns the full JSON, so we advance UI stages on a timer.
+    setStep("analyze", "active", "A IA está lendo seu plano...");
+    const t1 = setTimeout(() => setStep("analyze", "done") || setStep("adapt", "active", "Ajustando refeições à sua rotina..."), 4000);
+    const t2 = setTimeout(() => setStep("adapt", "done") || setStep("recipes", "active", "Criando receitas..."), 10000);
+    const t3 = setTimeout(() => setStep("recipes", "done") || setStep("shopping", "active", "Montando lista de compras..."), 16000);
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: "Faça login para usar esta funcionalidade.", variant: "destructive" }); return; }
+      if (!session) {
+        setStep("analyze", "error", "Sessão expirada");
+        setFatalError("Faça login novamente para usar esta funcionalidade.");
+        toast({ title: "Faça login para usar esta funcionalidade.", variant: "destructive" });
+        return;
+      }
 
-      // Prefer text (works best). If PDF and we have extracted text, send text + also attach file.
       let source: any;
       if (sourceType === "text" || (sourceType === "pdf" && textContent.trim())) {
         source = { type: "text", content: textContent.trim() };
@@ -241,23 +259,40 @@ export default function AdaptadorDieta() {
       const { data, error } = await supabase.functions.invoke("adaptar-dieta", {
         body: {
           source,
-          personalization: {
-            horarios, gosta, nao_gosta: naoGosta, alergias,
-            rotina, tempo_cozinhar: tempoCozinhar, orcamento,
-          },
+          personalization: { horarios, gosta, nao_gosta: naoGosta, alergias, rotina, tempo_cozinhar: tempoCozinhar, orcamento },
         },
       });
       if (error) throw error;
 
       const content: string = data?.content || "";
       const match = content.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error("Resposta inválida da IA");
+      if (!match) throw new Error("A IA retornou uma resposta em formato inesperado. Tente novamente ou cole o texto do plano.");
       const parsed: AdaptedResult = JSON.parse(match[0]);
+
+      [t1, t2, t3].forEach(clearTimeout);
+      setStep("analyze", "done");
+      setStep("adapt", "done", parsed.plano_adaptado?.refeicoes?.length ? `${parsed.plano_adaptado.refeicoes.length} refeições adaptadas` : undefined);
+
+      const nReceitas = parsed.plano_adaptado?.refeicoes?.filter((r) => r.receita).length || 0;
+      setStep("recipes", nReceitas > 0 ? "done" : "error", nReceitas > 0 ? `${nReceitas} ${nReceitas === 1 ? "receita gerada" : "receitas geradas"}` : "Nenhuma receita gerada.");
+
+      const nItens = Object.values(parsed.lista_compras?.semanal || {}).reduce((acc: number, arr: any) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
+      setStep("shopping", nItens > 0 ? "done" : "error", nItens > 0 ? `${nItens} itens na lista` : "Lista de compras vazia.");
+
       setResult(parsed);
       toast({ title: "Dieta adaptada com sucesso!" });
     } catch (e: any) {
+      [t1, t2, t3].forEach(clearTimeout);
       console.error(e);
-      toast({ title: "Erro ao adaptar dieta.", description: e.message, variant: "destructive" });
+      const msg = e.message || "Erro desconhecido.";
+      const friendly =
+        msg.includes("Failed to fetch") ? "Sem conexão com o servidor. Verifique sua internet e tente novamente."
+        : msg.includes("timeout") || msg.includes("aborted") ? "A análise demorou demais. Tente reduzir o tamanho do arquivo ou colar o texto do plano."
+        : msg.includes("JSON") || msg.includes("formato") ? "A IA não conseguiu ler o conteúdo. Se enviou um PDF escaneado ou foto de baixa qualidade, tente colar o texto manualmente."
+        : msg;
+      setSteps((prev) => prev.map((s) => (s.status === "active" ? { ...s, status: "error", detail: friendly } : s)));
+      setFatalError(friendly);
+      toast({ title: "Erro ao adaptar dieta", description: friendly, variant: "destructive" });
     } finally { setLoading(false); }
   };
 
