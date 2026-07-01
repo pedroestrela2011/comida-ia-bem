@@ -12,7 +12,9 @@ import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 import {
   FileText, Image as ImageIcon, ClipboardPaste, Sparkles, Loader2, Save,
   ShoppingBasket, AlertTriangle, Wand2, ChefHat, Clock, Trash2, X, CheckCircle2,
+  Pencil, Plus, CalendarPlus, ArrowLeft,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // pdfjs client-side text extraction
 import * as pdfjsLib from "pdfjs-dist";
@@ -81,9 +83,12 @@ export default function AdaptadorDieta() {
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdaptedResult | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [converting, setConverting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<any[]>([]);
   const [tab, setTab] = useState("nova");
+  const navigate = useNavigate();
 
   useEffect(() => { loadSaved(); }, []);
 
@@ -213,6 +218,35 @@ export default function AdaptadorDieta() {
     setSaved((s) => s.filter((r) => r.id !== id));
   };
 
+  const converterEmCardapio = async () => {
+    if (!result?.plano_adaptado) return;
+    setConverting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sessão expirada");
+      const dados = {
+        titulo: result.plano_adaptado.resumo?.slice(0, 80) || "Dieta adaptada",
+        origem: "adaptador_dieta",
+        refeicoes: (result.plano_adaptado.refeicoes || []).map((r) => ({
+          nome: r.nome,
+          horario: r.horario,
+          itens: r.itens || [],
+          receita: r.receita || null,
+        })),
+      };
+      const { error } = await supabase.from("cardapios_salvos").insert({
+        user_id: user.id,
+        tipo: "adaptado",
+        dados,
+      });
+      if (error) throw error;
+      toast({ title: "Cardápio criado! Abrindo em Meu Cardápio..." });
+      navigate("/dashboard/cardapio");
+    } catch (e: any) {
+      toast({ title: "Erro ao criar cardápio.", description: e.message, variant: "destructive" });
+    } finally { setConverting(false); }
+  };
+
   const scoreColor = (n?: number) => !n ? "text-muted-foreground" : n >= 85 ? "text-green-600" : n >= 65 ? "text-yellow-600" : "text-red-500";
 
   return (
@@ -302,7 +336,24 @@ export default function AdaptadorDieta() {
             {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adaptando dieta...</> : <><Sparkles className="mr-2 h-4 w-4" /> Adaptar minha dieta</>}
           </Button>
 
-          {result && <AdaptedResultView result={result} onSalvar={salvar} saving={saving} scoreColor={scoreColor} />}
+          {result && !editing && (
+            <AdaptedResultView
+              result={result}
+              onSalvar={salvar}
+              saving={saving}
+              scoreColor={scoreColor}
+              onEditar={() => setEditing(true)}
+              onConverter={converterEmCardapio}
+              converting={converting}
+            />
+          )}
+          {result && editing && (
+            <AdaptedDietEditor
+              result={result}
+              onCancel={() => setEditing(false)}
+              onApply={(updated) => { setResult(updated); setEditing(false); toast({ title: "Ajustes aplicados." }); }}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="salvas" className="space-y-4 mt-4">
@@ -333,7 +384,10 @@ export default function AdaptadorDieta() {
   );
 }
 
-function AdaptedResultView({ result, onSalvar, saving, scoreColor }: { result: AdaptedResult; onSalvar: () => void; saving: boolean; scoreColor: (n?: number) => string }) {
+function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onConverter, converting }: {
+  result: AdaptedResult; onSalvar: () => void; saving: boolean; scoreColor: (n?: number) => string;
+  onEditar: () => void; onConverter: () => void; converting: boolean;
+}) {
   const comp = result.compatibilidade;
   return (
     <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
@@ -346,12 +400,30 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor }: { result: A
               <p className="font-semibold text-foreground">Compatibilidade com sua rotina</p>
               <p className="text-sm text-muted-foreground mt-1">{comp.justificativa}</p>
             </div>
-            <Button onClick={onSalvar} disabled={saving}>
-              {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando</> : <><Save className="mr-2 h-4 w-4" /> Salvar dieta</>}
-            </Button>
           </CardContent>
         </Card>
       )}
+
+      {/* Ações principais - Revisar / Salvar / Transformar */}
+      <Card className="bg-muted/30">
+        <CardContent className="pt-6 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+          <div className="text-sm text-muted-foreground">
+            Revise e ajuste horários, quantidades e substituições antes de salvar ou transformar em cardápio.
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={onEditar}>
+              <Pencil className="mr-2 h-4 w-4" /> Revisar e ajustar
+            </Button>
+            <Button variant="secondary" onClick={onSalvar} disabled={saving}>
+              {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando</> : <><Save className="mr-2 h-4 w-4" /> Salvar dieta</>}
+            </Button>
+            <Button onClick={onConverter} disabled={converting}>
+              {converting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Convertendo</> : <><CalendarPlus className="mr-2 h-4 w-4" /> Transformar em cardápio</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* Comparação Original x Adaptado */}
       <div className="grid gap-4 lg:grid-cols-2">
@@ -503,6 +575,130 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor }: { result: A
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+function AdaptedDietEditor({ result, onCancel, onApply }: {
+  result: AdaptedResult;
+  onCancel: () => void;
+  onApply: (updated: AdaptedResult) => void;
+}) {
+  const [draft, setDraft] = useState<AdaptedResult>(() => JSON.parse(JSON.stringify(result)));
+  const refeicoes = draft.plano_adaptado?.refeicoes || [];
+
+  const updateMeal = (idx: number, patch: any) => {
+    setDraft((d) => {
+      const next = { ...d, plano_adaptado: { ...d.plano_adaptado, refeicoes: [...(d.plano_adaptado?.refeicoes || [])] } };
+      next.plano_adaptado!.refeicoes![idx] = { ...next.plano_adaptado!.refeicoes![idx], ...patch };
+      return next;
+    });
+  };
+  const updateItem = (mIdx: number, iIdx: number, patch: any) => {
+    const itens = [...(refeicoes[mIdx].itens || [])];
+    itens[iIdx] = { ...itens[iIdx], ...patch };
+    updateMeal(mIdx, { itens });
+  };
+  const addItem = (mIdx: number) => updateMeal(mIdx, { itens: [...(refeicoes[mIdx].itens || []), { alimento: "", quantidade: "" }] });
+  const removeItem = (mIdx: number, iIdx: number) => updateMeal(mIdx, { itens: (refeicoes[mIdx].itens || []).filter((_, i) => i !== iIdx) });
+  const updateSub = (mIdx: number, sIdx: number, val: string) => {
+    const subs = [...(refeicoes[mIdx].substituicoes_feitas || [])];
+    subs[sIdx] = val;
+    updateMeal(mIdx, { substituicoes_feitas: subs });
+  };
+  const addSub = (mIdx: number) => updateMeal(mIdx, { substituicoes_feitas: [...(refeicoes[mIdx].substituicoes_feitas || []), ""] });
+  const removeSub = (mIdx: number, sIdx: number) => updateMeal(mIdx, { substituicoes_feitas: (refeicoes[mIdx].substituicoes_feitas || []).filter((_, i) => i !== sIdx) });
+  const addMeal = () => setDraft((d) => ({
+    ...d,
+    plano_adaptado: {
+      ...d.plano_adaptado,
+      refeicoes: [...(d.plano_adaptado?.refeicoes || []), { nome: "Nova refeição", horario: "", itens: [], substituicoes_feitas: [] }],
+    },
+  }));
+  const removeMeal = (idx: number) => setDraft((d) => ({
+    ...d,
+    plano_adaptado: { ...d.plano_adaptado, refeicoes: (d.plano_adaptado?.refeicoes || []).filter((_, i) => i !== idx) },
+  }));
+
+  return (
+    <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300">
+      <Card className="border-primary/40">
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2"><Pencil className="h-5 w-5 text-primary" /> Revisar e ajustar</CardTitle>
+            <CardDescription>Ajuste horários, quantidades e substituições. Clique em "Aplicar ajustes" para confirmar.</CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={onCancel}><ArrowLeft className="mr-2 h-4 w-4" /> Cancelar</Button>
+            <Button onClick={() => onApply(draft)}><CheckCircle2 className="mr-2 h-4 w-4" /> Aplicar ajustes</Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Label className="text-xs">Resumo do plano adaptado</Label>
+          <Textarea
+            value={draft.plano_adaptado?.resumo || ""}
+            onChange={(e) => setDraft((d) => ({ ...d, plano_adaptado: { ...d.plano_adaptado, resumo: e.target.value } }))}
+            rows={2}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="space-y-3">
+        {refeicoes.map((r, mIdx) => (
+          <Card key={mIdx}>
+            <CardHeader className="pb-3">
+              <div className="grid gap-2 sm:grid-cols-[1fr_140px_auto] items-end">
+                <div>
+                  <Label className="text-xs">Nome da refeição</Label>
+                  <Input value={r.nome || ""} onChange={(e) => updateMeal(mIdx, { nome: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Horário</Label>
+                  <Input placeholder="07:30" value={r.horario || ""} onChange={(e) => updateMeal(mIdx, { horario: e.target.value })} />
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => removeMeal(mIdx)} className="text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Itens (alimento · quantidade)</Label>
+                  <Button size="sm" variant="outline" onClick={() => addItem(mIdx)}><Plus className="mr-1 h-3 w-3" /> Item</Button>
+                </div>
+                {(r.itens || []).map((it, iIdx) => (
+                  <div key={iIdx} className="grid gap-2 grid-cols-[1fr_120px_auto]">
+                    <Input placeholder="Alimento" value={it.alimento} onChange={(e) => updateItem(mIdx, iIdx, { alimento: e.target.value })} />
+                    <Input placeholder="Qtd" value={it.quantidade} onChange={(e) => updateItem(mIdx, iIdx, { quantidade: e.target.value })} />
+                    <Button size="sm" variant="ghost" onClick={() => removeItem(mIdx, iIdx)} className="text-destructive"><X className="h-4 w-4" /></Button>
+                  </div>
+                ))}
+                {(!r.itens || r.itens.length === 0) && <p className="text-xs text-muted-foreground">Nenhum item.</p>}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Substituições feitas</Label>
+                  <Button size="sm" variant="outline" onClick={() => addSub(mIdx)}><Plus className="mr-1 h-3 w-3" /> Substituição</Button>
+                </div>
+                {(r.substituicoes_feitas || []).map((s, sIdx) => (
+                  <div key={sIdx} className="flex gap-2">
+                    <Input value={s} onChange={(e) => updateSub(mIdx, sIdx, e.target.value)} placeholder="ex: troquei aveia por tapioca" />
+                    <Button size="sm" variant="ghost" onClick={() => removeSub(mIdx, sIdx)} className="text-destructive"><X className="h-4 w-4" /></Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        <Button variant="outline" onClick={addMeal} className="w-full"><Plus className="mr-2 h-4 w-4" /> Adicionar refeição</Button>
+      </div>
+
+      <div className="flex justify-end gap-2 pb-4">
+        <Button variant="ghost" onClick={onCancel}>Cancelar</Button>
+        <Button onClick={() => onApply(draft)}><CheckCircle2 className="mr-2 h-4 w-4" /> Aplicar ajustes</Button>
+      </div>
     </div>
   );
 }
