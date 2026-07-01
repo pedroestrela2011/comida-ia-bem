@@ -578,3 +578,127 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
     </div>
   );
 }
+
+function AdaptedDietEditor({ result, onCancel, onApply }: {
+  result: AdaptedResult;
+  onCancel: () => void;
+  onApply: (updated: AdaptedResult) => void;
+}) {
+  const [draft, setDraft] = useState<AdaptedResult>(() => JSON.parse(JSON.stringify(result)));
+  const refeicoes = draft.plano_adaptado?.refeicoes || [];
+
+  const updateMeal = (idx: number, patch: any) => {
+    setDraft((d) => {
+      const next = { ...d, plano_adaptado: { ...d.plano_adaptado, refeicoes: [...(d.plano_adaptado?.refeicoes || [])] } };
+      next.plano_adaptado!.refeicoes![idx] = { ...next.plano_adaptado!.refeicoes![idx], ...patch };
+      return next;
+    });
+  };
+  const updateItem = (mIdx: number, iIdx: number, patch: any) => {
+    const itens = [...(refeicoes[mIdx].itens || [])];
+    itens[iIdx] = { ...itens[iIdx], ...patch };
+    updateMeal(mIdx, { itens });
+  };
+  const addItem = (mIdx: number) => updateMeal(mIdx, { itens: [...(refeicoes[mIdx].itens || []), { alimento: "", quantidade: "" }] });
+  const removeItem = (mIdx: number, iIdx: number) => updateMeal(mIdx, { itens: (refeicoes[mIdx].itens || []).filter((_, i) => i !== iIdx) });
+  const updateSub = (mIdx: number, sIdx: number, val: string) => {
+    const subs = [...(refeicoes[mIdx].substituicoes_feitas || [])];
+    subs[sIdx] = val;
+    updateMeal(mIdx, { substituicoes_feitas: subs });
+  };
+  const addSub = (mIdx: number) => updateMeal(mIdx, { substituicoes_feitas: [...(refeicoes[mIdx].substituicoes_feitas || []), ""] });
+  const removeSub = (mIdx: number, sIdx: number) => updateMeal(mIdx, { substituicoes_feitas: (refeicoes[mIdx].substituicoes_feitas || []).filter((_, i) => i !== sIdx) });
+  const addMeal = () => setDraft((d) => ({
+    ...d,
+    plano_adaptado: {
+      ...d.plano_adaptado,
+      refeicoes: [...(d.plano_adaptado?.refeicoes || []), { nome: "Nova refeição", horario: "", itens: [], substituicoes_feitas: [] }],
+    },
+  }));
+  const removeMeal = (idx: number) => setDraft((d) => ({
+    ...d,
+    plano_adaptado: { ...d.plano_adaptado, refeicoes: (d.plano_adaptado?.refeicoes || []).filter((_, i) => i !== idx) },
+  }));
+
+  return (
+    <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-300">
+      <Card className="border-primary/40">
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2"><Pencil className="h-5 w-5 text-primary" /> Revisar e ajustar</CardTitle>
+            <CardDescription>Ajuste horários, quantidades e substituições. Clique em "Aplicar ajustes" para confirmar.</CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={onCancel}><ArrowLeft className="mr-2 h-4 w-4" /> Cancelar</Button>
+            <Button onClick={() => onApply(draft)}><CheckCircle2 className="mr-2 h-4 w-4" /> Aplicar ajustes</Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Label className="text-xs">Resumo do plano adaptado</Label>
+          <Textarea
+            value={draft.plano_adaptado?.resumo || ""}
+            onChange={(e) => setDraft((d) => ({ ...d, plano_adaptado: { ...d.plano_adaptado, resumo: e.target.value } }))}
+            rows={2}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="space-y-3">
+        {refeicoes.map((r, mIdx) => (
+          <Card key={mIdx}>
+            <CardHeader className="pb-3">
+              <div className="grid gap-2 sm:grid-cols-[1fr_140px_auto] items-end">
+                <div>
+                  <Label className="text-xs">Nome da refeição</Label>
+                  <Input value={r.nome || ""} onChange={(e) => updateMeal(mIdx, { nome: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Horário</Label>
+                  <Input placeholder="07:30" value={r.horario || ""} onChange={(e) => updateMeal(mIdx, { horario: e.target.value })} />
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => removeMeal(mIdx)} className="text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Itens (alimento · quantidade)</Label>
+                  <Button size="sm" variant="outline" onClick={() => addItem(mIdx)}><Plus className="mr-1 h-3 w-3" /> Item</Button>
+                </div>
+                {(r.itens || []).map((it, iIdx) => (
+                  <div key={iIdx} className="grid gap-2 grid-cols-[1fr_120px_auto]">
+                    <Input placeholder="Alimento" value={it.alimento} onChange={(e) => updateItem(mIdx, iIdx, { alimento: e.target.value })} />
+                    <Input placeholder="Qtd" value={it.quantidade} onChange={(e) => updateItem(mIdx, iIdx, { quantidade: e.target.value })} />
+                    <Button size="sm" variant="ghost" onClick={() => removeItem(mIdx, iIdx)} className="text-destructive"><X className="h-4 w-4" /></Button>
+                  </div>
+                ))}
+                {(!r.itens || r.itens.length === 0) && <p className="text-xs text-muted-foreground">Nenhum item.</p>}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Substituições feitas</Label>
+                  <Button size="sm" variant="outline" onClick={() => addSub(mIdx)}><Plus className="mr-1 h-3 w-3" /> Substituição</Button>
+                </div>
+                {(r.substituicoes_feitas || []).map((s, sIdx) => (
+                  <div key={sIdx} className="flex gap-2">
+                    <Input value={s} onChange={(e) => updateSub(mIdx, sIdx, e.target.value)} placeholder="ex: troquei aveia por tapioca" />
+                    <Button size="sm" variant="ghost" onClick={() => removeSub(mIdx, sIdx)} className="text-destructive"><X className="h-4 w-4" /></Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        <Button variant="outline" onClick={addMeal} className="w-full"><Plus className="mr-2 h-4 w-4" /> Adicionar refeição</Button>
+      </div>
+
+      <div className="flex justify-end gap-2 pb-4">
+        <Button variant="ghost" onClick={onCancel}>Cancelar</Button>
+        <Button onClick={() => onApply(draft)}><CheckCircle2 className="mr-2 h-4 w-4" /> Aplicar ajustes</Button>
+      </div>
+    </div>
+  );
+}
