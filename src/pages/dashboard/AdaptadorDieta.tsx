@@ -469,11 +469,14 @@ export default function AdaptadorDieta() {
   );
 }
 
-function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onConverter, converting }: {
+function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onConverter, converting, onAdicionarAoCardapio, adding }: {
   result: AdaptedResult; onSalvar: () => void; saving: boolean; scoreColor: (n?: number) => string;
   onEditar: () => void; onConverter: () => void; converting: boolean;
+  onAdicionarAoCardapio: (semanas: number) => void; adding: boolean;
 }) {
   const comp = result.compatibilidade;
+  const [addOpen, setAddOpen] = useState(false);
+  const [semanas, setSemanas] = useState("1");
   return (
     <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
       {/* Compatibilidade */}
@@ -489,11 +492,11 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
         </Card>
       )}
 
-      {/* Ações principais - Revisar / Salvar / Transformar */}
+      {/* Ações principais - Revisar / Salvar / Transformar / Adicionar */}
       <Card className="bg-muted/30">
         <CardContent className="pt-6 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
-            Revise e ajuste horários, quantidades e substituições antes de salvar ou transformar em cardápio.
+            Revise, salve, ou transforme direto em uma ou mais semanas do seu cardápio.
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={onEditar}>
@@ -502,9 +505,44 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
             <Button variant="secondary" onClick={onSalvar} disabled={saving}>
               {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando</> : <><Save className="mr-2 h-4 w-4" /> Salvar dieta</>}
             </Button>
-            <Button onClick={onConverter} disabled={converting}>
+            <Button variant="secondary" onClick={onConverter} disabled={converting}>
               {converting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Convertendo</> : <><CalendarPlus className="mr-2 h-4 w-4" /> Transformar em cardápio</>}
             </Button>
+            <Dialog open={addOpen} onOpenChange={setAddOpen}>
+              <DialogTrigger asChild>
+                <Button disabled={adding}>
+                  {adding ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adicionando</> : <><CalendarDays className="mr-2 h-4 w-4" /> Adicionar ao meu cardápio</>}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Adicionar ao meu cardápio</DialogTitle>
+                  <DialogDescription>
+                    As refeições serão posicionadas nos dias da semana e nos horários com base em cada refeição adaptada.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2">
+                  <Label className="text-sm">Quantas semanas deseja adicionar?</Label>
+                  <Select value={semanas} onValueChange={setSemanas}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4].map((n) => (
+                        <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "semana" : "semanas"}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Cada semana cria uma entrada em Meu Cardápio com os 7 dias já preenchidos.
+                  </p>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setAddOpen(false)}>Cancelar</Button>
+                  <Button onClick={() => { setAddOpen(false); onAdicionarAoCardapio(parseInt(semanas, 10)); }}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> Confirmar
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
