@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      adapted_diets: {
+        Row: {
+          compatibilidade: number | null
+          created_at: string
+          id: string
+          personalization: Json
+          resultado: Json
+          source_type: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          compatibilidade?: number | null
+          created_at?: string
+          id?: string
+          personalization?: Json
+          resultado: Json
+          source_type: string
+          titulo?: string
+          user_id: string
+        }
+        Update: {
+          compatibilidade?: number | null
+          created_at?: string
+          id?: string
+          personalization?: Json
+          resultado?: Json
+          source_type?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cardapios_salvos: {
         Row: {
           created_at: string
