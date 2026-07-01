@@ -39,7 +39,7 @@ const Footer = () => {
                 <span className="text-primary-foreground font-bold text-lg">N</span>
               </div>
               <span className="font-display font-bold text-xl text-foreground">
-                NutriPlus
+                ComaFacil
               </span>
             </Link>
             <p className="text-muted-foreground mb-4 max-w-xs">
@@ -103,7 +103,7 @@ const Footer = () => {
 
         {/* Bottom */}
         <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>© {currentYear} NutriPlus. Todos os direitos reservados.</p>
+          <p>© {currentYear} ComaFacil. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

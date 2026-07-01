@@ -14,7 +14,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant
 
 export default function Chat() {
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: "Olá! Sou a NutriPlus, sua assistente de nutrição. Pergunte-me qualquer coisa sobre alimentos e saúde!" },
+    { role: "assistant", content: "Olá! Sou a ComaFacil, sua assistente de nutrição. Pergunte-me qualquer coisa sobre alimentos e saúde!" },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -110,7 +110,7 @@ export default function Chat() {
 
   const novaConversa = () => {
     setMessages([
-      { role: "assistant", content: "Olá! Sou a NutriPlus, sua assistente de nutrição. Pergunte-me qualquer coisa sobre alimentos e saúde!" },
+      { role: "assistant", content: "Olá! Sou a ComaFacil, sua assistente de nutrição. Pergunte-me qualquer coisa sobre alimentos e saúde!" },
     ]);
   };
 
@@ -158,7 +158,7 @@ export default function Chat() {
     <div className="flex flex-col h-[calc(100svh-8rem)] max-w-3xl">
       <div className="flex items-center gap-3 mb-3 md:mb-4">
         <MessageCircle className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-        <h1 className="text-xl md:text-2xl font-bold text-foreground">NutriPlus</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">ComaFacil</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">

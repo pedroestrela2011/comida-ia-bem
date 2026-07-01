@@ -47,7 +47,7 @@ serve(async (req) => {
       if (match) recipientId = match.id;
       if (data.users.length < 200) break;
     }
-    if (!recipientId) return json({ error: "Nenhum usuário NutriPlus encontrado com esse e-mail" }, 404);
+    if (!recipientId) return json({ error: "Nenhum usuário ComaFacil encontrado com esse e-mail" }, 404);
 
     // Sender name from profiles (optional)
     const { data: prof } = await supabase

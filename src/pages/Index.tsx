@@ -2,7 +2,6 @@ import Header from "@/components/landing/Header";
 import Hero from "@/components/landing/Hero";
 import ProblemSolution from "@/components/landing/ProblemSolution";
 import Benefits from "@/components/landing/Benefits";
-import Testimonials from "@/components/landing/Testimonials";
 import Demo from "@/components/landing/Demo";
 import HowItWorks from "@/components/landing/HowItWorks";
 import VisualDemo from "@/components/landing/VisualDemo";
@@ -20,7 +19,6 @@ const Index = () => {
           <Hero />
           <ProblemSolution />
           <Benefits />
-          <Testimonials />
           <Demo />
           <HowItWorks />
           <VisualDemo />
@@ -34,3 +32,4 @@ const Index = () => {
 };
 
 export default Index;
+

@@ -40,7 +40,7 @@ const Benefits = () => {
         {/* Section Header */}
         <div className="text-center mb-6">
           <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-            Por que escolher o NutriPlus?
+            Por que escolher o ComaFacil?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Tudo o que você precisa para uma alimentação saudável em um só lugar

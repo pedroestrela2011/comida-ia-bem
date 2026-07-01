@@ -57,7 +57,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // NutriPlus custom colors
+        // ComaFacil custom colors
         green: {
           50: "hsl(var(--green-50))",
           100: "hsl(var(--green-100))",
