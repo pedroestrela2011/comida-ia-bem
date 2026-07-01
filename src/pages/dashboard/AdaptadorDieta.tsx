@@ -524,6 +524,10 @@ export default function AdaptadorDieta() {
             {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adaptando dieta...</> : <><Sparkles className="mr-2 h-4 w-4" /> Adaptar minha dieta</>}
           </Button>
 
+          {(loading || fatalError || steps.some((s) => s.status !== "pending")) && (
+            <ProgressStepper steps={steps} fatalError={fatalError} onRetry={() => { resetSteps(); }} />
+          )}
+
           {result && !editing && (
             <AdaptedResultView
               result={result}
