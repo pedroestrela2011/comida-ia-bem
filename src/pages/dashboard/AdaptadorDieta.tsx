@@ -12,7 +12,9 @@ import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 import {
   FileText, Image as ImageIcon, ClipboardPaste, Sparkles, Loader2, Save,
   ShoppingBasket, AlertTriangle, Wand2, ChefHat, Clock, Trash2, X, CheckCircle2,
+  Pencil, Plus, CalendarPlus, ArrowLeft,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // pdfjs client-side text extraction
 import * as pdfjsLib from "pdfjs-dist";
