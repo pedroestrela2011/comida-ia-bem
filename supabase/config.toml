@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.send-recipe]
 verify_jwt = false
+
+[functions.adaptar-dieta]
+verify_jwt = false
