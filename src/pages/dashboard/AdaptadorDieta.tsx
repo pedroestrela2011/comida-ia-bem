@@ -12,9 +12,11 @@ import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 import {
   FileText, Image as ImageIcon, ClipboardPaste, Sparkles, Loader2, Save,
   ShoppingBasket, AlertTriangle, Wand2, ChefHat, Clock, Trash2, X, CheckCircle2,
-  Pencil, Plus, CalendarPlus, ArrowLeft,
+  Pencil, Plus, CalendarPlus, ArrowLeft, CalendarDays,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // pdfjs client-side text extraction
 import * as pdfjsLib from "pdfjs-dist";
