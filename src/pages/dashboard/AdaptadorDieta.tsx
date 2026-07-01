@@ -328,6 +328,7 @@ export default function AdaptadorDieta() {
     } catch (e: any) {
       toast({ title: "Erro ao adicionar ao cardápio.", description: e.message, variant: "destructive" });
     } finally { setAdding(false); }
+  };
 
   const scoreColor = (n?: number) => !n ? "text-muted-foreground" : n >= 85 ? "text-green-600" : n >= 65 ? "text-yellow-600" : "text-red-500";
 
