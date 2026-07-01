@@ -384,7 +384,10 @@ export default function AdaptadorDieta() {
   );
 }
 
-function AdaptedResultView({ result, onSalvar, saving, scoreColor }: { result: AdaptedResult; onSalvar: () => void; saving: boolean; scoreColor: (n?: number) => string }) {
+function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onConverter, converting }: {
+  result: AdaptedResult; onSalvar: () => void; saving: boolean; scoreColor: (n?: number) => string;
+  onEditar: () => void; onConverter: () => void; converting: boolean;
+}) {
   const comp = result.compatibilidade;
   return (
     <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
@@ -397,12 +400,30 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor }: { result: A
               <p className="font-semibold text-foreground">Compatibilidade com sua rotina</p>
               <p className="text-sm text-muted-foreground mt-1">{comp.justificativa}</p>
             </div>
-            <Button onClick={onSalvar} disabled={saving}>
-              {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando</> : <><Save className="mr-2 h-4 w-4" /> Salvar dieta</>}
-            </Button>
           </CardContent>
         </Card>
       )}
+
+      {/* Ações principais - Revisar / Salvar / Transformar */}
+      <Card className="bg-muted/30">
+        <CardContent className="pt-6 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+          <div className="text-sm text-muted-foreground">
+            Revise e ajuste horários, quantidades e substituições antes de salvar ou transformar em cardápio.
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={onEditar}>
+              <Pencil className="mr-2 h-4 w-4" /> Revisar e ajustar
+            </Button>
+            <Button variant="secondary" onClick={onSalvar} disabled={saving}>
+              {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando</> : <><Save className="mr-2 h-4 w-4" /> Salvar dieta</>}
+            </Button>
+            <Button onClick={onConverter} disabled={converting}>
+              {converting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Convertendo</> : <><CalendarPlus className="mr-2 h-4 w-4" /> Transformar em cardápio</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* Comparação Original x Adaptado */}
       <div className="grid gap-4 lg:grid-cols-2">
