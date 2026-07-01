@@ -336,7 +336,24 @@ export default function AdaptadorDieta() {
             {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adaptando dieta...</> : <><Sparkles className="mr-2 h-4 w-4" /> Adaptar minha dieta</>}
           </Button>
 
-          {result && <AdaptedResultView result={result} onSalvar={salvar} saving={saving} scoreColor={scoreColor} />}
+          {result && !editing && (
+            <AdaptedResultView
+              result={result}
+              onSalvar={salvar}
+              saving={saving}
+              scoreColor={scoreColor}
+              onEditar={() => setEditing(true)}
+              onConverter={converterEmCardapio}
+              converting={converting}
+            />
+          )}
+          {result && editing && (
+            <AdaptedDietEditor
+              result={result}
+              onCancel={() => setEditing(false)}
+              onApply={(updated) => { setResult(updated); setEditing(false); toast({ title: "Ajustes aplicados." }); }}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="salvas" className="space-y-4 mt-4">
