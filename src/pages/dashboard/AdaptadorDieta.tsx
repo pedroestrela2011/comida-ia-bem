@@ -83,9 +83,12 @@ export default function AdaptadorDieta() {
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdaptedResult | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [converting, setConverting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<any[]>([]);
   const [tab, setTab] = useState("nova");
+  const navigate = useNavigate();
 
   useEffect(() => { loadSaved(); }, []);
 
