@@ -599,12 +599,12 @@ export default function Cardapio() {
       </Tabs>
 
       <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Exportar cardápio em PDF</DialogTitle>
-            <DialogDescription>O que você deseja exportar?</DialogDescription>
+            <DialogDescription>Revise a prévia abaixo antes de baixar.</DialogDescription>
           </DialogHeader>
-          <RadioGroup value={pdfMode} onValueChange={(v) => setPdfMode(v as "dia" | "semana")} className="space-y-2 py-2">
+          <RadioGroup value={pdfMode} onValueChange={(v) => setPdfMode(v as "dia" | "semana")} className="grid grid-cols-1 sm:grid-cols-2 gap-2 py-2">
             <label className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/40">
               <RadioGroupItem value="dia" id="pdf-dia" />
               <div>
@@ -620,6 +620,25 @@ export default function Cardapio() {
               </div>
             </label>
           </RadioGroup>
+
+          <div className="rounded-lg border border-border bg-muted/30 overflow-hidden">
+            <div className="px-3 py-2 border-b border-border bg-card">
+              <p className="text-xs font-medium text-muted-foreground">Prévia do PDF</p>
+            </div>
+            {pdfPreviewUrl ? (
+              <iframe
+                key={pdfPreviewUrl}
+                src={pdfPreviewUrl}
+                title="Prévia do PDF"
+                className="w-full h-[60vh] bg-white"
+              />
+            ) : (
+              <div className="w-full h-[60vh] flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>Cancelar</Button>
             <Button onClick={confirmPdf} style={{ backgroundColor: "#2d6a4f", color: "#ffffff" }} className="hover:opacity-90">
@@ -628,6 +647,7 @@ export default function Cardapio() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
