@@ -157,7 +157,7 @@ function renderDia(doc: jsPDF, dia: string, dados: DiaCardapio, startY: number, 
   return y;
 }
 
-export function exportCardapioPDF(data: CardapioData, mode: "dia" | "semana") {
+export function buildCardapioPDF(data: CardapioData, mode: "dia" | "semana"): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -170,7 +170,6 @@ export function exportCardapioPDF(data: CardapioData, mode: "dia" | "semana") {
         );
 
   if (dias.length === 0) {
-    // fallback: any first available day
     const first = Object.keys(data.cardapio)[0];
     if (first) dias.push(first);
   }
@@ -189,6 +188,18 @@ export function exportCardapioPDF(data: CardapioData, mode: "dia" | "semana") {
     drawFooter(doc, pageWidth, pageHeight, i);
   }
 
+  return doc;
+}
+
+export function exportCardapioPDF(data: CardapioData, mode: "dia" | "semana") {
+  const doc = buildCardapioPDF(data, mode);
   const suffix = mode === "dia" ? "dia" : "semanal";
   doc.save(`coma-facil-cardapio-${suffix}-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
+
+export function getCardapioPDFPreviewUrl(data: CardapioData, mode: "dia" | "semana"): string {
+  const doc = buildCardapioPDF(data, mode);
+  const blob = doc.output("blob");
+  return URL.createObjectURL(blob);
+}
+
