@@ -226,8 +226,10 @@ export default function Configuracoes() {
     setDarkMode(enabled);
     if (enabled) {
       document.documentElement.classList.add("dark");
+      localStorage.setItem("comafacil-tema", "dark");
     } else {
       document.documentElement.classList.remove("dark");
+      localStorage.setItem("comafacil-tema", "light");
     }
 
     try {
