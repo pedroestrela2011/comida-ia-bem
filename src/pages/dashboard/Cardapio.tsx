@@ -217,6 +217,26 @@ export default function Cardapio() {
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string }[]>([]);
   const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [pdfMode, setPdfMode] = useState<"dia" | "semana">("semana");
+  const [pdfSource, setPdfSource] = useState<CardapioData | null>(null);
+
+  const openPdfDialog = (data: CardapioData) => {
+    setPdfSource(data);
+    setPdfMode("semana");
+    setPdfDialogOpen(true);
+  };
+
+  const confirmPdf = () => {
+    if (!pdfSource) return;
+    try {
+      exportCardapioPDF(pdfSource, pdfMode);
+      setPdfDialogOpen(false);
+      toast({ title: "PDF gerado com sucesso!" });
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar PDF", description: e.message, variant: "destructive" });
+    }
+  };
   const { registerAction } = useDailyScore();
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
