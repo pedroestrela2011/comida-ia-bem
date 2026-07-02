@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft, ThumbsUp, ThumbsDown, Trash2, RefreshCw } from "lucide-react";
+import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookOpen, ArrowLeft, ThumbsUp, ThumbsDown, Trash2, RefreshCw, Download } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { exportCardapioPDF } from "@/lib/cardapio-pdf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -214,6 +217,26 @@ export default function Cardapio() {
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string }[]>([]);
   const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [pdfMode, setPdfMode] = useState<"dia" | "semana">("semana");
+  const [pdfSource, setPdfSource] = useState<CardapioData | null>(null);
+
+  const openPdfDialog = (data: CardapioData) => {
+    setPdfSource(data);
+    setPdfMode("semana");
+    setPdfDialogOpen(true);
+  };
+
+  const confirmPdf = () => {
+    if (!pdfSource) return;
+    try {
+      exportCardapioPDF(pdfSource, pdfMode);
+      setPdfDialogOpen(false);
+      toast({ title: "PDF gerado com sucesso!" });
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar PDF", description: e.message, variant: "destructive" });
+    }
+  };
   const { registerAction } = useDailyScore();
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
@@ -486,14 +509,23 @@ export default function Cardapio() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex gap-2 flex-wrap">
-                <Button variant="outline" onClick={() => setShowList(!showList)}>
-                  <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
+              <div className="flex items-start justify-between gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" onClick={() => setShowList(!showList)}>
+                    <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
+                  </Button>
+                  <Button variant="outline" onClick={salvarCardapio}>
+                    <BookOpen className="mr-2 h-4 w-4" /> Salvar
+                  </Button>
+                  <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
+                </div>
+                <Button
+                  onClick={() => openPdfDialog(cardapio)}
+                  style={{ backgroundColor: "#2d6a4f", color: "#ffffff" }}
+                  className="hover:opacity-90"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Baixar PDF
                 </Button>
-                <Button variant="outline" onClick={salvarCardapio}>
-                  <BookOpen className="mr-2 h-4 w-4" /> Salvar
-                </Button>
-                <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
               </div>
               {renderCardapioView(cardapio, setCardapio)}
             </div>
@@ -506,9 +538,17 @@ export default function Cardapio() {
               <Button variant="ghost" size="sm" onClick={() => setViewingSaved(null)}>
                 <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar
               </Button>
-              <div className="flex gap-2 mb-2">
+              <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                 <Button variant="outline" size="sm" onClick={() => setShowList(!showList)}>
                   <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => openPdfDialog(viewingSaved.dados)}
+                  style={{ backgroundColor: "#2d6a4f", color: "#ffffff" }}
+                  className="hover:opacity-90"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Baixar PDF
                 </Button>
               </div>
               {renderCardapioView(viewingSaved.dados, (d) => setViewingSaved({ ...viewingSaved, dados: d }))}
@@ -534,6 +574,37 @@ export default function Cardapio() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Exportar cardápio em PDF</DialogTitle>
+            <DialogDescription>O que você deseja exportar?</DialogDescription>
+          </DialogHeader>
+          <RadioGroup value={pdfMode} onValueChange={(v) => setPdfMode(v as "dia" | "semana")} className="space-y-2 py-2">
+            <label className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/40">
+              <RadioGroupItem value="dia" id="pdf-dia" />
+              <div>
+                <p className="font-medium text-sm">Cardápio do Dia</p>
+                <p className="text-xs text-muted-foreground">Apenas as refeições de hoje</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/40">
+              <RadioGroupItem value="semana" id="pdf-semana" />
+              <div>
+                <p className="font-medium text-sm">Cardápio Semanal Completo</p>
+                <p className="text-xs text-muted-foreground">Os 7 dias da semana</p>
+              </div>
+            </label>
+          </RadioGroup>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={confirmPdf} style={{ backgroundColor: "#2d6a4f", color: "#ffffff" }} className="hover:opacity-90">
+              Gerar PDF →
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
