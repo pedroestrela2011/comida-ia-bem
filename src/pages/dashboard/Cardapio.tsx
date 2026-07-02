@@ -574,6 +574,37 @@ export default function Cardapio() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Exportar cardápio em PDF</DialogTitle>
+            <DialogDescription>O que você deseja exportar?</DialogDescription>
+          </DialogHeader>
+          <RadioGroup value={pdfMode} onValueChange={(v) => setPdfMode(v as "dia" | "semana")} className="space-y-2 py-2">
+            <label className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/40">
+              <RadioGroupItem value="dia" id="pdf-dia" />
+              <div>
+                <p className="font-medium text-sm">Cardápio do Dia</p>
+                <p className="text-xs text-muted-foreground">Apenas as refeições de hoje</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/40">
+              <RadioGroupItem value="semana" id="pdf-semana" />
+              <div>
+                <p className="font-medium text-sm">Cardápio Semanal Completo</p>
+                <p className="text-xs text-muted-foreground">Os 7 dias da semana</p>
+              </div>
+            </label>
+          </RadioGroup>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={confirmPdf} style={{ backgroundColor: "#2d6a4f", color: "#ffffff" }} className="hover:opacity-90">
+              Gerar PDF →
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
