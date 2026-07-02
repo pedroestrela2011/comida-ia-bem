@@ -538,9 +538,17 @@ export default function Cardapio() {
               <Button variant="ghost" size="sm" onClick={() => setViewingSaved(null)}>
                 <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar
               </Button>
-              <div className="flex gap-2 mb-2">
+              <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                 <Button variant="outline" size="sm" onClick={() => setShowList(!showList)}>
                   <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => openPdfDialog(viewingSaved.dados)}
+                  style={{ backgroundColor: "#2d6a4f", color: "#ffffff" }}
+                  className="hover:opacity-90"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Baixar PDF
                 </Button>
               </div>
               {renderCardapioView(viewingSaved.dados, (d) => setViewingSaved({ ...viewingSaved, dados: d }))}
