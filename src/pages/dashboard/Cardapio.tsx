@@ -509,14 +509,23 @@ export default function Cardapio() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex gap-2 flex-wrap">
-                <Button variant="outline" onClick={() => setShowList(!showList)}>
-                  <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
+              <div className="flex items-start justify-between gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" onClick={() => setShowList(!showList)}>
+                    <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
+                  </Button>
+                  <Button variant="outline" onClick={salvarCardapio}>
+                    <BookOpen className="mr-2 h-4 w-4" /> Salvar
+                  </Button>
+                  <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
+                </div>
+                <Button
+                  onClick={() => openPdfDialog(cardapio)}
+                  style={{ backgroundColor: "#2d6a4f", color: "#ffffff" }}
+                  className="hover:opacity-90"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Baixar PDF
                 </Button>
-                <Button variant="outline" onClick={salvarCardapio}>
-                  <BookOpen className="mr-2 h-4 w-4" /> Salvar
-                </Button>
-                <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
               </div>
               {renderCardapioView(cardapio, setCardapio)}
             </div>
