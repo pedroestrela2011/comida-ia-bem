@@ -221,11 +221,33 @@ export default function Cardapio() {
   const [pdfMode, setPdfMode] = useState<"dia" | "semana">("semana");
   const [pdfSource, setPdfSource] = useState<CardapioData | null>(null);
 
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+
   const openPdfDialog = (data: CardapioData) => {
     setPdfSource(data);
     setPdfMode("semana");
     setPdfDialogOpen(true);
   };
+
+  useEffect(() => {
+    if (!pdfDialogOpen || !pdfSource) {
+      if (pdfPreviewUrl) {
+        URL.revokeObjectURL(pdfPreviewUrl);
+        setPdfPreviewUrl(null);
+      }
+      return;
+    }
+    try {
+      const url = getCardapioPDFPreviewUrl(pdfSource, pdfMode);
+      setPdfPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+    } catch (e) {
+      console.error("Erro ao gerar prévia:", e);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfDialogOpen, pdfSource, pdfMode]);
 
   const confirmPdf = () => {
     if (!pdfSource) return;
@@ -237,6 +259,7 @@ export default function Cardapio() {
       toast({ title: "Erro ao gerar PDF", description: e.message, variant: "destructive" });
     }
   };
+
   const { registerAction } = useDailyScore();
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
