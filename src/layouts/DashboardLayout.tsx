@@ -63,6 +63,42 @@ export default function DashboardLayout() {
     }
   }, [searchParams]);
 
+  // Apply dark theme only inside the dashboard. Load instantly from
+  // localStorage, then sync from the user's profile. Cleanup on unmount
+  // ensures landing/public pages are never dark.
+  useEffect(() => {
+    const cached = localStorage.getItem("comafacil-tema");
+    if (cached === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from("profiles")
+          .select("tema")
+          .eq("user_id", user.id)
+          .single();
+        const tema = (data as any)?.tema;
+        if (tema === "dark") {
+          document.documentElement.classList.add("dark");
+          localStorage.setItem("comafacil-tema", "dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+          localStorage.setItem("comafacil-tema", "light");
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+
+    return () => {
+      document.documentElement.classList.remove("dark");
+    };
+  }, []);
+
   useEffect(() => {
     const redirectToLogin = async (showExpiredMessage = false) => {
       await clearLocalAuthSession();
