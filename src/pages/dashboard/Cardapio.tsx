@@ -238,11 +238,26 @@ export default function Cardapio() {
   const [pdfSource, setPdfSource] = useState<CardapioData | null>(null);
 
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [limitOpen, setLimitOpen] = useState(false);
+  const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
+  const { planLabel } = useUserPlan();
 
   const openPdfDialog = (data: CardapioData) => {
+    if (!canDownload) { setLimitOpen(true); return; }
     setPdfSource(data);
     setPdfMode("semana");
     setPdfDialogOpen(true);
+  };
+
+  const handleDownloadReceita = async (r: Refeicao) => {
+    if (!canDownload) { setLimitOpen(true); return; }
+    try {
+      exportReceitaPDF(r);
+      await registerDownload("receita");
+      toast({ title: "PDF gerado!" });
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar PDF", description: e.message, variant: "destructive" });
+    }
   };
 
   useEffect(() => {
