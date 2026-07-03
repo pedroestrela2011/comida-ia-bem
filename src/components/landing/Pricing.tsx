@@ -9,6 +9,7 @@ const plans = [
     description: "Comece sua jornada com o básico",
     icon: Zap,
     features: [
+      { text: "3 downloads de PDF por mês", included: true },
       { text: "Cardápios semanais completos", included: true },
       { text: "Até 3 cardápios por conta", included: true },
       { text: "Lista de compras automática", included: true },
@@ -28,6 +29,7 @@ const plans = [
     description: "Melhor custo-benefício",
     icon: Star,
     features: [
+      { text: "10 downloads de PDF por mês", included: true },
       { text: "Cardápios ilimitados", included: true },
       { text: "Lista de compras completa", included: true },
       { text: "Marcar refeições como concluídas", included: true },
@@ -47,6 +49,7 @@ const plans = [
     description: "Desbloqueie todo o potencial",
     icon: Crown,
     features: [
+      { text: "Downloads de PDF ilimitados", included: true },
       { text: "Tudo do Equilíbrio", included: true },
       { text: "Score Diário, streak e níveis", included: true },
       { text: "Sistema de Conquistas completo", included: true },

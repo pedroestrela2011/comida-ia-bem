@@ -13,6 +13,10 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyScore } from "@/hooks/useDailyScore";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
+import { exportReceitaPDF } from "@/lib/recipe-pdf";
+import { usePdfLimit } from "@/hooks/usePdfLimit";
+import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 type Refeicao = {
   nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;
@@ -93,7 +97,7 @@ const difficultyColor = (d?: string) => {
   return "destructive" as const;
 };
 
-function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label: string; onSwap?: (preferencia: string) => void }) {
+function RefeicaoDetail({ refeicao, label, onSwap, onDownload }: { refeicao: Refeicao; label: string; onSwap?: (preferencia: string) => void; onDownload?: (r: Refeicao) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [showSwap, setShowSwap] = useState(false);
   const [swapText, setSwapText] = useState("");
@@ -101,7 +105,19 @@ function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label
 
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden relative">
-      <div className="absolute top-2 right-2 z-10">
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+        {onDownload && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onDownload(refeicao); }}
+            title="Baixar Receita em PDF"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-white hover:opacity-90"
+            style={{ backgroundColor: "#2d6a4f" }}
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
+        )}
         <FavoriteButton
           recipe={{
             nome: refeicao.nome,
@@ -118,7 +134,7 @@ function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label
         />
       </div>
       <button type="button" onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 pr-12 text-left hover:bg-muted/30 transition-colors">
+        className="w-full p-4 pr-24 text-left hover:bg-muted/30 transition-colors">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
         <div className="flex items-center justify-between">
           <p className="font-semibold text-foreground">{refeicao.nome}</p>
@@ -222,11 +238,26 @@ export default function Cardapio() {
   const [pdfSource, setPdfSource] = useState<CardapioData | null>(null);
 
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [limitOpen, setLimitOpen] = useState(false);
+  const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
+  const { planLabel } = useUserPlan();
 
   const openPdfDialog = (data: CardapioData) => {
+    if (!canDownload) { setLimitOpen(true); return; }
     setPdfSource(data);
     setPdfMode("semana");
     setPdfDialogOpen(true);
+  };
+
+  const handleDownloadReceita = async (r: Refeicao) => {
+    if (!canDownload) { setLimitOpen(true); return; }
+    try {
+      exportReceitaPDF(r);
+      await registerDownload("receita");
+      toast({ title: "PDF gerado!" });
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar PDF", description: e.message, variant: "destructive" });
+    }
   };
 
   useEffect(() => {
@@ -249,10 +280,12 @@ export default function Cardapio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pdfDialogOpen, pdfSource, pdfMode]);
 
-  const confirmPdf = () => {
+  const confirmPdf = async () => {
     if (!pdfSource) return;
+    if (!canDownload) { setPdfDialogOpen(false); setLimitOpen(true); return; }
     try {
       exportCardapioPDF(pdfSource, pdfMode);
+      await registerDownload(pdfMode === "dia" ? "cardapio_dia" : "cardapio_semana");
       setPdfDialogOpen(false);
       toast({ title: "PDF gerado com sucesso!" });
     } catch (e: any) {
@@ -416,12 +449,14 @@ export default function Cardapio() {
                 .filter(key => (data.cardapio[dia] as any)[key])
                 .map(key => (
                   <RefeicaoDetail key={key} refeicao={(data.cardapio[dia] as any)[key] as Refeicao} label={REFEICOES_LABEL[key] || key}
+                    onDownload={handleDownloadReceita}
                     onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
                 ))}
               {data.cardapio[dia] && Object.entries(data.cardapio[dia])
                 .filter(([key]) => !REFEICOES_ORDER.includes(key))
                 .map(([key, ref]) => (
                   <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key}
+                    onDownload={handleDownloadReceita}
                     onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
                 ))}
             </TabsContent>
@@ -433,9 +468,12 @@ export default function Cardapio() {
 
   return (
     <div className="space-y-4 md:space-y-6 max-w-4xl">
-      <div className="flex items-center gap-2 md:gap-3">
-        <CalendarDays className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-        <h1 className="text-xl md:text-2xl font-bold text-foreground">Meu Cardápio</h1>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 md:gap-3">
+          <CalendarDays className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Meu Cardápio</h1>
+        </div>
+        <PdfRemainingBadge used={used} limit={limit} isUnlimited={isUnlimited} />
       </div>
 
       <Tabs value={mainTab} onValueChange={setMainTab}>
@@ -648,6 +686,13 @@ export default function Cardapio() {
         </DialogContent>
       </Dialog>
 
+      <PdfLimitModal
+        open={limitOpen}
+        onOpenChange={setLimitOpen}
+        used={used}
+        limit={limit === Infinity ? 0 : limit}
+        planLabel={planLabel}
+      />
     </div>
   );
 }

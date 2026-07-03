@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ChefHat, Loader2, Sparkles, Clock, Users, BookOpen, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, BookmarkPlus, ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { ChefHat, Loader2, Sparkles, Clock, Users, BookOpen, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,11 +7,15 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
+import { exportReceitaPDF, ReceitaPDF } from "@/lib/recipe-pdf";
+import { usePdfLimit } from "@/hooks/usePdfLimit";
+import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
-type Receita = {
-  nome: string; descricao: string; tempo_preparo: string; porcoes: string;
-  dificuldade?: string; ingredientes: string[]; modo_preparo: string[]; dicas: string;
-  informacoes_nutricionais?: { calorias?: string; proteinas?: string; carboidratos?: string; gorduras?: string; fibras?: string };
+type Receita = ReceitaPDF & {
+  descricao: string;
+  ingredientes: string[];
+  modo_preparo: string[];
 };
 
 const difficultyColor = (d?: string) => {
@@ -22,13 +26,21 @@ const difficultyColor = (d?: string) => {
   return "destructive" as const;
 };
 
-function ReceitaDetail({ receita }: { receita: Receita }) {
+function ReceitaDetail({ receita, onDownload }: { receita: Receita; onDownload: (r: Receita) => void }) {
   return (
     <div className="relative rounded-xl border border-border bg-card p-6 space-y-5">
       <div className="absolute top-4 right-4 flex items-center gap-2">
+        <Button
+          size="sm"
+          onClick={() => onDownload(receita)}
+          style={{ backgroundColor: "#2d6a4f", color: "#ffffff" }}
+          className="hover:opacity-90"
+        >
+          <Download className="mr-1.5 h-3.5 w-3.5" /> Baixar Receita em PDF
+        </Button>
         <FavoriteButton recipe={receita} origem="receitas" />
       </div>
-      <div className="pr-32">
+      <div className="pr-32 md:pr-72">
         <h2 className="text-xl font-bold text-foreground">{receita.nome}</h2>
         <p className="text-muted-foreground text-sm mt-1">{receita.descricao}</p>
       </div>
@@ -114,6 +126,10 @@ export default function Receitas() {
   const [saved, setSaved] = useState<Receita[]>([]);
   const [activeTab, setActiveTab] = useState("criar");
   const [viewingSaved, setViewingSaved] = useState<Receita | null>(null);
+  const [limitOpen, setLimitOpen] = useState(false);
+
+  const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
+  const { planLabel } = useUserPlan();
 
   const gerarReceita = async () => {
     if (!ingredients.trim()) { toast({ title: "Informe os ingredientes", variant: "destructive" }); return; }
@@ -135,10 +151,14 @@ export default function Receitas() {
     }
   };
 
-  const salvarReceita = () => {
-    if (receita) {
-      setSaved(prev => [receita, ...prev]);
-      toast({ title: "Receita salva!" });
+  const handleDownload = async (r: Receita) => {
+    if (!canDownload) { setLimitOpen(true); return; }
+    try {
+      exportReceitaPDF(r);
+      await registerDownload("receita");
+      toast({ title: "PDF gerado!" });
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar PDF", description: e.message, variant: "destructive" });
     }
   };
 
@@ -149,6 +169,7 @@ export default function Receitas() {
           <ChefHat className="h-6 w-6 md:h-7 md:w-7 text-primary" />
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Receitas</h1>
         </div>
+        <PdfRemainingBadge used={used} limit={limit} isUnlimited={isUnlimited} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -174,7 +195,7 @@ export default function Receitas() {
               {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando receita...</> : <><Sparkles className="mr-2 h-4 w-4" /> Criar Receita</>}
             </Button>
           </div>
-          {receita && <ReceitaDetail receita={receita} />}
+          {receita && <ReceitaDetail receita={receita} onDownload={handleDownload} />}
         </TabsContent>
 
         <TabsContent value="salvas" className="space-y-4">
@@ -183,7 +204,7 @@ export default function Receitas() {
               <Button variant="ghost" size="sm" onClick={() => setViewingSaved(null)}>
                 <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar
               </Button>
-              <ReceitaDetail receita={viewingSaved} />
+              <ReceitaDetail receita={viewingSaved} onDownload={handleDownload} />
             </>
           ) : saved.length === 0 ? (
             <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
@@ -208,6 +229,14 @@ export default function Receitas() {
           )}
         </TabsContent>
       </Tabs>
+
+      <PdfLimitModal
+        open={limitOpen}
+        onOpenChange={setLimitOpen}
+        used={used}
+        limit={limit === Infinity ? 0 : limit}
+        planLabel={planLabel}
+      />
     </div>
   );
 }
