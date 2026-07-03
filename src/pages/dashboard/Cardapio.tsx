@@ -97,7 +97,7 @@ const difficultyColor = (d?: string) => {
   return "destructive" as const;
 };
 
-function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label: string; onSwap?: (preferencia: string) => void }) {
+function RefeicaoDetail({ refeicao, label, onSwap, onDownload }: { refeicao: Refeicao; label: string; onSwap?: (preferencia: string) => void; onDownload?: (r: Refeicao) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [showSwap, setShowSwap] = useState(false);
   const [swapText, setSwapText] = useState("");
@@ -105,7 +105,19 @@ function RefeicaoDetail({ refeicao, label, onSwap }: { refeicao: Refeicao; label
 
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden relative">
-      <div className="absolute top-2 right-2 z-10">
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+        {onDownload && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onDownload(refeicao); }}
+            title="Baixar Receita em PDF"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-white hover:opacity-90"
+            style={{ backgroundColor: "#2d6a4f" }}
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
+        )}
         <FavoriteButton
           recipe={{
             nome: refeicao.nome,
