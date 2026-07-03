@@ -49,6 +49,7 @@ const plans = [
     description: "Desbloqueie todo o potencial",
     icon: Crown,
     features: [
+      { text: "Downloads de PDF ilimitados", included: true },
       { text: "Tudo do Equilíbrio", included: true },
       { text: "Score Diário, streak e níveis", included: true },
       { text: "Sistema de Conquistas completo", included: true },
