@@ -29,6 +29,7 @@ const plans = [
     description: "Melhor custo-benefício",
     icon: Star,
     features: [
+      { text: "10 downloads de PDF por mês", included: true },
       { text: "Cardápios ilimitados", included: true },
       { text: "Lista de compras completa", included: true },
       { text: "Marcar refeições como concluídas", included: true },
