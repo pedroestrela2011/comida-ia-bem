@@ -9,6 +9,7 @@ const plans = [
     description: "Comece sua jornada com o básico",
     icon: Zap,
     features: [
+      { text: "3 downloads de PDF por mês", included: true },
       { text: "Cardápios semanais completos", included: true },
       { text: "Até 3 cardápios por conta", included: true },
       { text: "Lista de compras automática", included: true },
