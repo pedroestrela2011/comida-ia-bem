@@ -686,6 +686,13 @@ export default function Cardapio() {
         </DialogContent>
       </Dialog>
 
+      <PdfLimitModal
+        open={limitOpen}
+        onOpenChange={setLimitOpen}
+        used={used}
+        limit={limit === Infinity ? 0 : limit}
+        planLabel={planLabel}
+      />
     </div>
   );
 }
