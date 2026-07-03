@@ -134,7 +134,7 @@ function RefeicaoDetail({ refeicao, label, onSwap, onDownload }: { refeicao: Ref
         />
       </div>
       <button type="button" onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 pr-12 text-left hover:bg-muted/30 transition-colors">
+        className="w-full p-4 pr-24 text-left hover:bg-muted/30 transition-colors">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
         <div className="flex items-center justify-between">
           <p className="font-semibold text-foreground">{refeicao.nome}</p>
