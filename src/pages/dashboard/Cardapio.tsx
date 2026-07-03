@@ -468,9 +468,12 @@ export default function Cardapio() {
 
   return (
     <div className="space-y-4 md:space-y-6 max-w-4xl">
-      <div className="flex items-center gap-2 md:gap-3">
-        <CalendarDays className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-        <h1 className="text-xl md:text-2xl font-bold text-foreground">Meu Cardápio</h1>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 md:gap-3">
+          <CalendarDays className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Meu Cardápio</h1>
+        </div>
+        <PdfRemainingBadge used={used} limit={limit} isUnlimited={isUnlimited} />
       </div>
 
       <Tabs value={mainTab} onValueChange={setMainTab}>
