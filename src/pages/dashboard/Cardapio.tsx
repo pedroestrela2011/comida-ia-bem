@@ -280,10 +280,12 @@ export default function Cardapio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pdfDialogOpen, pdfSource, pdfMode]);
 
-  const confirmPdf = () => {
+  const confirmPdf = async () => {
     if (!pdfSource) return;
+    if (!canDownload) { setPdfDialogOpen(false); setLimitOpen(true); return; }
     try {
       exportCardapioPDF(pdfSource, pdfMode);
+      await registerDownload(pdfMode === "dia" ? "cardapio_dia" : "cardapio_semana");
       setPdfDialogOpen(false);
       toast({ title: "PDF gerado com sucesso!" });
     } catch (e: any) {
