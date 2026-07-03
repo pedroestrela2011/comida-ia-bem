@@ -449,12 +449,14 @@ export default function Cardapio() {
                 .filter(key => (data.cardapio[dia] as any)[key])
                 .map(key => (
                   <RefeicaoDetail key={key} refeicao={(data.cardapio[dia] as any)[key] as Refeicao} label={REFEICOES_LABEL[key] || key}
+                    onDownload={handleDownloadReceita}
                     onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
                 ))}
               {data.cardapio[dia] && Object.entries(data.cardapio[dia])
                 .filter(([key]) => !REFEICOES_ORDER.includes(key))
                 .map(([key, ref]) => (
                   <RefeicaoDetail key={key} refeicao={ref as Refeicao} label={REFEICOES_LABEL[key] || key}
+                    onDownload={handleDownloadReceita}
                     onSwap={setTargetData ? (pref) => substituirRefeicao(data, setTargetData, dia, key, pref) : undefined} />
                 ))}
             </TabsContent>
