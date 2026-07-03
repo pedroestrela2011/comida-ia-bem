@@ -13,6 +13,10 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyScore } from "@/hooks/useDailyScore";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
+import { exportReceitaPDF } from "@/lib/recipe-pdf";
+import { usePdfLimit } from "@/hooks/usePdfLimit";
+import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 type Refeicao = {
   nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;
