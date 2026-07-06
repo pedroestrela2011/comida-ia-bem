@@ -117,6 +117,14 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
+        "epic-pulse": {
+          "0%, 100%": { boxShadow: "0 0 12px rgba(139,92,246,0.35)" },
+          "50%": { boxShadow: "0 0 22px rgba(139,92,246,0.7)" },
+        },
+        "legendary-shine": {
+          "0%, 100%": { boxShadow: "0 0 12px rgba(245,158,11,0.4), 0 0 4px rgba(253,224,71,0.6) inset" },
+          "50%": { boxShadow: "0 0 26px rgba(245,158,11,0.9), 0 0 10px rgba(253,224,71,0.9) inset" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -125,6 +133,8 @@ export default {
         "slide-in-left": "slide-in-left 0.5s ease-out forwards",
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         float: "float 3s ease-in-out infinite",
+        "epic-pulse": "epic-pulse 2.2s ease-in-out infinite",
+        "legendary-shine": "legendary-shine 2.6s ease-in-out infinite",
       },
     },
   },

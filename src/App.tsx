@@ -23,6 +23,7 @@ import ScoreDiario from "./pages/dashboard/ScoreDiario";
 import Conquistas from "./pages/dashboard/Conquistas";
 import Favoritos from "./pages/dashboard/Favoritos";
 import AdaptadorDieta from "./pages/dashboard/AdaptadorDieta";
+import Jornada from "./pages/dashboard/Jornada";
 
 import Admin from "./pages/dashboard/Admin";
 import { PlanGate } from "./components/dashboard/PlanGate";
@@ -67,6 +68,8 @@ const App = () => (
             <Route path="conquistas" element={<PlanGate feature="conquistas" requiredPlan="Performance"><Conquistas /></PlanGate>} />
             <Route path="favoritos" element={<Favoritos />} />
             <Route path="adaptador-dieta" element={<AdaptadorDieta />} />
+            <Route path="jornada" element={<Jornada />} />
+            
             
             <Route path="admin" element={<Admin />} />
           </Route>

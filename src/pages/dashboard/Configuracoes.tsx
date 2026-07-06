@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, X, Bell } from "lucide-react";
+import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, X, Bell, Sparkles } from "lucide-react";
 import { useSubscription, PLAN_CONFIG } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useGamification } from "@/hooks/useGamification";
+import { WelcomeGamificationDialog } from "@/components/dashboard/WelcomeGamificationDialog";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",
@@ -55,6 +57,10 @@ export default function Configuracoes() {
   // Appearance
   const [darkMode, setDarkMode] = useState(false);
   const [notificacoesScore, setNotificacoesScore] = useState(true);
+
+  // Gamification
+  const { enabled: gamiEnabled, onboarded: gamiOnboarded, setEnabled: setGamiEnabled, markOnboarded } = useGamification();
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -505,7 +511,42 @@ export default function Configuracoes() {
               />
             </div>
           </div>
+
+          {/* Jornada de Evolução */}
+          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> Jornada de Evolução
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Sistema opcional de XP, níveis e conquistas. Quando ativado, cada ação sua na plataforma
+              acumula pontos e desbloqueia badges. Se desativar, seu progresso é mantido e volta de onde parou.
+            </p>
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${gamiEnabled ? "bg-primary/10" : "bg-muted"}`}>
+                  <Sparkles className={`h-5 w-5 ${gamiEnabled ? "text-primary" : "text-muted-foreground"}`} />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{gamiEnabled ? "Ativada" : "Desativada"}</p>
+                  <p className="text-xs text-muted-foreground">Acumule XP e desbloqueie conquistas</p>
+                </div>
+              </div>
+              <Switch
+                checked={!!gamiEnabled}
+                onCheckedChange={async (checked) => {
+                  await setGamiEnabled(checked);
+                  if (checked && !gamiOnboarded) setShowWelcome(true);
+                  toast({ title: checked ? "Jornada de Evolução ativada" : "Jornada de Evolução desativada" });
+                }}
+              />
+            </div>
+          </div>
         </TabsContent>
+        <WelcomeGamificationDialog
+          open={showWelcome}
+          onConfirm={async () => { setShowWelcome(false); await markOnboarded(); }}
+        />
+
 
         {/* ========== PLANOS ========== */}
         <TabsContent value="planos" className="space-y-6 mt-6">

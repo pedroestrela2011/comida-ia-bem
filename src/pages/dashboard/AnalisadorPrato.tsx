@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useDailyScore } from "@/hooks/useDailyScore";
+import { useGamification } from "@/hooks/useGamification";
 import {
   Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star,
   Camera, X, ChefHat, Clock, Users, BookmarkPlus, Lightbulb,

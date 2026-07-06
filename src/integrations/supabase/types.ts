@@ -199,6 +199,8 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           data_nascimento: string | null
+          gamificacao_ativa: boolean
+          gamificacao_onboarded: boolean
           id: string
           nome: string
           notificacoes_score: boolean
@@ -214,6 +216,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           data_nascimento?: string | null
+          gamificacao_ativa?: boolean
+          gamificacao_onboarded?: boolean
           id?: string
           nome: string
           notificacoes_score?: boolean
@@ -229,6 +233,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           data_nascimento?: string | null
+          gamificacao_ativa?: boolean
+          gamificacao_onboarded?: boolean
           id?: string
           nome?: string
           notificacoes_score?: boolean
@@ -362,6 +368,69 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_xp: {
+        Row: {
+          created_at: string
+          current_streak: number
+          last_action_date: string | null
+          longest_streak: number
+          shield_month: string | null
+          streak_shield_available: boolean
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          last_action_date?: string | null
+          longest_streak?: number
+          shield_month?: string | null
+          streak_shield_available?: boolean
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          last_action_date?: string | null
+          longest_streak?: number
+          shield_month?: string | null
+          streak_shield_available?: boolean
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      xp_events: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          metadata: Json
+          user_id: string
+          xp_amount: number
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          user_id: string
+          xp_amount?: number
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          user_id?: string
+          xp_amount?: number
         }
         Relationships: []
       }

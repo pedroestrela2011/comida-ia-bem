@@ -11,6 +11,7 @@ import { exportReceitaPDF, ReceitaPDF } from "@/lib/recipe-pdf";
 import { usePdfLimit } from "@/hooks/usePdfLimit";
 import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useGamification } from "@/hooks/useGamification";
 
 type Receita = ReceitaPDF & {
   descricao: string;
@@ -130,6 +131,7 @@ export default function Receitas() {
 
   const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
   const { planLabel } = useUserPlan();
+  const { awardXP } = useGamification();
 
   const gerarReceita = async () => {
     if (!ingredients.trim()) { toast({ title: "Informe os ingredientes", variant: "destructive" }); return; }
@@ -143,6 +145,7 @@ export default function Receitas() {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("Resposta inválida");
       setReceita(JSON.parse(jsonMatch[0]) as Receita);
+      awardXP("receita");
       toast({ title: "Receita criada!" });
     } catch (e: any) {
       toast({ title: "Erro ao gerar receita", description: e.message, variant: "destructive" });
@@ -156,6 +159,7 @@ export default function Receitas() {
     try {
       exportReceitaPDF(r);
       await registerDownload("receita");
+      awardXP("pdf");
       toast({ title: "PDF gerado!" });
     } catch (e: any) {
       toast({ title: "Erro ao gerar PDF", description: e.message, variant: "destructive" });

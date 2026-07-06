@@ -1,9 +1,10 @@
-import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart, Wand2 } from "lucide-react";
+import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart, Wand2, Sparkles } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useGamification } from "@/hooks/useGamification";
 
 import {
   Sidebar,
@@ -37,6 +38,8 @@ const menuItems: { title: string; url: string; icon: any; featureKey?: FeatureKe
 export function AppSidebar() {
   const navigate = useNavigate();
   const { features, isAdmin } = useUserPlan();
+  const { enabled: gamiEnabled } = useGamification();
+  
   
 
   const handleLogout = async () => {
@@ -77,6 +80,20 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
+              {gamiEnabled && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/dashboard/jornada"
+                      className="flex items-center gap-2"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span className="flex-1">Jornada de Evolução</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
