@@ -24,6 +24,18 @@ const allFeatures: FeatureAccess = {
   conquistas: true,
 };
 
+// During the 7-day free trial, only the cardápio is unlocked.
+const trialFeatures: FeatureAccess = {
+  cardapio: true,
+  receitas: false,
+  chat: false,
+  modoEsporte: false,
+  progresso: false,
+  analisadorPrato: false,
+  scoreDiario: false,
+  conquistas: false,
+};
+
 const planFeatures: Record<PlanType, FeatureAccess> = {
   essencial: {
     cardapio: true,
@@ -52,7 +64,7 @@ const planFeatures: Record<PlanType, FeatureAccess> = {
 let adminCache: boolean | null = null;
 
 export function useUserPlan() {
-  const { plan, loading } = useSubscription();
+  const { plan, loading, subscribed, trialEndsAt, trialExpired } = useSubscription();
   const [isAdmin, setIsAdmin] = useState<boolean>(adminCache ?? false);
 
   useEffect(() => {
@@ -81,14 +93,30 @@ export function useUserPlan() {
     return () => { cancelled = true; };
   }, []);
 
+  const isTrial =
+    !isAdmin &&
+    !subscribed &&
+    plan === "essencial" &&
+    !!trialEndsAt &&
+    !trialExpired;
+
+  const features = isAdmin
+    ? allFeatures
+    : isTrial
+      ? trialFeatures
+      : planFeatures[plan];
+
   return {
     plan,
     loading,
     isAdmin,
-    features: isAdmin ? allFeatures : planFeatures[plan],
+    isTrial,
+    features,
     planLabel: isAdmin
       ? "Administrador"
-      : plan === "essencial" ? "Essencial" : plan === "equilibrio" ? "Equilíbrio" : "Performance",
+      : isTrial
+        ? "Teste grátis"
+        : plan === "essencial" ? "Essencial" : plan === "equilibrio" ? "Equilíbrio" : "Performance",
   };
 }
 

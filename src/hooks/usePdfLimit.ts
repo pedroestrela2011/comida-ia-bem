@@ -14,11 +14,12 @@ function startOfMonthISO(): string {
 }
 
 export function usePdfLimit() {
-  const { plan, isAdmin } = useUserPlan();
+  const { plan, isAdmin, isTrial } = useUserPlan();
   const [used, setUsed] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
-  const limit = isAdmin ? Infinity : LIMITS[plan];
+  // Trial users get only 1 PDF for the entire trial period.
+  const limit = isAdmin ? Infinity : isTrial ? 1 : LIMITS[plan];
   const remaining = limit === Infinity ? Infinity : Math.max(0, limit - used);
   const canDownload = remaining > 0;
 
@@ -27,18 +28,21 @@ export function usePdfLimit() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setUsed(0); return; }
-      const { count } = await supabase
+      let query = supabase
         .from("pdf_downloads" as any)
         .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", startOfMonthISO());
+        .eq("user_id", user.id);
+      if (!isTrial) {
+        query = query.gte("created_at", startOfMonthISO());
+      }
+      const { count } = await query;
       setUsed(count || 0);
     } catch (e) {
       console.error("pdf limit refresh", e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isTrial]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
