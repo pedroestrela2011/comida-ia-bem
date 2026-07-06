@@ -57,6 +57,7 @@ export default function AnalisadorPrato() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { registerAction } = useDailyScore();
+  const { awardXP } = useGamification();
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
