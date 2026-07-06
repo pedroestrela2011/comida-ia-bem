@@ -14,11 +14,12 @@ function startOfMonthISO(): string {
 }
 
 export function usePdfLimit() {
-  const { plan, isAdmin } = useUserPlan();
+  const { plan, isAdmin, isTrial } = useUserPlan();
   const [used, setUsed] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
-  const limit = isAdmin ? Infinity : LIMITS[plan];
+  // Trial users get only 1 PDF for the entire trial period.
+  const limit = isAdmin ? Infinity : isTrial ? 1 : LIMITS[plan];
   const remaining = limit === Infinity ? Infinity : Math.max(0, limit - used);
   const canDownload = remaining > 0;
 
