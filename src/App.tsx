@@ -59,8 +59,9 @@ const App = () => (
             <Route path="modo-esporte" element={<PlanGate feature="modoEsporte" requiredPlan="Equilíbrio"><ModoEsporte /></PlanGate>} />
             <Route path="analisador-prato" element={<PlanGate feature="analisadorPrato" requiredPlan="Equilíbrio"><AnalisadorPrato /></PlanGate>} />
             <Route path="progresso" element={<PlanGate feature="progresso" requiredPlan="Equilíbrio"><Progresso /></PlanGate>} />
-            <Route path="receitas" element={<Receitas />} />
-            <Route path="chat" element={<Chat />} />
+            <Route path="receitas" element={<PlanGate feature="receitas" requiredPlan="Essencial"><Receitas /></PlanGate>} />
+            <Route path="chat" element={<PlanGate feature="chat" requiredPlan="Essencial"><Chat /></PlanGate>} />
+
             <Route path="configuracoes" element={<Configuracoes />} />
             <Route path="score" element={<PlanGate feature="scoreDiario" requiredPlan="Performance"><ScoreDiario /></PlanGate>} />
             <Route path="conquistas" element={<PlanGate feature="conquistas" requiredPlan="Performance"><Conquistas /></PlanGate>} />
