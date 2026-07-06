@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useDailyScore } from "@/hooks/useDailyScore";
+import { useGamification } from "@/hooks/useGamification";
 import {
   Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star,
   Camera, X, ChefHat, Clock, Users, BookmarkPlus, Lightbulb,
@@ -56,6 +57,7 @@ export default function AnalisadorPrato() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { registerAction } = useDailyScore();
+  const { awardXP } = useGamification();
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,6 +147,7 @@ export default function AnalisadorPrato() {
       const parsed: Analise = JSON.parse(jsonMatch[0]);
       setAnalise(parsed);
       await registerAction("analisador", 15, { action: "analise_prato", prato: parsed.nome_prato });
+      awardXP("analisador");
       toast({ title: "Análise concluída!" });
     } catch (e: any) {
       console.error(e);

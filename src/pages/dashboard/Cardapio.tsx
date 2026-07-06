@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyScore } from "@/hooks/useDailyScore";
+import { useGamification } from "@/hooks/useGamification";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 import { exportReceitaPDF } from "@/lib/recipe-pdf";
 import { usePdfLimit } from "@/hooks/usePdfLimit";
@@ -254,6 +255,7 @@ export default function Cardapio() {
     try {
       exportReceitaPDF(r);
       await registerDownload("receita");
+      awardXP("pdf");
       toast({ title: "PDF gerado!" });
     } catch (e: any) {
       toast({ title: "Erro ao gerar PDF", description: e.message, variant: "destructive" });
@@ -286,6 +288,7 @@ export default function Cardapio() {
     try {
       exportCardapioPDF(pdfSource, pdfMode);
       await registerDownload(pdfMode === "dia" ? "cardapio_dia" : "cardapio_semana");
+      awardXP("pdf");
       setPdfDialogOpen(false);
       toast({ title: "PDF gerado com sucesso!" });
     } catch (e: any) {
@@ -294,6 +297,7 @@ export default function Cardapio() {
   };
 
   const { registerAction } = useDailyScore();
+  const { awardXP } = useGamification();
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
     gosta: "", nao_gosta: "",
@@ -348,6 +352,7 @@ export default function Cardapio() {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("Resposta inválida da IA");
       setCardapio(JSON.parse(jsonMatch[0]) as CardapioData);
+      awardXP("cardapio");
       toast({ title: "Cardápio gerado com sucesso!" });
     } catch (e: any) {
       toast({ title: "Erro ao gerar cardápio", description: e.message, variant: "destructive" });
