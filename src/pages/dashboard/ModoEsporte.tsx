@@ -182,6 +182,7 @@ export default function ModoEsporte() {
   const [loading, setLoading] = useState(false);
   const [cardapio, setCardapio] = useState<CardapioEsporteData | null>(null);
   const { registerAction } = useDailyScore();
+  const { awardXP } = useGamification();
   const [showList, setShowList] = useState(false);
   const [mainTab, setMainTab] = useState("criar");
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioEsporteData; created_at: string }[]>([]);
