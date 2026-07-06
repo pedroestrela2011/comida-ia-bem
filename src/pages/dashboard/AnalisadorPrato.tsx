@@ -147,6 +147,7 @@ export default function AnalisadorPrato() {
       const parsed: Analise = JSON.parse(jsonMatch[0]);
       setAnalise(parsed);
       await registerAction("analisador", 15, { action: "analise_prato", prato: parsed.nome_prato });
+      awardXP("analisador");
       toast({ title: "Análise concluída!" });
     } catch (e: any) {
       console.error(e);
