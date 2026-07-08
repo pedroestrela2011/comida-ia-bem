@@ -9,6 +9,7 @@ interface FeatureAccess {
   modoEsporte: boolean;
   progresso: boolean;
   analisadorPrato: boolean;
+  adaptadorDieta: boolean;
   scoreDiario: boolean;
   conquistas: boolean;
 }
@@ -20,6 +21,7 @@ const allFeatures: FeatureAccess = {
   modoEsporte: true,
   progresso: true,
   analisadorPrato: true,
+  adaptadorDieta: true,
   scoreDiario: true,
   conquistas: true,
 };
@@ -32,6 +34,7 @@ const trialFeatures: FeatureAccess = {
   modoEsporte: false,
   progresso: false,
   analisadorPrato: false,
+  adaptadorDieta: false,
   scoreDiario: false,
   conquistas: false,
 };
@@ -43,7 +46,8 @@ const planFeatures: Record<PlanType, FeatureAccess> = {
     chat: true,
     modoEsporte: false,
     progresso: false,
-    analisadorPrato: false,
+    analisadorPrato: true,
+    adaptadorDieta: false,
     scoreDiario: false,
     conquistas: false,
   },
@@ -54,6 +58,7 @@ const planFeatures: Record<PlanType, FeatureAccess> = {
     modoEsporte: true,
     progresso: true,
     analisadorPrato: true,
+    adaptadorDieta: true,
     scoreDiario: false,
     conquistas: false,
   },
