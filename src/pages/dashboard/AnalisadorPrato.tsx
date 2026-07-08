@@ -68,8 +68,8 @@ export default function AnalisadorPrato() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "A imagem deve ter no máximo 5MB.", variant: "destructive" });
+    if (file.size > 7 * 1024 * 1024) {
+      toast({ title: "A imagem deve ter no máximo 7MB.", variant: "destructive" });
       return;
     }
 
