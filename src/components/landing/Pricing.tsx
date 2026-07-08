@@ -55,7 +55,7 @@ const plans = [
       { text: "Sistema de Conquistas completo", included: true },
       { text: "Sugestões nutricionais avançadas", included: true },
       { text: "Ajuste automático de cardápio", included: true },
-      { text: "Chat Bot com ate 30 perguntas diarias.", included: true },
+      { text: "Chat Bot com ate 25 perguntas diarias.", included: true },
       { text: "\u00a0Nutricionista IA pessoal", included: true },
       { text: "Análise avançada de pratos", included: true },
     ],
