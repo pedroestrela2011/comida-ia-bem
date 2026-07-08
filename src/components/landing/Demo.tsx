@@ -8,6 +8,7 @@ import {
   Trophy,
   Star,
   Award,
+  Wand2,
 } from "lucide-react";
 
 const features = [
