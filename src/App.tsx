@@ -58,7 +58,7 @@ const App = () => (
             <Route index element={<Navigate to="cardapio" replace />} />
             <Route path="cardapio" element={<Cardapio />} />
             <Route path="modo-esporte" element={<PlanGate feature="modoEsporte" requiredPlan="Equilíbrio"><ModoEsporte /></PlanGate>} />
-            <Route path="analisador-prato" element={<PlanGate feature="analisadorPrato" requiredPlan="Equilíbrio"><AnalisadorPrato /></PlanGate>} />
+            <Route path="analisador-prato" element={<PlanGate feature="analisadorPrato" requiredPlan="Essencial"><AnalisadorPrato /></PlanGate>} />
             <Route path="progresso" element={<PlanGate feature="progresso" requiredPlan="Equilíbrio"><Progresso /></PlanGate>} />
             <Route path="receitas" element={<PlanGate feature="receitas" requiredPlan="Essencial"><Receitas /></PlanGate>} />
             <Route path="chat" element={<PlanGate feature="chat" requiredPlan="Essencial"><Chat /></PlanGate>} />
@@ -67,7 +67,7 @@ const App = () => (
             <Route path="score" element={<PlanGate feature="scoreDiario" requiredPlan="Performance"><ScoreDiario /></PlanGate>} />
             <Route path="conquistas" element={<PlanGate feature="conquistas" requiredPlan="Performance"><Conquistas /></PlanGate>} />
             <Route path="favoritos" element={<Favoritos />} />
-            <Route path="adaptador-dieta" element={<AdaptadorDieta />} />
+            <Route path="adaptador-dieta" element={<PlanGate feature="adaptadorDieta" requiredPlan="Equilíbrio"><AdaptadorDieta /></PlanGate>} />
             <Route path="jornada" element={<Jornada />} />
             
             

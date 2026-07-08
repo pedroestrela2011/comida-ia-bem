@@ -8,6 +8,7 @@ import {
   Trophy,
   Star,
   Award,
+  Wand2,
 } from "lucide-react";
 
 const features = [
@@ -31,6 +32,13 @@ const features = [
     description:
       "Envie uma foto ou descreva seu prato e receba análise nutricional com nota de saúde de 1 a 10.",
     color: "bg-accent/20 text-accent",
+  },
+  {
+    icon: Wand2,
+    title: "Adaptador de Dietas",
+    description:
+      "Envie o plano do seu nutricionista (PDF, imagem ou texto) e receba uma versão adaptada à sua rotina.",
+    color: "bg-primary/10 text-primary",
   },
   {
     icon: Dumbbell,

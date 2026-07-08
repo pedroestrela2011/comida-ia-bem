@@ -5,7 +5,7 @@ import { useUserPlan, PlanType } from "@/hooks/useUserPlan";
 const LIMITS: Record<PlanType, number> = {
   essencial: 3,
   equilibrio: 10,
-  performance: Infinity,
+  performance: 30,
 };
 
 function startOfMonthISO(): string {
