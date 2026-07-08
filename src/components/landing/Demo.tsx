@@ -34,6 +34,13 @@ const features = [
     color: "bg-accent/20 text-accent",
   },
   {
+    icon: Wand2,
+    title: "Adaptador de Dietas",
+    description:
+      "Envie o plano do seu nutricionista (PDF, imagem ou texto) e receba uma versão adaptada à sua rotina.",
+    color: "bg-primary/10 text-primary",
+  },
+  {
     icon: Dumbbell,
     title: "Modo Esporte",
     description:
