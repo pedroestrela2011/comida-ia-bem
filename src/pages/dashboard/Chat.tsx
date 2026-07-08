@@ -54,6 +54,19 @@ export default function Chat() {
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
+        if (resp.status === 429) {
+          const limitMsg = err.error || "Você atingiu o limite diário de perguntas do seu plano.";
+          setMessages(prev => [...prev, {
+            role: "assistant",
+            content: `⚠️ ${limitMsg}\n\nVocê pode:\n• Fazer upgrade do seu plano para ter mais perguntas por dia\n• Aguardar até amanhã, quando seu limite será renovado automaticamente.`,
+          }]);
+          toast({
+            title: "Limite diário atingido",
+            description: "Faça upgrade do plano ou tente novamente amanhã.",
+            variant: "destructive",
+          });
+          return;
+        }
         throw new Error(err.error || "Erro na conexão");
       }
 
