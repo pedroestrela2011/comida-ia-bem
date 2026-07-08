@@ -159,12 +159,67 @@ Os passos do modo_preparo devem ser claros, com técnica, tempos e indicações 
 Seja preciso nas estimativas e educativo nos feedbacks. Use português do Brasil.`;
       userPrompt = `Analise nutricionalmente e gere a receita do seguinte prato com estes alimentos: ${preferences.alimentos}${preferences.objetivo ? `\nObjetivo do usuário: ${preferences.objetivo}` : ""}`;
     } else if (type === "chat") {
+      // Enforce daily chatbot question limit based on user's plan
+      const userId = claimsData.claims.sub as string;
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+
+      const { data: profile } = await serviceClient
+        .from("profiles")
+        .select("plano")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const plano = (profile?.plano || "essencial").toLowerCase();
+      const LIMITS: Record<string, number> = {
+        essencial: 7,
+        equilibrio: 15,
+        "equilíbrio": 15,
+        performance: 25,
+      };
+      const limit = LIMITS[plano] ?? 7;
+
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: usageRow } = await serviceClient
+        .from("chatbot_usage")
+        .select("id, count")
+        .eq("user_id", userId)
+        .eq("usage_date", today)
+        .maybeSingle();
+
+      const currentCount = usageRow?.count ?? 0;
+      if (currentCount >= limit) {
+        return new Response(
+          JSON.stringify({
+            error: `Você atingiu o limite diário de ${limit} perguntas do seu plano. Tente novamente amanhã ou faça upgrade.`,
+            limit_reached: true,
+            limit,
+            used: currentCount,
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      if (usageRow) {
+        await serviceClient
+          .from("chatbot_usage")
+          .update({ count: currentCount + 1 })
+          .eq("id", usageRow.id);
+      } else {
+        await serviceClient
+          .from("chatbot_usage")
+          .insert({ user_id: userId, usage_date: today, count: 1 });
+      }
+
       systemPrompt = `Você é o "Conversa Saudável", um assistente de saúde amigável e educativo. 
 Responda dúvidas sobre alimentos, nutrição e hábitos alimentares saudáveis.
 Use tom acolhedor, acessível e educativo. Responda em português do Brasil.
 Não dê diagnósticos médicos. Sugira sempre procurar um profissional quando necessário.
 Use emojis ocasionalmente para ser mais amigável.`;
     }
+
 
     const aiMessages = type === "chat"
       ? [{ role: "system", content: systemPrompt }, ...messages]
