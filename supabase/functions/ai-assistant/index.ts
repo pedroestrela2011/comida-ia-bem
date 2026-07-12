@@ -28,6 +28,39 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    // Load health profile for user (used to personalize prompts)
+    const userIdForHealth = claimsData.claims.sub as string;
+    const serviceForHealth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    let healthContext = "";
+    try {
+      const { data: hp } = await serviceForHealth
+        .from("profiles")
+        .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+        .eq("user_id", userIdForHealth)
+        .maybeSingle();
+      if (hp) {
+        const parts: string[] = [];
+        if (hp.peso_kg) parts.push(`Peso: ${hp.peso_kg}kg`);
+        if (hp.altura_cm) parts.push(`Altura: ${hp.altura_cm}cm`);
+        if (hp.imc) parts.push(`IMC: ${hp.imc}`);
+        if (hp.objetivo) parts.push(`Objetivo: ${hp.objetivo}`);
+        if (hp.nivel_atividade) parts.push(`Atividade: ${hp.nivel_atividade}`);
+        if (hp.refeicoes_dia) parts.push(`Refeições/dia: ${hp.refeicoes_dia}`);
+        const rest = (hp.restricoes_alimentares || []).filter((r: string) => r && r !== "Nenhuma");
+        if (rest.length) parts.push(`Restrições: ${rest.join(", ")}`);
+        if (hp.alergias) parts.push(`Alergias: ${hp.alergias}`);
+        const cond = (hp.condicoes_saude || []).filter((c: string) => c && c !== "Nenhuma");
+        if (cond.length) parts.push(`Condições de saúde: ${cond.join(", ")}`);
+        if (hp.condicoes_outras) parts.push(`Outras condições: ${hp.condicoes_outras}`);
+        if (parts.length) {
+          healthContext = `\n\nCONTEXTO DE SAÚDE DO USUÁRIO (use para personalizar respostas, evitar sugestões incompatíveis com condições/restrições, e emitir avisos claros quando necessário):\n- ${parts.join("\n- ")}`;
+        }
+      }
+    } catch (_e) { /* ignore */ }
+
     let systemPrompt = "";
     let userPrompt = "";
 
