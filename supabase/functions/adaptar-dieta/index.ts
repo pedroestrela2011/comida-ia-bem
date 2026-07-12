@@ -77,16 +77,34 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    const h = personalization.health || {};
+    const restH = Array.isArray(h.restricoes_alimentares)
+      ? h.restricoes_alimentares.filter((r: string) => r && r !== "Nenhuma").join(", ")
+      : "";
+    const condH = Array.isArray(h.condicoes_saude)
+      ? h.condicoes_saude.filter((c: string) => c && c !== "Nenhuma").join(", ")
+      : "";
+
     const userPrompt = `PERSONALIZAÇÃO DO USUÁRIO:
 - Horários habituais: ${personalization.horarios || "não informado"}
 - Gosta de: ${personalization.gosta || "sem preferência específica"}
 - NÃO gosta / evita: ${personalization.nao_gosta || "nenhum"}
-- Alergias / restrições: ${personalization.alergias || "nenhuma"}
+- Alergias / restrições: ${personalization.alergias || h.alergias || "nenhuma"}
 - Rotina (trabalho/estudo): ${personalization.rotina || "não informada"}
 - Tempo disponível para cozinhar: ${personalization.tempo_cozinhar || "moderado"}
 - Orçamento mensal: ${personalization.orcamento || "moderado"}
 
-Analise o plano alimentar enviado (a seguir) e gere a versão ADAPTADA no JSON solicitado. Mantenha rigorosamente o objetivo nutricional original.`;
+PERFIL DE SAÚDE (do onboarding):
+- Peso: ${h.peso_kg ? h.peso_kg + "kg" : "não informado"}
+- Altura: ${h.altura_cm ? h.altura_cm + "cm" : "não informado"}
+- IMC: ${h.imc ?? "não informado"}
+- Objetivo pessoal: ${h.objetivo || "não informado"}
+- Nível de atividade: ${h.nivel_atividade || "não informado"}
+- Refeições por dia preferidas: ${h.refeicoes_dia || "não informado"}
+- Restrições alimentares: ${restH || "nenhuma"}
+- Condições de saúde: ${condH || "nenhuma"}${h.condicoes_outras ? " | Outras: " + h.condicoes_outras : ""}
+
+Analise o plano alimentar enviado (a seguir) e gere a versão ADAPTADA no JSON solicitado. Mantenha rigorosamente o objetivo nutricional original, mas respeite as condições de saúde, restrições e alergias do usuário — sinalize substituições feitas por causa delas.`;
 
     // Build content parts based on source type
     const userContent: any[] = [{ type: "text", text: userPrompt }];
