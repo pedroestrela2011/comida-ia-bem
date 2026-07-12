@@ -69,6 +69,7 @@ const CATEGORIA_LABELS: Record<string, string> = {
 };
 
 export default function AdaptadorDieta() {
+  const { profile: healthProfile } = useHealthProfile();
   const [sourceType, setSourceType] = useState<SourceType>("text");
   const [textContent, setTextContent] = useState("");
   const [fileName, setFileName] = useState<string>("");
@@ -260,7 +261,7 @@ export default function AdaptadorDieta() {
       const { data, error } = await supabase.functions.invoke("adaptar-dieta", {
         body: {
           source,
-          personalization: { horarios, gosta, nao_gosta: naoGosta, alergias, rotina, tempo_cozinhar: tempoCozinhar, orcamento },
+          personalization: { horarios, gosta, nao_gosta: naoGosta, alergias, rotina, tempo_cozinhar: tempoCozinhar, orcamento, health: healthProfile },
         },
       });
       if (error) throw error;
