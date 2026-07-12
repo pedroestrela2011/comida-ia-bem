@@ -377,6 +377,11 @@ export default function Configuracoes() {
           </div>
         </TabsContent>
 
+        {/* ========== DADOS DE SAÚDE ========== */}
+        <TabsContent value="saude" className="space-y-6 mt-6">
+          <DadosSaudeTab />
+        </TabsContent>
+
         {/* ========== SEGURANÇA ========== */}
         <TabsContent value="seguranca" className="space-y-6 mt-6">
           {/* Alterar senha */}
