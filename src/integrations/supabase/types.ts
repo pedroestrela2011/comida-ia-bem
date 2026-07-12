@@ -223,53 +223,95 @@ export type Database = {
       }
       profiles: {
         Row: {
+          alergias: string | null
+          altura_cm: number | null
           avatar_url: string | null
+          condicoes_outras: string | null
+          condicoes_saude: string[] | null
           created_at: string
           data_nascimento: string | null
           gamificacao_ativa: boolean
           gamificacao_onboarded: boolean
           id: string
+          idioma: string | null
+          imc: number | null
+          nivel_atividade: string | null
           nome: string
           notificacoes_score: boolean
+          objetivo: string | null
+          onboarding_completo: boolean | null
           pais: string | null
+          peso_kg: number | null
           plano: string
+          refeicoes_dia: number | null
+          restricoes_alimentares: string[] | null
           tema: string
           trial_ends_at: string | null
           two_fa_enabled: boolean
+          unidade_altura: string | null
+          unidade_peso: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          alergias?: string | null
+          altura_cm?: number | null
           avatar_url?: string | null
+          condicoes_outras?: string | null
+          condicoes_saude?: string[] | null
           created_at?: string
           data_nascimento?: string | null
           gamificacao_ativa?: boolean
           gamificacao_onboarded?: boolean
           id?: string
+          idioma?: string | null
+          imc?: number | null
+          nivel_atividade?: string | null
           nome: string
           notificacoes_score?: boolean
+          objetivo?: string | null
+          onboarding_completo?: boolean | null
           pais?: string | null
+          peso_kg?: number | null
           plano?: string
+          refeicoes_dia?: number | null
+          restricoes_alimentares?: string[] | null
           tema?: string
           trial_ends_at?: string | null
           two_fa_enabled?: boolean
+          unidade_altura?: string | null
+          unidade_peso?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          alergias?: string | null
+          altura_cm?: number | null
           avatar_url?: string | null
+          condicoes_outras?: string | null
+          condicoes_saude?: string[] | null
           created_at?: string
           data_nascimento?: string | null
           gamificacao_ativa?: boolean
           gamificacao_onboarded?: boolean
           id?: string
+          idioma?: string | null
+          imc?: number | null
+          nivel_atividade?: string | null
           nome?: string
           notificacoes_score?: boolean
+          objetivo?: string | null
+          onboarding_completo?: boolean | null
           pais?: string | null
+          peso_kg?: number | null
           plano?: string
+          refeicoes_dia?: number | null
+          restricoes_alimentares?: string[] | null
           tema?: string
           trial_ends_at?: string | null
           two_fa_enabled?: boolean
+          unidade_altura?: string | null
+          unidade_peso?: string | null
           updated_at?: string
           user_id?: string
         }

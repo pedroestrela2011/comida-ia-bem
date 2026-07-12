@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ const CATEGORIA_LABELS: Record<string, string> = {
 };
 
 export default function AdaptadorDieta() {
+  const { profile: healthProfile } = useHealthProfile();
   const [sourceType, setSourceType] = useState<SourceType>("text");
   const [textContent, setTextContent] = useState("");
   const [fileName, setFileName] = useState<string>("");
@@ -259,7 +261,7 @@ export default function AdaptadorDieta() {
       const { data, error } = await supabase.functions.invoke("adaptar-dieta", {
         body: {
           source,
-          personalization: { horarios, gosta, nao_gosta: naoGosta, alergias, rotina, tempo_cozinhar: tempoCozinhar, orcamento },
+          personalization: { horarios, gosta, nao_gosta: naoGosta, alergias, rotina, tempo_cozinhar: tempoCozinhar, orcamento, health: healthProfile },
         },
       });
       if (error) throw error;

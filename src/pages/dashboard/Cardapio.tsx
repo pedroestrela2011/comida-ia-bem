@@ -18,6 +18,7 @@ import { exportReceitaPDF } from "@/lib/recipe-pdf";
 import { usePdfLimit } from "@/hooks/usePdfLimit";
 import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useHealthProfile } from "@/hooks/useHealthProfile";
 
 type Refeicao = {
   nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;
@@ -298,10 +299,41 @@ export default function Cardapio() {
 
   const { registerAction } = useDailyScore();
   const { awardXP } = useGamification();
+  const { profile: healthProfile } = useHealthProfile();
   const [prefs, setPrefs] = useState({
     objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
     gosta: "", nao_gosta: "",
   });
+
+  // Pre-fill from onboarding once profile loads
+  useEffect(() => {
+    if (!healthProfile) return;
+    setPrefs((p) => {
+      const next = { ...p };
+      if (!p.objetivo && healthProfile.objetivo) {
+        const map: Record<string, string> = {
+          "Emagrecer": "emagrecer",
+          "Ganhar Massa Muscular": "ganhar_massa",
+          "Manter o Peso": "manter_saude",
+          "Melhorar a Saúde Geral": "manter_saude",
+          "Melhorar Performance Esportiva": "ganhar_massa",
+        };
+        next.objetivo = map[healthProfile.objetivo] || p.objetivo;
+      }
+      if (p.restricoes.length === 0 && healthProfile.restricoes_alimentares?.length) {
+        const restMap: Record<string, string> = {
+          "Vegetariano": "vegetariano",
+          "Vegano": "vegano",
+          "Sem Glúten": "sem glúten",
+          "Sem Lactose": "sem lactose",
+        };
+        next.restricoes = healthProfile.restricoes_alimentares
+          .map((r) => restMap[r])
+          .filter(Boolean);
+      }
+      return next;
+    });
+  }, [healthProfile]);
 
   const fetchSaved = async () => {
     setLoadingSaved(true);
