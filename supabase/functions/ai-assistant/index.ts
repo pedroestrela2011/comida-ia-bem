@@ -254,6 +254,11 @@ Use emojis ocasionalmente para ser mais amigável.`;
     }
 
 
+    // Inject personal health context into system prompt for relevant types
+    if (healthContext && (type === "chat" || type === "cardapio" || type === "cardapio_esporte" || type === "analisador_prato" || type === "substituir_refeicao" || type === "receita")) {
+      systemPrompt = `${systemPrompt}${healthContext}`;
+    }
+
     const aiMessages = type === "chat"
       ? [{ role: "system", content: systemPrompt }, ...messages]
       : [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }];
