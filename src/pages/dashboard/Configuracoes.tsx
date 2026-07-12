@@ -568,6 +568,193 @@ export default function Configuracoes() {
   );
 }
 
+function DadosSaudeTab() {
+  const { profile, loading, update } = useHealthProfile();
+  const [peso, setPeso] = useState("");
+  const [altura, setAltura] = useState("");
+  const [objetivo, setObjetivo] = useState("");
+  const [nivel, setNivel] = useState("");
+  const [refeicoes, setRefeicoes] = useState<number | null>(null);
+  const [restricoes, setRestricoes] = useState<string[]>([]);
+  const [alergias, setAlergias] = useState("");
+  const [condicoes, setCondicoes] = useState<string[]>([]);
+  const [outras, setOutras] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!profile) return;
+    setPeso(profile.peso_kg ? String(profile.peso_kg) : "");
+    setAltura(profile.altura_cm ? String(profile.altura_cm) : "");
+    setObjetivo(profile.objetivo || "");
+    setNivel(profile.nivel_atividade || "");
+    setRefeicoes(profile.refeicoes_dia ?? null);
+    setRestricoes(profile.restricoes_alimentares || []);
+    setAlergias(profile.alergias || "");
+    setCondicoes(profile.condicoes_saude || []);
+    setOutras(profile.condicoes_outras || "");
+  }, [profile]);
+
+  const toggleArr = (arr: string[], val: string) => {
+    if (val === "Nenhuma") return ["Nenhuma"];
+    const without = arr.filter((v) => v !== "Nenhuma");
+    return without.includes(val) ? without.filter((v) => v !== val) : [...without, val];
+  };
+
+  const salvar = async () => {
+    setSaving(true);
+    try {
+      const pesoNum = parseFloat(peso.replace(",", "."));
+      const alturaNum = parseFloat(altura.replace(",", "."));
+      await update({
+        peso_kg: isNaN(pesoNum) ? null : pesoNum,
+        altura_cm: isNaN(alturaNum) ? null : alturaNum,
+        objetivo: objetivo || null,
+        nivel_atividade: nivel || null,
+        refeicoes_dia: refeicoes,
+        restricoes_alimentares: restricoes,
+        alergias: alergias || null,
+        condicoes_saude: condicoes,
+        condicoes_outras: outras || null,
+      });
+      toast({ title: "Dados de saúde atualizados!" });
+    } catch (e: any) {
+      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  }
+
+  const imcCalc = peso && altura ? calcIMC(parseFloat(peso.replace(",", ".")), parseFloat(altura.replace(",", "."))) : profile?.imc ?? null;
+  const faixa = faixaIMC(imcCalc);
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-6 space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <HeartPulse className="h-5 w-5 text-primary" /> Dados de Saúde
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Atualize suas informações a qualquer momento. As mudanças são usadas em todas as funções do site.
+        </p>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Peso (kg)</Label>
+          <Input inputMode="decimal" value={peso} onChange={(e) => setPeso(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label>Altura (cm)</Label>
+          <Input inputMode="decimal" value={altura} onChange={(e) => setAltura(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label>IMC</Label>
+          <div className="h-10 rounded-md border border-border bg-muted/30 px-3 flex items-center justify-between">
+            <span className="font-semibold text-foreground">{imcCalc ?? "—"}</span>
+            <span className={`text-xs font-medium ${faixa.color}`}>{faixa.label}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Objetivo principal</Label>
+        <Select value={objetivo} onValueChange={setObjetivo}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            {OBJETIVOS.map((o) => (<SelectItem key={o} value={o}>{o}</SelectItem>))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Nível de atividade</Label>
+        <Select value={nivel} onValueChange={setNivel}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            {NIVEIS_ATIVIDADE.map((n) => (<SelectItem key={n.value} value={n.value}>{n.value}</SelectItem>))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Refeições por dia</Label>
+        <div className="flex gap-2">
+          {REFEICOES_OPCOES.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setRefeicoes(n)}
+              className={`h-10 w-12 rounded-lg border-2 text-sm font-semibold transition-all ${
+                refeicoes === n
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Restrições alimentares</Label>
+        <div className="flex flex-wrap gap-2">
+          {RESTRICOES_OPCOES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRestricoes(toggleArr(restricoes, r))}
+              className={`rounded-full border-2 px-3 py-1 text-xs font-medium transition-all ${
+                restricoes.includes(r)
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Alergias</Label>
+        <Textarea rows={2} value={alergias} onChange={(e) => setAlergias(e.target.value)} placeholder="Descreva alergias, se houver" />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Condições de saúde</Label>
+        <div className="flex flex-wrap gap-2">
+          {CONDICOES_OPCOES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCondicoes(toggleArr(condicoes, c))}
+              className={`rounded-full border-2 px-3 py-1 text-xs font-medium transition-all ${
+                condicoes.includes(c)
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        {condicoes.includes("Outras") && (
+          <Input placeholder="Especifique" value={outras} onChange={(e) => setOutras(e.target.value)} />
+        )}
+      </div>
+
+      <Button onClick={salvar} disabled={saving}>
+        {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Salvando...</> : "Salvar dados de saúde"}
+      </Button>
+    </div>
+  );
+}
+
 const plansData = [
   {
     id: "essencial",
