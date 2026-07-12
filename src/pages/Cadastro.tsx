@@ -113,7 +113,7 @@ const Cadastro = () => {
       })
     );
 
-    navigate("/escolher-plano");
+    navigate("/onboarding-saude");
   };
 
   return (

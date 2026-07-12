@@ -81,6 +81,7 @@ const EscolherPlano = () => {
     senha: string;
     data_nascimento: string;
     pais: string;
+    health?: any;
   } | null>(null);
 
   useEffect(() => {
@@ -94,7 +95,12 @@ const EscolherPlano = () => {
       return;
     }
     try {
-      setPending(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      if (!parsed.health || !parsed.health.onboarding_completo) {
+        navigate("/onboarding-saude", { replace: true });
+        return;
+      }
+      setPending(parsed);
     } catch {
       navigate("/cadastro", { replace: true });
     }
@@ -117,6 +123,7 @@ const EscolherPlano = () => {
             pais: pending.pais,
             plano: planId,
             skip_checkout: opts.skipCheckout,
+            health: pending.health ?? null,
           },
         },
       });
