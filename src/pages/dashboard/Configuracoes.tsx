@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, X, Bell, Sparkles } from "lucide-react";
+import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, X, Bell, Sparkles, HeartPulse } from "lucide-react";
+import { useHealthProfile } from "@/hooks/useHealthProfile";
+import { CONDICOES_OPCOES, NIVEIS_ATIVIDADE, OBJETIVOS, REFEICOES_OPCOES, RESTRICOES_OPCOES, faixaIMC, calcIMC } from "@/lib/health";
+import { Textarea } from "@/components/ui/textarea";
 import { useSubscription, PLAN_CONFIG } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -269,9 +272,12 @@ export default function Configuracoes() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="perfil" className="gap-1.5">
             <User className="h-3.5 w-3.5" /> Perfil
+          </TabsTrigger>
+          <TabsTrigger value="saude" className="gap-1.5">
+            <HeartPulse className="h-3.5 w-3.5" /> Saúde
           </TabsTrigger>
           <TabsTrigger value="seguranca" className="gap-1.5">
             <Shield className="h-3.5 w-3.5" /> Segurança
