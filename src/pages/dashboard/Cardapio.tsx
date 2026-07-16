@@ -337,18 +337,16 @@ export default function Cardapio() {
   };
 
   const gerarCardapio = async () => {
-    if (!prefs.objetivo) { toast({ title: "Selecione um objetivo", variant: "destructive" }); return; }
     setLoading(true);
     try {
       const preferences = {
-        objetivo: OBJETIVOS.find(o => o.value === prefs.objetivo)?.label || prefs.objetivo,
         orcamento: prefs.orcamento || "moderado",
         pessoas: prefs.pessoas,
         preferencias: prefs.gosta || "nenhuma especial",
         nao_gosta: prefs.nao_gosta || "nenhum",
-        restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
         deficiencias: prefs.deficiencias.filter(d => d !== "nenhuma").join(", ") || "nenhuma",
       };
+
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
         body: { type: "cardapio", preferences },
       });
