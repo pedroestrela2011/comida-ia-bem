@@ -408,9 +408,8 @@ export default function Cardapio() {
             refeicao_atual: refeicaoAtual.nome,
             tipo_refeicao: REFEICOES_LABEL[tipoRefeicao] || tipoRefeicao,
             preferencia,
-            objetivo: prefs.objetivo ? OBJETIVOS.find(o => o.value === prefs.objetivo)?.label : "",
-            restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
           },
+
         },
       });
       if (error) throw error;
@@ -497,14 +496,7 @@ export default function Cardapio() {
         <TabsContent value="criar" className="space-y-4">
           {!cardapio ? (
             <div className="rounded-xl border border-border bg-card p-6 space-y-6">
-              <div className="space-y-2">
-                <Label className="text-base font-semibold">Qual é o seu objetivo?</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {OBJETIVOS.map(o => (
-                    <OptionButton key={o.value} selected={prefs.objetivo === o.value} onClick={() => setPrefs(p => ({ ...p, objetivo: o.value }))} label={o.label} desc={o.desc} />
-                  ))}
-                </div>
-              </div>
+              <HealthProfileSummary profile={healthProfile} />
 
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Orçamento semanal</Label>
@@ -530,14 +522,6 @@ export default function Cardapio() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-base font-semibold">Restrições alimentares</Label>
-                <div className="flex flex-wrap gap-2">
-                  {RESTRICOES.map(r => (
-                    <ChipButton key={r.value} selected={prefs.restricoes.includes(r.value)} onClick={() => setPrefs(p => ({ ...p, restricoes: toggleArray(p.restricoes, r.value) }))} label={r.label} />
-                  ))}
-                </div>
-              </div>
 
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Deficiências nutricionais</Label>
