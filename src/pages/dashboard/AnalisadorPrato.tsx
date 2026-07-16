@@ -9,7 +9,7 @@ import { useDailyScore } from "@/hooks/useDailyScore";
 import { useGamification } from "@/hooks/useGamification";
 import {
   Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star,
-  Camera, X, ChefHat, Clock, Users, BookmarkPlus, Lightbulb,
+  Camera, X, ChefHat, Clock, Users, BookmarkPlus, Lightbulb, AlertTriangle,
 } from "lucide-react";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 
