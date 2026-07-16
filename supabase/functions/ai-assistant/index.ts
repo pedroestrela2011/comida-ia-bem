@@ -86,25 +86,27 @@ ${hasCritical ? '5. Inclua em "dicas" ou "descricao" um breve motivo educativo q
     let userPrompt = "";
 
     if (type === "cardapio") {
-      systemPrompt = `Você é um nutricionista brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON.
+      systemPrompt = `Você é um nutricionista brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, PLENAMENTE ADAPTADO ao contexto de saúde do usuário (condições clínicas, restrições, alergias e objetivo) — este contexto tem PRIORIDADE MÁXIMA sobre as preferências.
 Cada dia deve ter: cafe_da_manha, lanche_manha, almoco, lanche_tarde, jantar.
-Cada refeição deve ser BEM DETALHADA com: { "nome": "...", "descricao": "breve descrição", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 muito detalhado explicando técnica, tempo e temperatura", "passo 2 muito detalhado com dicas de textura e ponto ideal", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "dica útil para esta refeição" }
+Cada refeição deve ser BEM DETALHADA com: { "nome": "...", "descricao": "breve descrição (mencione o benefício para a(s) condição(ões) do usuário quando aplicável)", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 muito detalhado explicando técnica, tempo e temperatura", "passo 2 muito detalhado com dicas de textura e ponto ideal", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "dica útil (inclua justificativa clínica quando a escolha for guiada por diabetes, hipertensão, colesterol etc.)" }
+${healthConditionsList.length ? `\nATENÇÃO CRÍTICA: o usuário tem as seguintes condições que exigem adaptação de TODAS as refeições: ${healthConditionsList.join(", ")}. Cada dia do cardápio deve estar EXPLICITAMENTE alinhado a essas condições.` : ""}
 O modo_preparo deve ter passos bem explicados, com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está no ponto.
 Responda APENAS com JSON válido no formato: { "cardapio": { "segunda": { ... }, "terca": { ... }, ... } , "lista_compras": ["item1", "item2", ...] }`;
       const p = preferences;
       userPrompt = `Gere um cardápio semanal para ${p.pessoas || 1} pessoa(s).
-Objetivo: ${p.objetivo || "alimentação saudável"}
+IMPORTANTE: objetivo, restrições alimentares, alergias e condições de saúde JÁ ESTÃO no CONTEXTO DE SAÚDE do usuário acima — use-os como fonte de verdade, NÃO peça de novo e NÃO ignore.
 Orçamento: ${p.orcamento || "moderado"}
 Alimentos que gosta: ${p.preferencias || "nenhuma preferência especial"}
 Alimentos que NÃO gosta (EVITAR no cardápio): ${p.nao_gosta || "nenhum"}
-Restrições: ${p.restricoes || "nenhuma"}
-Deficiências nutricionais: ${p.deficiencias || "nenhuma"}`;
+Deficiências nutricionais a reforçar: ${p.deficiencias || "nenhuma"}`;
     } else if (type === "cardapio_esporte") {
-      systemPrompt = `Você é um nutricionista esportivo brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, personalizado para atletas e praticantes de atividade física.
+      systemPrompt = `Você é um nutricionista esportivo brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, personalizado para atletas e praticantes de atividade física, sempre respeitando restrições, alergias e condições clínicas do usuário (contexto de saúde tem PRIORIDADE MÁXIMA).
 Cada dia deve ter: cafe_da_manha, almoco, jantar, lanche_pre_treino, lanche_pos_treino.
 Cada refeição deve ser BEM DETALHADA com: { "nome": "...", "descricao": "breve descrição focada no benefício esportivo", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 muito detalhado", "passo 2 muito detalhado", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "vitaminas": ["Vitamina A", "Vitamina C", ...], "minerais": ["Ferro", "Magnésio", ...], "beneficio_esportivo": "explicação de como esta refeição ajuda no desempenho/recuperação", "dicas": "dica útil" }
+${healthConditionsList.length ? `\nATENÇÃO: adapte o cardápio esportivo às condições clínicas do usuário: ${healthConditionsList.join(", ")}.` : ""}
 O cardápio deve priorizar: reposição de glicogênio, recuperação muscular, hidratação, energia sustentada e micronutrientes essenciais para o esporte praticado.
 Responda APENAS com JSON válido no formato: { "cardapio": { "segunda": { ... }, "terca": { ... }, ... }, "lista_compras": ["item1", "item2", ...], "resumo_nutricional": "breve resumo das estratégias nutricionais adotadas" }`;
+
       const sp = preferences;
       userPrompt = `Gere um cardápio semanal esportivo personalizado.
 Esporte praticado: ${sp.esporte || "não especificado"}
