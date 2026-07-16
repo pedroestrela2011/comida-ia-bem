@@ -80,10 +80,10 @@ export default function AdaptadorDieta() {
   const [horarios, setHorarios] = useState("");
   const [gosta, setGosta] = useState("");
   const [naoGosta, setNaoGosta] = useState("");
-  const [alergias, setAlergias] = useState("");
   const [rotina, setRotina] = useState("");
   const [tempoCozinhar, setTempoCozinhar] = useState("");
   const [orcamento, setOrcamento] = useState("");
+
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdaptedResult | null>(null);
