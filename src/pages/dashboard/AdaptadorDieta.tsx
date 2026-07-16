@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
+import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -512,7 +514,7 @@ export default function AdaptadorDieta() {
               <CardDescription>Quanto mais detalhes, melhor a adaptação. Suas alergias, restrições e condições de saúde já são usadas automaticamente do seu perfil.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <HealthProfileSummaryImport />
+              <HealthProfileSummary profile={healthProfile} fields={["objetivo", "restricoes", "condicoes", "alergias"]} />
               <div className="grid gap-4 md:grid-cols-2">
                 <div><Label>Horários que costuma comer</Label><Input placeholder="ex: 7h, 12h, 16h, 20h" value={horarios} onChange={(e) => setHorarios(e.target.value)} /></div>
                 <div><Label>Rotina de trabalho / estudo</Label><Input placeholder="ex: escritório 9h-18h, treino 19h" value={rotina} onChange={(e) => setRotina(e.target.value)} /></div>
