@@ -175,6 +175,9 @@ Responda APENAS com JSON válido no formato:
     "feedback positivo ou sugestão 2",
     "feedback positivo ou sugestão 3"
   ],
+  "alertas_saude": [
+    { "condicao": "Diabetes", "severidade": "alta", "motivo": "Alto teor de açúcar refinado/carboidratos simples" }
+  ],
   "pontuacao_saude": 7,
   "resumo": "Um breve resumo geral sobre a qualidade nutricional do prato",
   "receita": {
@@ -187,6 +190,7 @@ Responda APENAS com JSON válido no formato:
   }
 }
 A pontuacao_saude deve ser de 1 a 10 (10 = muito saudável).
+IMPORTANTE sobre alertas_saude: SOMENTE inclua alertas se o CONTEXTO DE SAÚDE do usuário indicar condições como Diabetes, Hipertensão, Colesterol alto, doença renal, etc., E o prato for potencialmente inadequado para essas condições. Use severidade "alta" (prato claramente inadequado), "media" (moderado) ou "baixa" (leve preocupação). Se o usuário NÃO tiver condições relevantes ou o prato for adequado, retorne "alertas_saude": []. Também gere alertas se houver ingredientes que violem restrições/alergias declaradas.
 A receita deve ser COERENTE com os alimentos informados, focada em alimentação saudável e adaptada ao objetivo do usuário (se informado: emagrecimento → menos gordura; ganho de massa → mais proteína).
 Os passos do modo_preparo devem ser claros, com técnica, tempos e indicações visuais quando relevante.
 Seja preciso nas estimativas e educativo nos feedbacks. Use português do Brasil.`;
