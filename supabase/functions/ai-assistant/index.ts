@@ -35,6 +35,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
     let healthContext = "";
+    let healthConditionsList: string[] = [];
+    let healthRestrictionsList: string[] = [];
+    let healthAllergies = "";
     try {
       const { data: hp } = await serviceForHealth
         .from("profiles")
@@ -50,16 +53,34 @@ serve(async (req) => {
         if (hp.nivel_atividade) parts.push(`Atividade: ${hp.nivel_atividade}`);
         if (hp.refeicoes_dia) parts.push(`Refeições/dia: ${hp.refeicoes_dia}`);
         const rest = (hp.restricoes_alimentares || []).filter((r: string) => r && r !== "Nenhuma");
-        if (rest.length) parts.push(`Restrições: ${rest.join(", ")}`);
-        if (hp.alergias) parts.push(`Alergias: ${hp.alergias}`);
+        healthRestrictionsList = rest;
+        if (rest.length) parts.push(`Restrições alimentares: ${rest.join(", ")}`);
+        if (hp.alergias) { parts.push(`Alergias: ${hp.alergias}`); healthAllergies = hp.alergias; }
         const cond = (hp.condicoes_saude || []).filter((c: string) => c && c !== "Nenhuma");
+        healthConditionsList = cond;
         if (cond.length) parts.push(`Condições de saúde: ${cond.join(", ")}`);
-        if (hp.condicoes_outras) parts.push(`Outras condições: ${hp.condicoes_outras}`);
+        if (hp.condicoes_outras) { parts.push(`Outras condições: ${hp.condicoes_outras}`); healthConditionsList.push(hp.condicoes_outras); }
         if (parts.length) {
-          healthContext = `\n\nCONTEXTO DE SAÚDE DO USUÁRIO (use para personalizar respostas, evitar sugestões incompatíveis com condições/restrições, e emitir avisos claros quando necessário):\n- ${parts.join("\n- ")}`;
+          const hasCritical = cond.length > 0 || !!hp.condicoes_outras || rest.length > 0 || !!hp.alergias;
+          healthContext = `\n\nCONTEXTO DE SAÚDE DO USUÁRIO (OBRIGATÓRIO seguir integralmente — estas informações vêm do cadastro/onboarding do usuário e SUBSTITUEM qualquer pergunta redundante):
+- ${parts.join("\n- ")}
+
+REGRAS OBRIGATÓRIAS DE PERSONALIZAÇÃO:
+1. NUNCA inclua alimentos que violem as restrições alimentares declaradas (ex.: se "Vegano", NÃO usar nenhum produto de origem animal — inclusive leite, ovos, mel, gelatina).
+2. NUNCA inclua alimentos que causem reação às alergias declaradas.
+3. Para CADA condição de saúde declarada, adapte TODAS as refeições:
+   - Diabetes (Tipo 1 ou 2): priorize baixo índice glicêmico, limite açúcar refinado, farinhas brancas, sucos concentrados e frutas muito doces em jejum; combine carboidratos com proteína/gordura boa/fibra.
+   - Hipertensão: reduza drasticamente o sódio (evite embutidos, enlatados, temperos industrializados, queijos muito salgados); use ervas e temperos naturais.
+   - Colesterol Alto: evite gordura trans e minimize gordura saturada; priorize aveia, azeite, oleaginosas, peixes ricos em ômega-3, fibras solúveis.
+   - Doença Celíaca / Sem Glúten: eliminar totalmente trigo, cevada, centeio, aveia comum e derivados.
+   - Intolerância à Lactose / Sem Lactose: eliminar leite e derivados com lactose; usar versões sem lactose ou vegetais.
+   - Síndrome do Intestino Irritável: reduzir FODMAPs (cebola, alho crus, feijão em excesso, adoçantes tipo sorbitol), refeições fracionadas.
+4. Se qualquer preferência informada no formulário conflitar com uma condição/restrição, PREVALECE a condição/restrição de saúde. Menção explícita ao motivo em "dicas".
+${hasCritical ? '5. Inclua em "dicas" ou "descricao" um breve motivo educativo quando a escolha for feita por causa de uma condição de saúde do usuário.' : ""}`;
         }
       }
     } catch (_e) { /* ignore */ }
+
 
     let systemPrompt = "";
     let userPrompt = "";
