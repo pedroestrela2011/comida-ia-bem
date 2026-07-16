@@ -35,6 +35,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
     let healthContext = "";
+    let healthConditionsList: string[] = [];
+    let healthRestrictionsList: string[] = [];
+    let healthAllergies = "";
     try {
       const { data: hp } = await serviceForHealth
         .from("profiles")
@@ -50,40 +53,60 @@ serve(async (req) => {
         if (hp.nivel_atividade) parts.push(`Atividade: ${hp.nivel_atividade}`);
         if (hp.refeicoes_dia) parts.push(`Refeições/dia: ${hp.refeicoes_dia}`);
         const rest = (hp.restricoes_alimentares || []).filter((r: string) => r && r !== "Nenhuma");
-        if (rest.length) parts.push(`Restrições: ${rest.join(", ")}`);
-        if (hp.alergias) parts.push(`Alergias: ${hp.alergias}`);
+        healthRestrictionsList = rest;
+        if (rest.length) parts.push(`Restrições alimentares: ${rest.join(", ")}`);
+        if (hp.alergias) { parts.push(`Alergias: ${hp.alergias}`); healthAllergies = hp.alergias; }
         const cond = (hp.condicoes_saude || []).filter((c: string) => c && c !== "Nenhuma");
+        healthConditionsList = cond;
         if (cond.length) parts.push(`Condições de saúde: ${cond.join(", ")}`);
-        if (hp.condicoes_outras) parts.push(`Outras condições: ${hp.condicoes_outras}`);
+        if (hp.condicoes_outras) { parts.push(`Outras condições: ${hp.condicoes_outras}`); healthConditionsList.push(hp.condicoes_outras); }
         if (parts.length) {
-          healthContext = `\n\nCONTEXTO DE SAÚDE DO USUÁRIO (use para personalizar respostas, evitar sugestões incompatíveis com condições/restrições, e emitir avisos claros quando necessário):\n- ${parts.join("\n- ")}`;
+          const hasCritical = cond.length > 0 || !!hp.condicoes_outras || rest.length > 0 || !!hp.alergias;
+          healthContext = `\n\nCONTEXTO DE SAÚDE DO USUÁRIO (OBRIGATÓRIO seguir integralmente — estas informações vêm do cadastro/onboarding do usuário e SUBSTITUEM qualquer pergunta redundante):
+- ${parts.join("\n- ")}
+
+REGRAS OBRIGATÓRIAS DE PERSONALIZAÇÃO:
+1. NUNCA inclua alimentos que violem as restrições alimentares declaradas (ex.: se "Vegano", NÃO usar nenhum produto de origem animal — inclusive leite, ovos, mel, gelatina).
+2. NUNCA inclua alimentos que causem reação às alergias declaradas.
+3. Para CADA condição de saúde declarada, adapte TODAS as refeições:
+   - Diabetes (Tipo 1 ou 2): priorize baixo índice glicêmico, limite açúcar refinado, farinhas brancas, sucos concentrados e frutas muito doces em jejum; combine carboidratos com proteína/gordura boa/fibra.
+   - Hipertensão: reduza drasticamente o sódio (evite embutidos, enlatados, temperos industrializados, queijos muito salgados); use ervas e temperos naturais.
+   - Colesterol Alto: evite gordura trans e minimize gordura saturada; priorize aveia, azeite, oleaginosas, peixes ricos em ômega-3, fibras solúveis.
+   - Doença Celíaca / Sem Glúten: eliminar totalmente trigo, cevada, centeio, aveia comum e derivados.
+   - Intolerância à Lactose / Sem Lactose: eliminar leite e derivados com lactose; usar versões sem lactose ou vegetais.
+   - Síndrome do Intestino Irritável: reduzir FODMAPs (cebola, alho crus, feijão em excesso, adoçantes tipo sorbitol), refeições fracionadas.
+4. Se qualquer preferência informada no formulário conflitar com uma condição/restrição, PREVALECE a condição/restrição de saúde. Menção explícita ao motivo em "dicas".
+${hasCritical ? '5. Inclua em "dicas" ou "descricao" um breve motivo educativo quando a escolha for feita por causa de uma condição de saúde do usuário.' : ""}`;
         }
       }
     } catch (_e) { /* ignore */ }
+
 
     let systemPrompt = "";
     let userPrompt = "";
 
     if (type === "cardapio") {
-      systemPrompt = `Você é um nutricionista brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON.
+      systemPrompt = `Você é um nutricionista brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, PLENAMENTE ADAPTADO ao contexto de saúde do usuário (condições clínicas, restrições, alergias e objetivo) — este contexto tem PRIORIDADE MÁXIMA sobre as preferências.
 Cada dia deve ter: cafe_da_manha, lanche_manha, almoco, lanche_tarde, jantar.
-Cada refeição deve ser BEM DETALHADA com: { "nome": "...", "descricao": "breve descrição", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 muito detalhado explicando técnica, tempo e temperatura", "passo 2 muito detalhado com dicas de textura e ponto ideal", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "dica útil para esta refeição" }
+Cada refeição deve ser BEM DETALHADA com: { "nome": "...", "descricao": "breve descrição (mencione o benefício para a(s) condição(ões) do usuário quando aplicável)", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 muito detalhado explicando técnica, tempo e temperatura", "passo 2 muito detalhado com dicas de textura e ponto ideal", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "dica útil (inclua justificativa clínica quando a escolha for guiada por diabetes, hipertensão, colesterol etc.)" }
+${healthConditionsList.length ? `\nATENÇÃO CRÍTICA: o usuário tem as seguintes condições que exigem adaptação de TODAS as refeições: ${healthConditionsList.join(", ")}. Cada dia do cardápio deve estar EXPLICITAMENTE alinhado a essas condições.` : ""}
 O modo_preparo deve ter passos bem explicados, com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está no ponto.
 Responda APENAS com JSON válido no formato: { "cardapio": { "segunda": { ... }, "terca": { ... }, ... } , "lista_compras": ["item1", "item2", ...] }`;
       const p = preferences;
       userPrompt = `Gere um cardápio semanal para ${p.pessoas || 1} pessoa(s).
-Objetivo: ${p.objetivo || "alimentação saudável"}
+IMPORTANTE: objetivo, restrições alimentares, alergias e condições de saúde JÁ ESTÃO no CONTEXTO DE SAÚDE do usuário acima — use-os como fonte de verdade, NÃO peça de novo e NÃO ignore.
 Orçamento: ${p.orcamento || "moderado"}
 Alimentos que gosta: ${p.preferencias || "nenhuma preferência especial"}
 Alimentos que NÃO gosta (EVITAR no cardápio): ${p.nao_gosta || "nenhum"}
-Restrições: ${p.restricoes || "nenhuma"}
-Deficiências nutricionais: ${p.deficiencias || "nenhuma"}`;
+Deficiências nutricionais a reforçar: ${p.deficiencias || "nenhuma"}`;
     } else if (type === "cardapio_esporte") {
-      systemPrompt = `Você é um nutricionista esportivo brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, personalizado para atletas e praticantes de atividade física.
+      systemPrompt = `Você é um nutricionista esportivo brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, personalizado para atletas e praticantes de atividade física, sempre respeitando restrições, alergias e condições clínicas do usuário (contexto de saúde tem PRIORIDADE MÁXIMA).
 Cada dia deve ter: cafe_da_manha, almoco, jantar, lanche_pre_treino, lanche_pos_treino.
 Cada refeição deve ser BEM DETALHADA com: { "nome": "...", "descricao": "breve descrição focada no benefício esportivo", "ingredientes": ["ingrediente com quantidade exata"], "modo_preparo": ["passo 1 muito detalhado", "passo 2 muito detalhado", ...], "tempo_preparo": "ex: 30 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "vitaminas": ["Vitamina A", "Vitamina C", ...], "minerais": ["Ferro", "Magnésio", ...], "beneficio_esportivo": "explicação de como esta refeição ajuda no desempenho/recuperação", "dicas": "dica útil" }
+${healthConditionsList.length ? `\nATENÇÃO: adapte o cardápio esportivo às condições clínicas do usuário: ${healthConditionsList.join(", ")}.` : ""}
 O cardápio deve priorizar: reposição de glicogênio, recuperação muscular, hidratação, energia sustentada e micronutrientes essenciais para o esporte praticado.
 Responda APENAS com JSON válido no formato: { "cardapio": { "segunda": { ... }, "terca": { ... }, ... }, "lista_compras": ["item1", "item2", ...], "resumo_nutricional": "breve resumo das estratégias nutricionais adotadas" }`;
+
       const sp = preferences;
       userPrompt = `Gere um cardápio semanal esportivo personalizado.
 Esporte praticado: ${sp.esporte || "não especificado"}

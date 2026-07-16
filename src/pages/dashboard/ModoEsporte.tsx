@@ -10,6 +10,9 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyScore } from "@/hooks/useDailyScore";
 import { useGamification } from "@/hooks/useGamification";
+import { useHealthProfile } from "@/hooks/useHealthProfile";
+import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
+
 
 type Refeicao = {
   nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;
@@ -183,6 +186,7 @@ export default function ModoEsporte() {
   const [cardapio, setCardapio] = useState<CardapioEsporteData | null>(null);
   const { registerAction } = useDailyScore();
   const { awardXP } = useGamification();
+  const { profile: healthProfile } = useHealthProfile();
   const [showList, setShowList] = useState(false);
   const [mainTab, setMainTab] = useState("criar");
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioEsporteData; created_at: string }[]>([]);
@@ -191,8 +195,9 @@ export default function ModoEsporte() {
 
   const [prefs, setPrefs] = useState({
     esporte: "", frequencia: "", intensidade: "", desconforto: "",
-    fraqueza: "", objetivo: "", restricoes: [] as string[],
+    fraqueza: "", objetivo: "",
   });
+
 
   const fetchSaved = async () => {
     setLoadingSaved(true);
@@ -235,8 +240,8 @@ export default function ModoEsporte() {
         desconforto: prefs.desconforto || "nenhum",
         fraqueza: prefs.fraqueza || "não",
         objetivo: prefs.objetivo,
-        restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
       };
+
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
         body: { type: "cardapio_esporte", preferences },
       });
@@ -357,6 +362,11 @@ export default function ModoEsporte() {
         <TabsContent value="criar" className="space-y-4">
           {!cardapio ? (
             <div className="rounded-xl border border-border bg-card p-6 space-y-6">
+              <HealthProfileSummary
+                profile={healthProfile}
+                fields={["nivel_atividade", "restricoes", "condicoes", "alergias"]}
+              />
+
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Qual esporte você pratica?</Label>
                 <Input placeholder="Ex: futebol, corrida, musculação, natação..."
@@ -401,19 +411,13 @@ export default function ModoEsporte() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base font-semibold">Qual é o seu objetivo?</Label>
+                <Label className="text-base font-semibold">Objetivo esportivo</Label>
+                <p className="text-xs text-muted-foreground">
+                  Específico do treino — pode ser diferente do objetivo geral do seu perfil.
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {OBJETIVOS.map(o => (
                     <ChipButton key={o.value} selected={prefs.objetivo === o.value} onClick={() => setPrefs(p => ({ ...p, objetivo: o.value }))} label={o.label} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-base font-semibold">Restrições alimentares</Label>
-                <div className="flex flex-wrap gap-2">
-                  {RESTRICOES.map(r => (
-                    <ChipButton key={r.value} selected={prefs.restricoes.includes(r.value)} onClick={() => setPrefs(p => ({ ...p, restricoes: toggleArray(p.restricoes, r.value) }))} label={r.label} />
                   ))}
                 </div>
               </div>
@@ -422,6 +426,7 @@ export default function ModoEsporte() {
                 {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando cardápio esportivo...</> : <><Sparkles className="mr-2 h-4 w-4" /> Gerar Cardápio Esportivo</>}
               </Button>
             </div>
+
           ) : (
             <div className="space-y-4">
               <div className="flex gap-2 flex-wrap">

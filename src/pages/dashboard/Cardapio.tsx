@@ -19,6 +19,8 @@ import { usePdfLimit } from "@/hooks/usePdfLimit";
 import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
+import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
+
 
 type Refeicao = {
   nome: string; descricao: string; ingredientes: string[]; modo_preparo: string[] | string;
@@ -301,39 +303,10 @@ export default function Cardapio() {
   const { awardXP } = useGamification();
   const { profile: healthProfile } = useHealthProfile();
   const [prefs, setPrefs] = useState({
-    objetivo: "", orcamento: "", pessoas: "1", restricoes: [] as string[], deficiencias: [] as string[],
+    orcamento: "", pessoas: "1", deficiencias: [] as string[],
     gosta: "", nao_gosta: "",
   });
 
-  // Pre-fill from onboarding once profile loads
-  useEffect(() => {
-    if (!healthProfile) return;
-    setPrefs((p) => {
-      const next = { ...p };
-      if (!p.objetivo && healthProfile.objetivo) {
-        const map: Record<string, string> = {
-          "Emagrecer": "emagrecer",
-          "Ganhar Massa Muscular": "ganhar_massa",
-          "Manter o Peso": "manter_saude",
-          "Melhorar a Saúde Geral": "manter_saude",
-          "Melhorar Performance Esportiva": "ganhar_massa",
-        };
-        next.objetivo = map[healthProfile.objetivo] || p.objetivo;
-      }
-      if (p.restricoes.length === 0 && healthProfile.restricoes_alimentares?.length) {
-        const restMap: Record<string, string> = {
-          "Vegetariano": "vegetariano",
-          "Vegano": "vegano",
-          "Sem Glúten": "sem glúten",
-          "Sem Lactose": "sem lactose",
-        };
-        next.restricoes = healthProfile.restricoes_alimentares
-          .map((r) => restMap[r])
-          .filter(Boolean);
-      }
-      return next;
-    });
-  }, [healthProfile]);
 
   const fetchSaved = async () => {
     setLoadingSaved(true);
@@ -364,18 +337,16 @@ export default function Cardapio() {
   };
 
   const gerarCardapio = async () => {
-    if (!prefs.objetivo) { toast({ title: "Selecione um objetivo", variant: "destructive" }); return; }
     setLoading(true);
     try {
       const preferences = {
-        objetivo: OBJETIVOS.find(o => o.value === prefs.objetivo)?.label || prefs.objetivo,
         orcamento: prefs.orcamento || "moderado",
         pessoas: prefs.pessoas,
         preferencias: prefs.gosta || "nenhuma especial",
         nao_gosta: prefs.nao_gosta || "nenhum",
-        restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
         deficiencias: prefs.deficiencias.filter(d => d !== "nenhuma").join(", ") || "nenhuma",
       };
+
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
         body: { type: "cardapio", preferences },
       });
@@ -437,9 +408,8 @@ export default function Cardapio() {
             refeicao_atual: refeicaoAtual.nome,
             tipo_refeicao: REFEICOES_LABEL[tipoRefeicao] || tipoRefeicao,
             preferencia,
-            objetivo: prefs.objetivo ? OBJETIVOS.find(o => o.value === prefs.objetivo)?.label : "",
-            restricoes: prefs.restricoes.filter(r => r !== "nenhuma").join(", ") || "nenhuma",
           },
+
         },
       });
       if (error) throw error;
@@ -526,14 +496,7 @@ export default function Cardapio() {
         <TabsContent value="criar" className="space-y-4">
           {!cardapio ? (
             <div className="rounded-xl border border-border bg-card p-6 space-y-6">
-              <div className="space-y-2">
-                <Label className="text-base font-semibold">Qual é o seu objetivo?</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {OBJETIVOS.map(o => (
-                    <OptionButton key={o.value} selected={prefs.objetivo === o.value} onClick={() => setPrefs(p => ({ ...p, objetivo: o.value }))} label={o.label} desc={o.desc} />
-                  ))}
-                </div>
-              </div>
+              <HealthProfileSummary profile={healthProfile} />
 
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Orçamento semanal</Label>
@@ -559,14 +522,6 @@ export default function Cardapio() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-base font-semibold">Restrições alimentares</Label>
-                <div className="flex flex-wrap gap-2">
-                  {RESTRICOES.map(r => (
-                    <ChipButton key={r.value} selected={prefs.restricoes.includes(r.value)} onClick={() => setPrefs(p => ({ ...p, restricoes: toggleArray(p.restricoes, r.value) }))} label={r.label} />
-                  ))}
-                </div>
-              </div>
 
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Deficiências nutricionais</Label>
