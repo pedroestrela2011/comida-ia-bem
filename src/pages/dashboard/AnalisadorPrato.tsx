@@ -22,6 +22,12 @@ interface ReceitaPrato {
   dicas?: string;
 }
 
+interface AlertaSaude {
+  condicao: string;
+  severidade?: "alta" | "media" | "baixa" | string;
+  motivo: string;
+}
+
 interface Analise {
   nome_prato: string;
   macronutrientes: {
@@ -34,6 +40,7 @@ interface Analise {
   vitaminas: { nome: string; quantidade: string; beneficio: string }[];
   minerais: { nome: string; quantidade: string; beneficio: string }[];
   feedback: string[];
+  alertas_saude?: AlertaSaude[];
   pontuacao_saude: number;
   resumo: string;
   receita?: ReceitaPrato;
