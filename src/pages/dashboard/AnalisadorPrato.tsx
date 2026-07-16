@@ -9,7 +9,7 @@ import { useDailyScore } from "@/hooks/useDailyScore";
 import { useGamification } from "@/hooks/useGamification";
 import {
   Loader2, UtensilsCrossed, Flame, Beef, Wheat, Droplets, Leaf, Apple, Sparkles, Star,
-  Camera, X, ChefHat, Clock, Users, BookmarkPlus, Lightbulb,
+  Camera, X, ChefHat, Clock, Users, BookmarkPlus, Lightbulb, AlertTriangle,
 } from "lucide-react";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 
@@ -20,6 +20,12 @@ interface ReceitaPrato {
   ingredientes: string[];
   modo_preparo: string[];
   dicas?: string;
+}
+
+interface AlertaSaude {
+  condicao: string;
+  severidade?: "alta" | "media" | "baixa" | string;
+  motivo: string;
 }
 
 interface Analise {
@@ -34,6 +40,7 @@ interface Analise {
   vitaminas: { nome: string; quantidade: string; beneficio: string }[];
   minerais: { nome: string; quantidade: string; beneficio: string }[];
   feedback: string[];
+  alertas_saude?: AlertaSaude[];
   pontuacao_saude: number;
   resumo: string;
   receita?: ReceitaPrato;
@@ -322,6 +329,48 @@ export default function AnalisadorPrato() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Alertas de Saúde */}
+          {analise.alertas_saude && analise.alertas_saude.length > 0 && (
+            <Card className="border-red-500/50 bg-red-500/5">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2 text-red-600 dark:text-red-400">
+                  <AlertTriangle className="h-5 w-5" />
+                  Alertas de Saúde
+                </CardTitle>
+                <CardDescription className="text-red-600/80 dark:text-red-400/80">
+                  Este prato pode não ser adequado para suas condições de saúde.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {analise.alertas_saude.map((a, i) => {
+                    const sev = (a.severidade || "media").toLowerCase();
+                    const isHigh = sev === "alta";
+                    return (
+                      <li
+                        key={i}
+                        className={`flex items-start gap-2 p-3 rounded-md border ${
+                          isHigh
+                            ? "bg-red-500/10 border-red-500/40 text-red-700 dark:text-red-300"
+                            : "bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300"
+                        }`}
+                      >
+                        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-semibold">
+                            {a.condicao}
+                            <span className="ml-2 text-xs uppercase opacity-70">({sev})</span>
+                          </p>
+                          <p className="opacity-90">{a.motivo}</p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Macros */}
           <Card>
