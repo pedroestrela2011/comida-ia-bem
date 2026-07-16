@@ -261,7 +261,7 @@ export default function AdaptadorDieta() {
       const { data, error } = await supabase.functions.invoke("adaptar-dieta", {
         body: {
           source,
-          personalization: { horarios, gosta, nao_gosta: naoGosta, alergias, rotina, tempo_cozinhar: tempoCozinhar, orcamento, health: healthProfile },
+          personalization: { horarios, gosta, nao_gosta: naoGosta, rotina, tempo_cozinhar: tempoCozinhar, orcamento, health: healthProfile },
         },
       });
       if (error) throw error;
@@ -309,7 +309,7 @@ export default function AdaptadorDieta() {
         user_id: user.id,
         titulo,
         source_type: sourceType,
-        personalization: { horarios, gosta, nao_gosta: naoGosta, alergias, rotina, tempo_cozinhar: tempoCozinhar, orcamento },
+        personalization: { horarios, gosta, nao_gosta: naoGosta, rotina, tempo_cozinhar: tempoCozinhar, orcamento },
         resultado: result,
         compatibilidade: result.compatibilidade?.pontuacao ?? null,
       });
@@ -509,18 +509,21 @@ export default function AdaptadorDieta() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">2. Personalize à sua rotina</CardTitle>
-              <CardDescription>Quanto mais detalhes, melhor a adaptação.</CardDescription>
+              <CardDescription>Quanto mais detalhes, melhor a adaptação. Suas alergias, restrições e condições de saúde já são usadas automaticamente do seu perfil.</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div><Label>Horários que costuma comer</Label><Input placeholder="ex: 7h, 12h, 16h, 20h" value={horarios} onChange={(e) => setHorarios(e.target.value)} /></div>
-              <div><Label>Rotina de trabalho / estudo</Label><Input placeholder="ex: escritório 9h-18h, treino 19h" value={rotina} onChange={(e) => setRotina(e.target.value)} /></div>
-              <div><Label>Alimentos que gosta</Label><Input placeholder="ex: frango, ovo, batata doce" value={gosta} onChange={(e) => setGosta(e.target.value)} /></div>
-              <div><Label>Alimentos que NÃO gosta</Label><Input placeholder="ex: brócolis, peixe" value={naoGosta} onChange={(e) => setNaoGosta(e.target.value)} /></div>
-              <div><Label>Alergias / restrições</Label><Input placeholder="ex: lactose, glúten" value={alergias} onChange={(e) => setAlergias(e.target.value)} /></div>
-              <div><Label>Tempo para cozinhar</Label><Input placeholder="ex: pouco, 20min por refeição" value={tempoCozinhar} onChange={(e) => setTempoCozinhar(e.target.value)} /></div>
-              <div className="md:col-span-2"><Label>Orçamento mensal para alimentação</Label><Input placeholder="ex: R$ 600, moderado, alto" value={orcamento} onChange={(e) => setOrcamento(e.target.value)} /></div>
+            <CardContent className="space-y-4">
+              <HealthProfileSummaryImport />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div><Label>Horários que costuma comer</Label><Input placeholder="ex: 7h, 12h, 16h, 20h" value={horarios} onChange={(e) => setHorarios(e.target.value)} /></div>
+                <div><Label>Rotina de trabalho / estudo</Label><Input placeholder="ex: escritório 9h-18h, treino 19h" value={rotina} onChange={(e) => setRotina(e.target.value)} /></div>
+                <div><Label>Alimentos que gosta</Label><Input placeholder="ex: frango, ovo, batata doce" value={gosta} onChange={(e) => setGosta(e.target.value)} /></div>
+                <div><Label>Alimentos que NÃO gosta</Label><Input placeholder="ex: brócolis, peixe" value={naoGosta} onChange={(e) => setNaoGosta(e.target.value)} /></div>
+                <div><Label>Tempo para cozinhar</Label><Input placeholder="ex: pouco, 20min por refeição" value={tempoCozinhar} onChange={(e) => setTempoCozinhar(e.target.value)} /></div>
+                <div className="md:col-span-2"><Label>Orçamento mensal para alimentação</Label><Input placeholder="ex: R$ 600, moderado, alto" value={orcamento} onChange={(e) => setOrcamento(e.target.value)} /></div>
+              </div>
             </CardContent>
           </Card>
+
 
           <Button size="lg" onClick={adaptar} disabled={loading || !canSubmit} className="w-full sm:w-auto">
             {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adaptando dieta...</> : <><Sparkles className="mr-2 h-4 w-4" /> Adaptar minha dieta</>}
