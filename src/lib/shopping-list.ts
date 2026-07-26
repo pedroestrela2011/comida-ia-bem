@@ -174,10 +174,13 @@ export function parseIngredient(raw: string): Parsed | null {
     }
   }
 
-  // "colher de sopa de azeite" -> limpa restos de preposição
-  nome = nome.replace(/^(de\s+sopa|de\s+cha|de\s+chá|de\s+sobremesa)\s+(de\s+)?/i, "").trim();
+  // "colher de sopa de azeite" -> limpa restos de preposição/qualificador da medida
+  nome = nome.replace(/^(de\s+)?(sopa|cha|chá|café|cafe|sobremesa)\s+(de\s+)?/i, "").trim();
   nome = nome.replace(/^(de|da|do)\s+/i, "").trim();
   nome = nome.replace(/\s*,.*$/, "").trim();
+  // remove sufixos de quantidade indefinida
+  nome = nome.replace(/\s+(a\s+gosto|q\.?b\.?|quanto\s+baste|opcional)\s*$/i, "").trim();
+
   if (!nome) return null;
 
   if (!unidade && qtd !== null) unidade = "unidade";
