@@ -197,6 +197,11 @@ export default function ModoEsporte() {
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioEsporteData; created_at: string }[]>([]);
   const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioEsporteData; created_at: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
+  const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
+  const { planLabel } = useUserPlan();
+
+
 
   const [prefs, setPrefs] = useState({
     esporte: "", frequencia: "", intensidade: "", desconforto: "",
