@@ -347,13 +347,17 @@ export default function ModoEsporte() {
 
   return (
     <div className="space-y-4 md:space-y-6 max-w-4xl">
-      <div className="flex items-center gap-2 md:gap-3">
-        <Dumbbell className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Modo Esporte</h1>
-          <p className="text-xs md:text-sm text-muted-foreground">Cardápio personalizado para seu desempenho esportivo</p>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Dumbbell className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">Modo Esporte</h1>
+            <p className="text-xs md:text-sm text-muted-foreground">Cardápio personalizado para seu desempenho esportivo</p>
+          </div>
         </div>
+        <PdfRemainingBadge used={used} limit={limit} isUnlimited={isUnlimited} />
       </div>
+
 
       <Tabs value={mainTab} onValueChange={setMainTab}>
         <TabsList>
@@ -483,6 +487,15 @@ export default function ModoEsporte() {
           )}
         </TabsContent>
       </Tabs>
+
+      <PdfLimitModal
+        open={limitOpen}
+        onOpenChange={setLimitOpen}
+        used={used}
+        limit={limit === Infinity ? 0 : limit}
+        planLabel={planLabel}
+      />
     </div>
+
   );
 }
