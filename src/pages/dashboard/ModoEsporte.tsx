@@ -12,6 +12,11 @@ import { useDailyScore } from "@/hooks/useDailyScore";
 import { useGamification } from "@/hooks/useGamification";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
+import { ShoppingListPanel } from "@/components/dashboard/ShoppingListPanel";
+import { usePdfLimit } from "@/hooks/usePdfLimit";
+import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
+import { useUserPlan } from "@/hooks/useUserPlan";
+
 
 
 type Refeicao = {
@@ -192,6 +197,11 @@ export default function ModoEsporte() {
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioEsporteData; created_at: string }[]>([]);
   const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioEsporteData; created_at: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
+  const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
+  const { planLabel } = useUserPlan();
+
+
 
   const [prefs, setPrefs] = useState({
     esporte: "", frequencia: "", intensidade: "", desconforto: "",
@@ -300,20 +310,16 @@ export default function ModoEsporte() {
       )}
 
       {showList ? (
-        <div className="rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <ShoppingCart className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Lista de Compras</h2>
-          </div>
-          <ul className="grid sm:grid-cols-2 gap-1">
-            {data.lista_compras?.map((item, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm text-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" /> {item}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ShoppingListPanel
+          cardapio={data.cardapio as any}
+          storageKey="esporte"
+          destacarProteina
+          canDownload={canDownload}
+          onLimitReached={() => setLimitOpen(true)}
+          onRegisterDownload={async () => { await registerDownload("lista_compras_esporte"); awardXP("pdf"); }}
+        />
       ) : (
+
         <Tabs defaultValue="segunda">
           <TabsList className="flex-wrap h-auto gap-1">
             {DIAS.map(d => (
@@ -341,13 +347,17 @@ export default function ModoEsporte() {
 
   return (
     <div className="space-y-4 md:space-y-6 max-w-4xl">
-      <div className="flex items-center gap-2 md:gap-3">
-        <Dumbbell className="h-6 w-6 md:h-7 md:w-7 text-primary" />
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Modo Esporte</h1>
-          <p className="text-xs md:text-sm text-muted-foreground">Cardápio personalizado para seu desempenho esportivo</p>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Dumbbell className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">Modo Esporte</h1>
+            <p className="text-xs md:text-sm text-muted-foreground">Cardápio personalizado para seu desempenho esportivo</p>
+          </div>
         </div>
+        <PdfRemainingBadge used={used} limit={limit} isUnlimited={isUnlimited} />
       </div>
+
 
       <Tabs value={mainTab} onValueChange={setMainTab}>
         <TabsList>
@@ -477,6 +487,15 @@ export default function ModoEsporte() {
           )}
         </TabsContent>
       </Tabs>
+
+      <PdfLimitModal
+        open={limitOpen}
+        onOpenChange={setLimitOpen}
+        used={used}
+        limit={limit === Infinity ? 0 : limit}
+        planLabel={planLabel}
+      />
     </div>
+
   );
 }

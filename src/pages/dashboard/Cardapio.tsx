@@ -20,6 +20,8 @@ import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimi
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
+import { ShoppingListPanel } from "@/components/dashboard/ShoppingListPanel";
+
 
 
 type Refeicao = {
@@ -430,20 +432,15 @@ export default function Cardapio() {
   const renderCardapioView = (data: CardapioData, setTargetData?: (d: CardapioData) => void) => (
     <div className="space-y-4">
       {showList ? (
-        <div className="rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <ShoppingCart className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Lista de Compras</h2>
-          </div>
-          <ul className="grid sm:grid-cols-2 gap-1">
-            {data.lista_compras?.map((item, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm text-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" /> {item}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ShoppingListPanel
+          cardapio={data.cardapio as any}
+          storageKey="cardapio"
+          canDownload={canDownload}
+          onLimitReached={() => setLimitOpen(true)}
+          onRegisterDownload={async () => { await registerDownload("lista_compras"); awardXP("pdf"); }}
+        />
       ) : (
+
         <Tabs defaultValue="segunda">
           <TabsList className="flex-wrap h-auto gap-1">
             {DIAS.map(d => (
