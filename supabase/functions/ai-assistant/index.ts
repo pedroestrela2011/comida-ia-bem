@@ -127,9 +127,11 @@ ${sub.preferencia ? `O usuário gostaria de algo como: ${sub.preferencia}` : "Su
 Objetivo nutricional: ${sub.objetivo || "alimentação saudável"}
 Restrições: ${sub.restricoes || "nenhuma"}`;
     } else if (type === "receita") {
-      systemPrompt = `Você é um chef brasileiro criativo. Crie uma receita completa e MUITO DETALHADA usando os ingredientes fornecidos.
+      systemPrompt = `Você é um chef brasileiro criativo e nutricionista. Crie uma receita completa e MUITO DETALHADA usando os ingredientes fornecidos.
 O modo_preparo deve ter passos bem explicados com detalhes de técnica culinária, tempos de cocção, temperaturas e indicações visuais de quando o alimento está pronto.
-Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_preparo": "ex: 45 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "porcoes": "...", "ingredientes": ["ingrediente com quantidade"], "modo_preparo": ["passo 1 muito detalhado", "passo 2 muito detalhado", ...], "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "..." }`;
+Você TAMBÉM deve avaliar a receita em relação ao OBJETIVO PRINCIPAL do usuário (emagrecer, ganhar massa muscular, manter o peso, melhorar a saúde geral ou melhorar performance esportiva) e às condições de saúde dele (diabetes, hipertensão etc), se informados no contexto pessoal.
+Responda APENAS com JSON válido: { "nome": "...", "descricao": "...", "tempo_preparo": "ex: 45 minutos", "dificuldade": "fácil" ou "médio" ou "difícil", "porcoes": "...", "ingredientes": ["ingrediente com quantidade"], "modo_preparo": ["passo 1 muito detalhado", "passo 2 muito detalhado", ...], "informacoes_nutricionais": { "calorias": "...", "proteinas": "...", "carboidratos": "...", "gorduras": "...", "fibras": "..." }, "dicas": "...", "avaliacao_objetivo": { "objetivo": "objetivo do usuário em texto curto, ex: Emagrecer", "nota": 4.2, "justificativa": "máximo 3 linhas justificando a nota para o objetivo do usuário; se houver condição de saúde relevante, inclua um alerta iniciando com '⚠️ Atenção:'" } }
+A "nota" é um número decimal de 0 a 5 (uma casa decimal). Se o objetivo do usuário não for informado, use "Saúde geral".`;
       userPrompt = `Crie uma receita detalhada usando estes ingredientes: ${ingredients}`;
     } else if (type === "identificar_alimentos_foto") {
       // Use vision model to identify foods from photo

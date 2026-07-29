@@ -12,11 +12,13 @@ import { usePdfLimit } from "@/hooks/usePdfLimit";
 import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useGamification } from "@/hooks/useGamification";
+import { NutriRating, type AvaliacaoObjetivo } from "@/components/dashboard/NutriRating";
 
 type Receita = ReceitaPDF & {
   descricao: string;
   ingredientes: string[];
   modo_preparo: string[];
+  avaliacao_objetivo?: AvaliacaoObjetivo;
 };
 
 const difficultyColor = (d?: string) => {
@@ -45,6 +47,8 @@ function ReceitaDetail({ receita, onDownload }: { receita: Receita; onDownload: 
         <h2 className="text-xl font-bold text-foreground">{receita.nome}</h2>
         <p className="text-muted-foreground text-sm mt-1">{receita.descricao}</p>
       </div>
+
+      <NutriRating avaliacao={receita.avaliacao_objetivo} />
 
       <div className="flex flex-wrap gap-3 text-sm">
         {receita.tempo_preparo && (

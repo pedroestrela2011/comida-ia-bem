@@ -16,6 +16,7 @@ import { ShoppingListPanel } from "@/components/dashboard/ShoppingListPanel";
 import { usePdfLimit } from "@/hooks/usePdfLimit";
 import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimitModal";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { GenerationOverlay } from "@/components/dashboard/GenerationOverlay";
 
 
 
@@ -495,6 +496,7 @@ export default function ModoEsporte() {
         limit={limit === Infinity ? 0 : limit}
         planLabel={planLabel}
       />
+      <GenerationOverlay open={loading} title="Criando seu cardápio esportivo..." />
     </div>
 
   );

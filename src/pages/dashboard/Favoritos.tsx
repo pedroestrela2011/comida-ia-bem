@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites, FAVORITES_LIMIT, type FavoriteRecord } from "@/hooks/useFavorites";
+import { NutriRating } from "@/components/dashboard/NutriRating";
 
 
 const origemLabel: Record<string, string> = {
@@ -43,6 +44,8 @@ function RecipeFull({ rec, onBack, onRemove }: { rec: FavoriteRecord; onBack: ()
             <h2 className="text-xl font-bold text-foreground">{d.nome}</h2>
             {d.descricao && <p className="text-sm text-muted-foreground mt-1">{d.descricao}</p>}
           </div>
+
+          <NutriRating avaliacao={d.avaliacao_objetivo} />
 
           <div className="flex flex-wrap gap-3 text-sm">
             {d.tempo_preparo && <div className="flex items-center gap-1.5 text-muted-foreground"><Clock className="h-4 w-4" />{d.tempo_preparo}</div>}
