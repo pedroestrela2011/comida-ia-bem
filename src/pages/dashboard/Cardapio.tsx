@@ -683,6 +683,7 @@ export default function Cardapio() {
         limit={limit === Infinity ? 0 : limit}
         planLabel={planLabel}
       />
+      <GenerationOverlay open={loading} />
     </div>
   );
 }
