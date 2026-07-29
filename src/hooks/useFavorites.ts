@@ -14,6 +14,11 @@ export type FavoriteRecipeData = {
   modo_preparo?: string[] | string;
   dicas?: string;
   foto?: string;
+  avaliacao_objetivo?: {
+    objetivo?: string;
+    nota?: number;
+    justificativa?: string;
+  };
   informacoes_nutricionais?: {
     calorias?: string;
     proteinas?: string;
