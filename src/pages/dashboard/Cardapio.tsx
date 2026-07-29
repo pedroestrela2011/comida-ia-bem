@@ -20,6 +20,7 @@ import { PdfLimitModal, PdfRemainingBadge } from "@/components/dashboard/PdfLimi
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
+import { GenerationOverlay } from "@/components/dashboard/GenerationOverlay";
 import { ShoppingListPanel } from "@/components/dashboard/ShoppingListPanel";
 
 
