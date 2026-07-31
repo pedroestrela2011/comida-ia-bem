@@ -59,8 +59,11 @@ const App = () => (
           <Route path="/planos" element={<Planos />} />
           <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="cardapio" replace />} />
+            <Route index element={<Navigate to="inicio" replace />} />
+            <Route path="inicio" element={<Inicio />} />
+            <Route path="historico-semanal" element={<HistoricoSemanal />} />
             <Route path="cardapio" element={<Cardapio />} />
+
             <Route path="modo-esporte" element={<PlanGate feature="modoEsporte" requiredPlan="Equilíbrio"><ModoEsporte /></PlanGate>} />
             <Route path="analisador-prato" element={<PlanGate feature="analisadorPrato" requiredPlan="Essencial"><AnalisadorPrato /></PlanGate>} />
             <Route path="progresso" element={<PlanGate feature="progresso" requiredPlan="Equilíbrio"><Progresso /></PlanGate>} />
