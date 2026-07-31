@@ -25,6 +25,8 @@ import Conquistas from "./pages/dashboard/Conquistas";
 import Favoritos from "./pages/dashboard/Favoritos";
 import AdaptadorDieta from "./pages/dashboard/AdaptadorDieta";
 import Jornada from "./pages/dashboard/Jornada";
+import Inicio from "./pages/dashboard/Inicio";
+import HistoricoSemanal from "./pages/dashboard/HistoricoSemanal";
 
 import Admin from "./pages/dashboard/Admin";
 import { PlanGate } from "./components/dashboard/PlanGate";
