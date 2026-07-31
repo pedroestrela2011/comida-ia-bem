@@ -1,4 +1,4 @@
-import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart, Wand2, Sparkles } from "lucide-react";
+import { Home, CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart, Wand2, Sparkles } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
