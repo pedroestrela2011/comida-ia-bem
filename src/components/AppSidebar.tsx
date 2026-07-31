@@ -22,6 +22,7 @@ import {
 type FeatureKey = "cardapio" | "receitas" | "chat" | "modoEsporte" | "progresso" | "analisadorPrato" | "scoreDiario" | "conquistas";
 
 const menuItems: { title: string; url: string; icon: any; featureKey?: FeatureKey }[] = [
+  { title: "Início", url: "/dashboard/inicio", icon: Home },
   { title: "Meu Cardápio", url: "/dashboard/cardapio", icon: CalendarDays },
   { title: "Score Diário", url: "/dashboard/score", icon: Star, featureKey: "scoreDiario" },
   { title: "Conquistas", url: "/dashboard/conquistas", icon: Trophy, featureKey: "conquistas" },
