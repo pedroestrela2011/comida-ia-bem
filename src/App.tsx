@@ -25,6 +25,8 @@ import Conquistas from "./pages/dashboard/Conquistas";
 import Favoritos from "./pages/dashboard/Favoritos";
 import AdaptadorDieta from "./pages/dashboard/AdaptadorDieta";
 import Jornada from "./pages/dashboard/Jornada";
+import Inicio from "./pages/dashboard/Inicio";
+import HistoricoSemanal from "./pages/dashboard/HistoricoSemanal";
 
 import Admin from "./pages/dashboard/Admin";
 import { PlanGate } from "./components/dashboard/PlanGate";
@@ -57,8 +59,11 @@ const App = () => (
           <Route path="/planos" element={<Planos />} />
           <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="cardapio" replace />} />
+            <Route index element={<Navigate to="inicio" replace />} />
+            <Route path="inicio" element={<Inicio />} />
+            <Route path="historico-semanal" element={<HistoricoSemanal />} />
             <Route path="cardapio" element={<Cardapio />} />
+
             <Route path="modo-esporte" element={<PlanGate feature="modoEsporte" requiredPlan="Equilíbrio"><ModoEsporte /></PlanGate>} />
             <Route path="analisador-prato" element={<PlanGate feature="analisadorPrato" requiredPlan="Essencial"><AnalisadorPrato /></PlanGate>} />
             <Route path="progresso" element={<PlanGate feature="progresso" requiredPlan="Equilíbrio"><Progresso /></PlanGate>} />

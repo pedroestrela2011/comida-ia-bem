@@ -1,4 +1,4 @@
-import { CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart, Wand2, Sparkles } from "lucide-react";
+import { Home, CalendarDays, ChefHat, MessageCircle, Settings, LogOut, Leaf, Dumbbell, TrendingUp, UtensilsCrossed, Star, Trophy, Lock, ShieldCheck, Heart, Wand2, Sparkles } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,7 @@ import {
 type FeatureKey = "cardapio" | "receitas" | "chat" | "modoEsporte" | "progresso" | "analisadorPrato" | "scoreDiario" | "conquistas";
 
 const menuItems: { title: string; url: string; icon: any; featureKey?: FeatureKey }[] = [
+  { title: "Início", url: "/dashboard/inicio", icon: Home },
   { title: "Meu Cardápio", url: "/dashboard/cardapio", icon: CalendarDays },
   { title: "Score Diário", url: "/dashboard/score", icon: Star, featureKey: "scoreDiario" },
   { title: "Conquistas", url: "/dashboard/conquistas", icon: Trophy, featureKey: "conquistas" },
