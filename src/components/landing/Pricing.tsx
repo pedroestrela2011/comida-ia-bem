@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const plans = [
   {
     name: "Essencial",
-    price: "19,90",
+    price: "23,90",
     description: "Comece sua jornada com o básico",
     icon: Zap,
     features: [
@@ -25,7 +25,7 @@ const plans = [
   },
   {
     name: "Equilíbrio",
-    price: "27,90",
+    price: "41,90",
     description: "Melhor custo-benefício",
     icon: Star,
     features: [
@@ -45,7 +45,7 @@ const plans = [
   },
   {
     name: "Performance",
-    price: "35,90",
+    price: "83,90",
     description: "Desbloqueie todo o potencial",
     icon: Crown,
     features: [
