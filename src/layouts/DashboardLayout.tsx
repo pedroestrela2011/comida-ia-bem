@@ -5,6 +5,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ScoreReminders } from "@/components/dashboard/ScoreReminders";
 import { PageTransition } from "@/components/PageTransition";
+import { PremiumAssistant } from "@/components/dashboard/PremiumAssistant";
+
 import { SubscriptionProvider, useSubscription } from "@/contexts/SubscriptionContext";
 import { TrialExpired } from "@/components/dashboard/TrialExpired";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
