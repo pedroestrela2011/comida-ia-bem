@@ -44,7 +44,9 @@ function DashboardShell() {
             <PageTransition />
           </div>
         </main>
+        <PremiumAssistant />
       </div>
+
     </SidebarProvider>
   );
 }
