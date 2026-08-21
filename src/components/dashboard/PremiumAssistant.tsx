@@ -23,12 +23,21 @@ type Msg = {
   content: string;
   image?: string;
   cardapio?: any;
+  cardapioTipo?: "normal" | "esporte";
+  receita?: any;
+  analise?: any;
   saved?: boolean;
+  savedReceita?: boolean;
+  favorited?: boolean;
+  conflict?: boolean;
   options?: string[];
   grid?: boolean;
 };
 
 type SavedConversa = { id: number; created_at: string; titulo: string; messages: Msg[] };
+
+const RECEITAS_STORAGE_KEY = "saved_recipes_v1";
+export const ANALISE_HANDOFF_KEY = "assistant_analise_handoff_v1";
 
 // Session-only history: lives while the page is loaded, wiped on reload/logout.
 const session: { messages: Msg[]; welcomed: boolean } = { messages: [], welcomed: false };
@@ -56,17 +65,31 @@ function nextMondayCountdown(): string {
   return `Renova em ${dias} dia${dias === 1 ? "" : "s"} e ${horas} hora${horas === 1 ? "" : "s"}`;
 }
 
-function extractCardapio(text: string): { clean: string; cardapio: any | null } {
-  const match = text.match(/```cardapio-json\s*([\s\S]*?)```/);
-  if (!match) return { clean: text, cardapio: null };
-  let cardapio: any = null;
+function extractBlock(text: string, tag: string): { clean: string; data: any | null } {
+  const re = new RegExp("```" + tag + "\\s*([\\s\\S]*?)```");
+  const match = text.match(re);
+  if (!match) return { clean: text, data: null };
+  let data: any = null;
   try {
-    cardapio = JSON.parse(match[1].trim());
+    data = JSON.parse(match[1].trim());
   } catch {
-    cardapio = null;
+    data = null;
   }
-  return { clean: text.replace(match[0], "").trim(), cardapio };
+  return { clean: text.replace(match[0], "").trim(), data };
 }
+
+function extractPayloads(text: string) {
+  const a = extractBlock(text, "cardapio-json");
+  const b = extractBlock(a.clean, "receita-json");
+  const c = extractBlock(b.clean, "analise-json");
+  return { clean: c.clean, cardapio: a.data, receita: b.data, analise: c.data };
+}
+
+function periodoKey(cardapio: any): string {
+  const dias = Object.keys(cardapio?.cardapio || {});
+  return dias.sort().join(",");
+}
+
 
 /* ------------------------- Conversational onboarding ------------------------- */
 
