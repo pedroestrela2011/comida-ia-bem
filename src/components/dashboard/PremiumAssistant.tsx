@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bot, X, Send, Camera, Lock, Loader2 } from "lucide-react";
+import { Bot, X, Send, Camera, Lock, Loader2, History, MessageCircle, Trash2, ArrowLeft, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,13 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 
 const WEEKLY_LIMIT = 30;
 const GREEN = "#2d6a4f";
+const GREEN_DARK = "#1a4731";
+const GREEN_SOFT = "#f0f7f0";
+const PANEL_BORDER = "#e2e8f0";
+const ASSISTANT_BG = "#f8fafc";
+const TEXT_DARK = "#1e293b";
+const HISTORY_KEY = "premium_assistant_history_v1";
+const HISTORY_LIMIT = 5;
 
 type Msg = {
   role: "user" | "assistant";
@@ -17,7 +24,11 @@ type Msg = {
   image?: string;
   cardapio?: any;
   saved?: boolean;
+  options?: string[];
+  grid?: boolean;
 };
+
+type SavedConversa = { id: number; created_at: string; titulo: string; messages: Msg[] };
 
 // Session-only history: lives while the page is loaded, wiped on reload/logout.
 const session: { messages: Msg[]; welcomed: boolean } = { messages: [], welcomed: false };
@@ -57,6 +68,137 @@ function extractCardapio(text: string): { clean: string; cardapio: any | null } 
   return { clean: text.replace(match[0], "").trim(), cardapio };
 }
 
+/* ------------------------- Conversational onboarding ------------------------- */
+
+type Opt = { label: string; followUp?: string; photo?: boolean };
+type Step = { q: string; options?: Opt[]; grid?: boolean; free?: boolean; skipLabel?: string };
+
+const BRANCH_OPTIONS = [
+  "📅 Montar um cardápio personalizado",
+  "🍳 Dicas sobre como fazer uma receita",
+  "🥦 Benefícios de algum alimento",
+  "🏃 Nutrição para meu esporte",
+  "📸 Analisar o que estou comendo",
+  "💬 Tenho outra dúvida",
+];
+
+const o = (labels: string[]): Opt[] => labels.map((label) => ({ label }));
+
+const FLOWS: Record<string, { steps: Step[]; finalPrompt: string }> = {
+  cardapio: {
+    steps: [
+      { q: "Qual é o seu principal objetivo com o cardápio?", options: o(["Emagrecer", "Ganhar massa muscular", "Manter o peso", "Melhorar a saúde geral"]) },
+      {
+        q: "Seu peso e altura estão no perfil. Quer usar esses dados ou informar novos valores?",
+        options: [{ label: "Usar dados do perfil" }, { label: "Informar novos valores", followUp: "Perfeito! Me diga seu peso e altura atuais." }],
+      },
+      { q: "Quantas refeições você faz por dia?", options: o(["2 refeições", "3 refeições", "4 refeições", "5 refeições", "6 refeições"]) },
+      {
+        q: "Você tem alguma alergia ou restrição alimentar?",
+        options: [
+          ...o(["Nenhuma", "Sem glúten", "Sem lactose", "Vegetariano", "Vegano"]),
+          { label: "Outras", followUp: "Quais alergias ou restrições devo considerar?" },
+        ],
+      },
+      { q: "Quais alimentos você mais gosta?", free: true },
+      { q: "Quais alimentos você não gosta ou evita?", free: true },
+      {
+        q: "Você tem alguma deficiência nutricional conhecida?",
+        options: [...o(["Não sei", "Nenhuma"]), { label: "Sim", followUp: "Qual deficiência nutricional?" }],
+      },
+      {
+        q: "Você tem algum problema de saúde que devo considerar?",
+        options: [
+          ...o(["Nenhum", "Diabetes", "Hipertensão", "Colesterol alto"]),
+          { label: "Outros", followUp: "Quais problemas de saúde devo considerar?" },
+        ],
+      },
+      {
+        q: "Como é sua rotina no dia a dia?",
+        options: o(["Trabalho muito e tenho pouco tempo", "Tenho rotina flexível", "Pratico exercícios regularmente", "Trabalho em horários alternativos"]),
+      },
+      { q: "Quer adicionar mais algum detalhe sobre sua rotina?", free: true, skipLabel: "Não, seguir →" },
+      { q: "Qual é seu orçamento semanal para alimentação?", options: o(["Econômico (até R$150)", "Moderado (R$150 a R$300)", "Sem limite"]) },
+      { q: "Tem mais alguma informação que queira me passar antes de eu montar seu cardápio?", free: true, skipLabel: "Não, pode montar! →" },
+    ],
+    finalPrompt: "Monte agora um cardápio personalizado para mim com base nas informações acima e inclua o bloco técnico do cardápio.",
+  },
+  receita: {
+    steps: [
+      {
+        q: "Você tem ingredientes em mãos ou quer uma sugestão?",
+        options: [{ label: "Tenho ingredientes", followUp: "Quais ingredientes você tem em mãos?" }, { label: "Quero uma sugestão" }],
+      },
+      {
+        q: "Tem alguma restrição alimentar?",
+        options: [...o(["Usar as do meu perfil", "Nenhuma"]), { label: "Informar outras", followUp: "Quais restrições devo considerar?" }],
+      },
+      { q: "Quanto tempo tem para preparar?", options: o(["Até 15 min", "15 a 30 min", "30 a 60 min", "Sem pressa"]) },
+      { q: "Quer adicionar mais alguma informação?", free: true, skipLabel: "Não, pode sugerir! →" },
+    ],
+    finalPrompt: "Com base nas informações acima, sugira uma receita detalhada com ingredientes e modo de preparo.",
+  },
+  alimento: {
+    steps: [
+      { q: "Qual alimento você quer conhecer melhor?", free: true },
+      { q: "Por que tem interesse nesse alimento?", options: o(["Curiosidade", "Quero incluir na minha dieta", "Ouvi falar sobre ele", "Outro motivo"]) },
+      { q: "Tem mais alguma coisa que queira saber?", free: true, skipLabel: "Não, pode explicar! →" },
+    ],
+    finalPrompt: "Com base nas informações acima, explique os benefícios e cuidados desse alimento para mim.",
+  },
+  esporte: {
+    steps: [
+      {
+        q: "Qual é a sua modalidade esportiva?",
+        options: [...o(["Musculação", "Corrida", "Futebol", "Ciclismo", "Natação"]), { label: "Outra", followUp: "Qual modalidade você pratica?" }],
+      },
+      { q: "O que você quer melhorar?", options: o(["Energia pré-treino", "Recuperação pós-treino", "Resistência", "Emagrecimento", "Ganho de massa"]) },
+      { q: "Quantas vezes por semana treina?", options: o(["1 a 2x", "3 a 4x", "5 a 6x", "Todos os dias"]) },
+      { q: "Quer adicionar mais alguma informação sobre seus treinos?", free: true, skipLabel: "Não, pode me ajudar! →" },
+    ],
+    finalPrompt: "Com base nas informações acima, me oriente sobre nutrição esportiva personalizada.",
+  },
+  prato: {
+    steps: [
+      {
+        q: "Como prefere compartilhar sua refeição?",
+        options: [{ label: "Enviar uma foto", photo: true }, { label: "Descrever o que comi", followUp: "Descreva o que você comeu." }],
+      },
+      {
+        q: "Tem alguma dúvida específica sobre esse prato?",
+        options: [...o(["Quantas calorias tem?", "É adequado para meu objetivo?", "Quais nutrientes tem?"]), { label: "Outra dúvida", followUp: "Qual é a sua dúvida?" }],
+      },
+      { q: "Quer adicionar mais alguma informação antes da análise?", free: true, skipLabel: "Não, pode analisar! →" },
+    ],
+    finalPrompt: "Analise minha refeição com base nas informações acima.",
+  },
+  outra: {
+    steps: [{ q: "Claro! Me conta qual é a sua dúvida sobre alimentação e nutrição 🌿", free: true }],
+    finalPrompt: "Responda à minha dúvida acima.",
+  },
+};
+
+const BRANCH_KEYS = ["cardapio", "receita", "alimento", "esporte", "prato", "outra"];
+
+const INTRO_OPTIONS = ["Sim, vamos lá! 🚀", "Me conta mais sobre você"];
+const GOAL_MSG = "Ótimo! O que você veio buscar hoje? Escolha uma opção ou digite livremente 👇";
+
+function loadHistory(): SavedConversa[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function guessTitulo(messages: Msg[]): string {
+  const firstUser = messages.find((m) => m.role === "user" && m.content);
+  const raw = (firstUser?.content || "Conversa").replace(/^[^\p{L}\p{N}]+/u, "");
+  return raw.length > 42 ? `${raw.slice(0, 42)}…` : raw;
+}
+
 export function PremiumAssistant() {
   const navigate = useNavigate();
   const { plan, isAdmin, loading } = useUserPlan();
@@ -64,13 +206,26 @@ export function PremiumAssistant() {
 
   const [open, setOpen] = useState(false);
   const [lockOpen, setLockOpen] = useState(false);
+  const [tab, setTab] = useState<"chat" | "historico">("chat");
   const [messages, setMessages] = useState<Msg[]>(session.messages);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [used, setUsed] = useState(0);
   const [countdown, setCountdown] = useState(nextMondayCountdown());
+  const [saved, setSaved] = useState<SavedConversa[]>(() => loadHistory());
+  const [viewing, setViewing] = useState<SavedConversa | null>(null);
+  const [fullHistoryWarn, setFullHistoryWarn] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Onboarding flow state
+  const [stage, setStage] = useState<"intro" | "goal" | "branch" | "free">("intro");
+  const [branch, setBranch] = useState<string | null>(null);
+  const [stepIdx, setStepIdx] = useState(0);
+  const [followUp, setFollowUp] = useState<string | null>(null);
+  const answersRef = useRef<{ q: string; a: string }[]>([]);
+  const pendingImageRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     session.messages = messages;
@@ -84,6 +239,17 @@ export function PremiumAssistant() {
     const t = setInterval(() => setCountdown(nextMondayCountdown()), 60000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    if (open && tab === "chat" && !sending) inputRef.current?.focus();
+  }, [open, tab, sending, messages.length]);
+
+  const persistHistory = (list: SavedConversa[]) => {
+    setSaved(list);
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    } catch { /* ignore */ }
+  };
 
   const loadUsage = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -103,7 +269,6 @@ export function PremiumAssistant() {
         body: { ...payload, week_start: mondayOfCurrentWeek() },
       });
       if (error) {
-        // Non-2xx: try to surface the backend message
         let msg = "Não foi possível falar com o assistente.";
         try {
           const ctx: any = (error as any).context;
@@ -119,25 +284,36 @@ export function PremiumAssistant() {
     [],
   );
 
+  const startOnboarding = useCallback(async () => {
+    let nome = "";
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from("profiles").select("nome").eq("user_id", user.id).maybeSingle();
+        nome = ((data as any)?.nome || "").split(" ")[0];
+      }
+    } catch { /* ignore */ }
+    setStage("intro");
+    setMessages([
+      {
+        role: "assistant",
+        content: `Olá${nome ? `, ${nome}` : ""}! 👋 Sou seu Assistente Premium, especializado em alimentação e nutrição personalizada. Estou aqui para te ajudar a alcançar seus objetivos de forma prática e inteligente. Pronto para começar?`,
+        options: INTRO_OPTIONS,
+      },
+    ]);
+  }, []);
+
   const openPanel = async () => {
     if (!isTop) {
       setLockOpen(true);
       return;
     }
     setOpen(true);
+    setTab("chat");
     loadUsage();
     if (session.welcomed) return;
     session.welcomed = true;
-    setSending(true);
-    try {
-      const data = await callAssistant({ mode: "welcome" });
-      const content = data.content?.trim();
-      setMessages([{ role: "assistant", content: content || "Olá! 👋 Estou aqui para te ajudar com tudo sobre alimentação e hábitos saudáveis — personalizado para você. O que você gostaria de saber hoje?" }]);
-    } catch {
-      setMessages([{ role: "assistant", content: "Olá! 👋 Estou aqui para te ajudar com tudo sobre alimentação e hábitos saudáveis — personalizado para você. O que você gostaria de saber hoje?" }]);
-    } finally {
-      setSending(false);
-    }
+    await startOnboarding();
   };
 
   const remaining = Math.max(0, WEEKLY_LIMIT - used);
@@ -156,11 +332,13 @@ export function PremiumAssistant() {
         : { role: m.role, content: m.content },
     );
 
-  const send = async (text: string, image?: string) => {
+  const clearOptions = () =>
+    setMessages((prev) => prev.map((m) => (m.options ? { ...m, options: undefined } : m)));
+
+  const askAI = async (text: string, image?: string, baseOverride?: Msg[]) => {
     if (sending || blocked) return;
-    if (!text.trim() && !image) return;
     const userMsg: Msg = { role: "user", content: text.trim(), image };
-    const next = [...messages, userMsg];
+    const next = [...(baseOverride ?? messages), userMsg];
     setMessages(next);
     setInput("");
     setSending(true);
@@ -176,6 +354,144 @@ export function PremiumAssistant() {
     }
   };
 
+  const pushAssistant = (content: string, options?: string[], grid?: boolean) =>
+    setMessages((prev) => [...prev, { role: "assistant", content, options, grid }]);
+
+  const pushUser = (content: string) =>
+    setMessages((prev) => [...prev.map((m) => (m.options ? { ...m, options: undefined } : m)), { role: "user", content }]);
+
+  const askStep = (branchKey: string, idx: number) => {
+    const step = FLOWS[branchKey].steps[idx];
+    const opts = step.options ? step.options.map((x) => x.label) : step.skipLabel ? [step.skipLabel] : undefined;
+    pushAssistant(step.q, opts);
+  };
+
+  const finishFlow = (branchKey: string) => {
+    const summary = answersRef.current
+      .filter((a) => a.a)
+      .map((a) => `- ${a.q} ${a.a}`)
+      .join("\n");
+    const prompt = `${FLOWS[branchKey].finalPrompt}\n\nInformações que eu forneci:\n${summary}`;
+    const image = pendingImageRef.current;
+    pendingImageRef.current = undefined;
+    setStage("free");
+    setBranch(null);
+    answersRef.current = [];
+    setMessages((prev) => {
+      const cleaned = prev.map((m) => (m.options ? { ...m, options: undefined } : m));
+      queueMicrotask(() => askAI(prompt, image, cleaned));
+      return cleaned;
+    });
+  };
+
+  const advance = (branchKey: string, nextIdx: number) => {
+    if (nextIdx >= FLOWS[branchKey].steps.length) {
+      finishFlow(branchKey);
+      return;
+    }
+    setStepIdx(nextIdx);
+    askStep(branchKey, nextIdx);
+  };
+
+  const recordAnswer = (q: string, a: string) => {
+    answersRef.current.push({ q, a });
+  };
+
+  // Handles both quick-reply clicks and free typing.
+  const handleAnswer = (text: string, fromOption?: Opt) => {
+    const value = text.trim();
+    if (!value) return;
+    pushUser(value);
+    setInput("");
+
+    if (stage === "intro") {
+      if (fromOption?.label === INTRO_OPTIONS[1]) {
+        pushAssistant(
+          "Com prazer! Eu conheço seu perfil de saúde (objetivo, peso, altura, restrições e condições) e uso isso para te dar orientações realmente personalizadas sobre alimentação, receitas, nutrientes e rotina. Pronto para começar?",
+          INTRO_OPTIONS,
+        );
+        return;
+      }
+      if (fromOption?.label === INTRO_OPTIONS[0]) {
+        setStage("goal");
+        pushAssistant(GOAL_MSG, BRANCH_OPTIONS, true);
+        return;
+      }
+      // typed freely → go straight to the AI
+      setStage("free");
+      clearOptions();
+      askAI(value);
+      return;
+    }
+
+    if (stage === "goal") {
+      const idx = BRANCH_OPTIONS.indexOf(fromOption?.label || "");
+      if (idx === -1) {
+        setStage("free");
+        askAI(value);
+        return;
+      }
+      const key = BRANCH_KEYS[idx];
+      setBranch(key);
+      setStage("branch");
+      answersRef.current = [];
+      setStepIdx(0);
+      askStep(key, 0);
+      return;
+    }
+
+    if (stage === "branch" && branch) {
+      const step = FLOWS[branch].steps[stepIdx];
+      if (followUp) {
+        recordAnswer(followUp, value);
+        setFollowUp(null);
+        advance(branch, stepIdx + 1);
+        return;
+      }
+      if (fromOption?.photo) {
+        recordAnswer(step.q, value);
+        fileRef.current?.click();
+        advance(branch, stepIdx + 1);
+        return;
+      }
+      if (fromOption?.followUp) {
+        recordAnswer(step.q, value);
+        setFollowUp(fromOption.followUp);
+        pushAssistant(fromOption.followUp);
+        return;
+      }
+      if (step.skipLabel && fromOption?.label === step.skipLabel) {
+        advance(branch, stepIdx + 1);
+        return;
+      }
+      recordAnswer(step.q, value);
+      advance(branch, stepIdx + 1);
+      return;
+    }
+
+    askAI(value);
+  };
+
+  const submitInput = () => {
+    const value = input.trim();
+    if (!value || sending || blocked) return;
+    if (stage === "free") {
+      askAI(value);
+      return;
+    }
+    handleAnswer(value);
+  };
+
+  const onOptionClick = (label: string) => {
+    if (sending) return;
+    let opt: Opt | undefined = { label };
+    if (stage === "branch" && branch) {
+      const step = FLOWS[branch].steps[stepIdx];
+      opt = step.options?.find((x) => x.label === label) || { label };
+    }
+    handleAnswer(label, opt);
+  };
+
   const onPickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -185,7 +501,15 @@ export function PremiumAssistant() {
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => send("Analise este prato, por favor.", String(reader.result));
+    reader.onload = () => {
+      const dataUrl = String(reader.result);
+      if (stage === "branch" || stage === "goal" || stage === "intro") {
+        pendingImageRef.current = dataUrl;
+        setMessages((prev) => [...prev, { role: "user", content: "", image: dataUrl }]);
+        return;
+      }
+      askAI("Analise este prato, por favor.", dataUrl);
+    };
     reader.readAsDataURL(file);
   };
 
@@ -209,9 +533,33 @@ export function PremiumAssistant() {
     }
   };
 
+  const salvarConversa = () => {
+    if (!messages.some((m) => m.role === "user")) return;
+    if (saved.length >= HISTORY_LIMIT) {
+      setFullHistoryWarn(true);
+      setTab("historico");
+      return;
+    }
+    const conv: SavedConversa = {
+      id: Date.now(),
+      created_at: new Date().toISOString(),
+      titulo: guessTitulo(messages),
+      messages: messages.map((m) => ({ ...m, options: undefined })),
+    };
+    persistHistory([conv, ...saved]);
+    toast({ title: "Conversa salva!" });
+  };
+
+  const excluirConversa = (id: number) => {
+    const list = saved.filter((c) => c.id !== id);
+    persistHistory(list);
+    if (viewing?.id === id) setViewing(null);
+    if (list.length < HISTORY_LIMIT) setFullHistoryWarn(false);
+  };
+
   if (loading) return null;
 
-  const counterColor = remaining <= 3 ? "#ef4444" : remaining <= 10 ? "#f59e0b" : "#ffffff";
+  const counterColor = remaining <= 3 ? "#ef4444" : remaining <= 10 ? "#f59e0b" : GREEN;
   const counterWarning =
     remaining <= 0
       ? null
@@ -220,6 +568,67 @@ export function PremiumAssistant() {
         : remaining <= 10
           ? "⚠️ Você está chegando ao limite semanal."
           : null;
+
+  const renderMessages = (list: Msg[], readonly = false) => (
+    <>
+      {list.map((m, i) => (
+        <div key={i} className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+          {m.role === "assistant" && (
+            <div
+              className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+              style={{ backgroundColor: GREEN }}
+            >
+              <Bot className="h-3.5 w-3.5 text-white" />
+            </div>
+          )}
+          <div className="max-w-[82%] flex flex-col items-start gap-2">
+            <div
+              className="px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
+              style={{
+                backgroundColor: m.role === "user" ? GREEN : ASSISTANT_BG,
+                color: m.role === "user" ? "#ffffff" : TEXT_DARK,
+                borderRadius: 12,
+              }}
+            >
+              {m.image && (
+                <img src={m.image} alt="Foto do prato enviada" className="rounded-lg mb-2 max-h-40 object-cover" />
+              )}
+              {m.content}
+              {m.cardapio && !m.saved && !readonly && (
+                <button
+                  onClick={() => salvarCardapio(i)}
+                  className="mt-2 w-full px-3 py-2 text-xs font-semibold text-white"
+                  style={{ backgroundColor: GREEN, borderRadius: 8 }}
+                >
+                  Salvar em Meus Cardápios →
+                </button>
+              )}
+            </div>
+            {!readonly && m.options && m.options.length > 0 && (
+              <div className={m.grid ? "grid grid-cols-2 gap-1.5 w-full" : "flex flex-wrap gap-1.5"}>
+                {m.options.map((label) => (
+                  <button
+                    key={label}
+                    onClick={() => onOptionClick(label)}
+                    disabled={sending}
+                    className="px-2.5 py-1.5 text-[12px] font-medium text-left disabled:opacity-50"
+                    style={{
+                      backgroundColor: GREEN_SOFT,
+                      border: `1px solid ${GREEN}`,
+                      color: GREEN_DARK,
+                      borderRadius: 8,
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </>
+  );
 
   return (
     <>
@@ -261,12 +670,17 @@ export function PremiumAssistant() {
       {/* Chat panel */}
       {open && (
         <div
-          className="fixed z-50 inset-0 md:inset-auto md:bottom-5 md:right-5 md:w-[380px] md:h-[520px] flex flex-col overflow-hidden md:rounded-2xl shadow-2xl"
-          style={{ backgroundColor: "#132b21" }}
+          className="fixed z-50 inset-0 md:inset-auto md:bottom-5 md:right-5 md:w-[380px] md:h-[520px] flex flex-col overflow-hidden"
+          style={{
+            backgroundColor: "#ffffff",
+            border: `1px solid ${PANEL_BORDER}`,
+            borderRadius: 16,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          }}
         >
           <div
             className="flex items-center gap-2 px-4 py-3 shrink-0"
-            style={{ backgroundColor: GREEN }}
+            style={{ background: `linear-gradient(135deg, ${GREEN_DARK} 0%, ${GREEN} 100%)` }}
           >
             <Bot className="h-5 w-5 text-white" />
             <span className="font-semibold text-white text-sm flex-1">Assistente Premium</span>
@@ -275,110 +689,181 @@ export function PremiumAssistant() {
             </button>
           </div>
 
-          <div className="px-4 py-2 shrink-0" style={{ backgroundColor: "#1b3a2c" }}>
-            <p className="text-xs font-medium" style={{ color: counterColor }}>
-              💬 {remaining} de {WEEKLY_LIMIT} mensagens disponíveis esta semana
-            </p>
-            {counterWarning && (
-              <p className="text-[11px] mt-0.5" style={{ color: counterColor }}>{counterWarning}</p>
-            )}
+          {/* Tabs */}
+          <div className="flex shrink-0 border-b" style={{ borderColor: PANEL_BORDER }}>
+            {([
+              { key: "chat", label: "Chat", Icon: MessageCircle },
+              { key: "historico", label: `Histórico (${saved.length})`, Icon: History },
+            ] as const).map(({ key, label, Icon }) => (
+              <button
+                key={key}
+                onClick={() => { setTab(key); setViewing(null); }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-medium"
+                style={{
+                  color: tab === key ? GREEN_DARK : "#64748b",
+                  backgroundColor: tab === key ? GREEN_SOFT : "#ffffff",
+                  borderBottom: tab === key ? `2px solid ${GREEN}` : "2px solid transparent",
+                }}
+              >
+                <Icon className="h-3.5 w-3.5" /> {label}
+              </button>
+            ))}
           </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-auto px-3 py-3 space-y-3">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                {m.role === "assistant" && (
-                  <div
-                    className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ backgroundColor: GREEN }}
-                  >
-                    <Bot className="h-3.5 w-3.5 text-white" />
-                  </div>
+          {tab === "chat" ? (
+            <>
+              <div className="px-4 py-2 shrink-0" style={{ backgroundColor: GREEN_SOFT }}>
+                <p className="text-xs font-medium" style={{ color: counterColor }}>
+                  💬 {remaining} de {WEEKLY_LIMIT} mensagens disponíveis esta semana
+                </p>
+                {counterWarning && (
+                  <p className="text-[11px] mt-0.5" style={{ color: counterColor }}>{counterWarning}</p>
                 )}
-                <div
-                  className="max-w-[80%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap text-white"
-                  style={{ backgroundColor: m.role === "user" ? GREEN : "#20493a" }}
-                >
-                  {m.image && (
-                    <img src={m.image} alt="Foto do prato enviada" className="rounded-lg mb-2 max-h-40 object-cover" />
-                  )}
-                  {m.content}
-                  {m.cardapio && !m.saved && (
-                    <button
-                      onClick={() => salvarCardapio(i)}
-                      className="mt-2 w-full rounded-lg px-3 py-2 text-xs font-semibold text-white"
+              </div>
+
+              <div ref={scrollRef} className="flex-1 overflow-auto px-3 py-3 space-y-3">
+                {renderMessages(messages)}
+
+                {sending && (
+                  <div className="flex gap-2 justify-start">
+                    <div
+                      className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                       style={{ backgroundColor: GREEN }}
                     >
-                      Salvar em Meus Cardápios →
+                      <Bot className="h-3.5 w-3.5 text-white" />
+                    </div>
+                    <div className="px-3 py-3 flex gap-1" style={{ backgroundColor: ASSISTANT_BG, borderRadius: 12 }}>
+                      {[0, 1, 2].map((d) => (
+                        <span
+                          key={d}
+                          className="h-1.5 w-1.5 rounded-full animate-bounce"
+                          style={{ backgroundColor: GREEN, animationDelay: `${d * 0.15}s` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="shrink-0 p-3 border-t space-y-2" style={{ borderColor: PANEL_BORDER, backgroundColor: "#ffffff" }}>
+                {messages.some((m) => m.role === "user") && (
+                  <button
+                    onClick={salvarConversa}
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[12px] font-medium"
+                    style={{ backgroundColor: GREEN_SOFT, border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 8 }}
+                  >
+                    <Save className="h-3.5 w-3.5" /> Salvar conversa 💾
+                  </button>
+                )}
+                {blocked ? (
+                  <div className="text-center space-y-1" style={{ color: TEXT_DARK }}>
+                    <Lock className="h-5 w-5 mx-auto" />
+                    <p className="text-[12px]">
+                      Você atingiu seu limite de 30 mensagens esta semana. Seu Assistente Premium será
+                      renovado na segunda-feira. Até lá! 🌿
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">{countdown}</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickPhoto} />
+                    <button
+                      onClick={() => fileRef.current?.click()}
+                      disabled={sending}
+                      aria-label="Enviar foto do prato"
+                      className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 disabled:opacity-50"
+                      style={{ backgroundColor: GREEN_SOFT, border: `1px solid ${GREEN}`, color: GREEN_DARK }}
+                    >
+                      <Camera className="h-4 w-4" />
                     </button>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {sending && (
-              <div className="flex gap-2 justify-start">
-                <div
-                  className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                  style={{ backgroundColor: GREEN }}
-                >
-                  <Bot className="h-3.5 w-3.5 text-white" />
-                </div>
-                <div className="rounded-2xl px-3 py-3 flex gap-1" style={{ backgroundColor: "#20493a" }}>
-                  {[0, 1, 2].map((d) => (
-                    <span
-                      key={d}
-                      className="h-1.5 w-1.5 rounded-full bg-white/70 animate-bounce"
-                      style={{ animationDelay: `${d * 0.15}s` }}
+                    <Input
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && submitInput()}
+                      placeholder="Digite sua dúvida..."
+                      disabled={sending}
+                      className="h-9 text-[13px]"
+                      style={{ border: `1px solid ${GREEN}`, backgroundColor: "#ffffff", borderRadius: 10, color: TEXT_DARK }}
                     />
-                  ))}
+                    <button
+                      onClick={submitInput}
+                      disabled={sending || !input.trim()}
+                      aria-label="Enviar mensagem"
+                      className="h-9 w-9 rounded-full flex items-center justify-center text-white shrink-0 disabled:opacity-50"
+                      style={{ backgroundColor: GREEN }}
+                    >
+                      {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 overflow-auto p-3">
+              {viewing ? (
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setViewing(null)}
+                    className="flex items-center gap-1.5 text-[12px] font-medium"
+                    style={{ color: GREEN_DARK }}
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Voltar
+                  </button>
+                  <p className="text-[13px] font-semibold" style={{ color: TEXT_DARK }}>{viewing.titulo}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {new Date(viewing.created_at).toLocaleString("pt-BR")} · modo leitura
+                  </p>
+                  <div className="space-y-3">{renderMessages(viewing.messages, true)}</div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          <div className="shrink-0 p-3" style={{ backgroundColor: "#1b3a2c" }}>
-            {blocked ? (
-              <div className="text-center text-white/90 space-y-1">
-                <Lock className="h-5 w-5 mx-auto" />
-                <p className="text-[12px]">
-                  Você atingiu seu limite de 30 mensagens esta semana. Seu Assistente Premium será
-                  renovado na segunda-feira. Até lá! 🌿
-                </p>
-                <p className="text-[11px] text-white/60">{countdown}</p>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickPhoto} />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={sending}
-                  aria-label="Enviar foto do prato"
-                  className="h-9 w-9 rounded-full flex items-center justify-center text-white shrink-0 disabled:opacity-50"
-                  style={{ backgroundColor: "#20493a" }}
-                >
-                  <Camera className="h-4 w-4" />
-                </button>
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send(input)}
-                  placeholder="Digite sua dúvida..."
-                  disabled={sending}
-                  className="h-9 border-white/15 bg-white/5 text-white placeholder:text-white/50 text-[13px]"
-                />
-                <button
-                  onClick={() => send(input)}
-                  disabled={sending || !input.trim()}
-                  aria-label="Enviar mensagem"
-                  className="h-9 w-9 rounded-full flex items-center justify-center text-white shrink-0 disabled:opacity-50"
-                  style={{ backgroundColor: GREEN }}
-                >
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </button>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="space-y-2">
+                  {fullHistoryWarn && (
+                    <p
+                      className="text-[12px] px-3 py-2"
+                      style={{ backgroundColor: "#fff7ed", border: "1px solid #f59e0b", color: "#92400e", borderRadius: 8 }}
+                    >
+                      Você já tem 5 conversas salvas. Exclua uma para salvar esta nova.
+                    </p>
+                  )}
+                  {saved.length === 0 ? (
+                    <div className="text-center py-10" style={{ color: "#64748b" }}>
+                      <History className="h-9 w-9 mx-auto mb-2 opacity-40" />
+                      <p className="text-[13px]">Nenhuma conversa salva ainda.</p>
+                      <p className="text-[11px] mt-1">Use "Salvar conversa 💾" no chat.</p>
+                    </div>
+                  ) : (
+                    saved.map((c) => (
+                      <div
+                        key={c.id}
+                        className="flex items-center gap-2 px-3 py-2"
+                        style={{ border: `1px solid ${PANEL_BORDER}`, borderRadius: 10, backgroundColor: ASSISTANT_BG }}
+                      >
+                        <button onClick={() => setViewing(c)} className="flex-1 text-left">
+                          <p className="text-[13px] font-medium" style={{ color: TEXT_DARK }}>{c.titulo}</p>
+                          <p className="text-[11px]" style={{ color: "#64748b" }}>
+                            {new Date(c.created_at).toLocaleDateString("pt-BR")} ·{" "}
+                            {new Date(c.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </button>
+                        <button
+                          onClick={() => excluirConversa(c.id)}
+                          aria-label="Excluir conversa"
+                          className="h-7 w-7 rounded-full flex items-center justify-center shrink-0"
+                          style={{ color: "#ef4444" }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                  <p className="text-[11px] text-center pt-1" style={{ color: "#64748b" }}>
+                    {saved.length}/{HISTORY_LIMIT} conversas salvas
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </>
