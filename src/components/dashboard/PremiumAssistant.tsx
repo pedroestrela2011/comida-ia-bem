@@ -367,8 +367,18 @@ export function PremiumAssistant() {
     setSending(true);
     try {
       const data = await callAssistant({ mode: "chat", messages: toApiMessages(next) });
-      const { clean, cardapio } = extractCardapio(data.content || "");
-      setMessages((prev) => [...prev, { role: "assistant", content: clean, cardapio }]);
+      const { clean, cardapio, receita, analise } = extractPayloads(data.content || "");
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: clean,
+          cardapio,
+          cardapioTipo: cardapio ? (esporteRef.current ? "esporte" : "normal") : undefined,
+          receita,
+          analise,
+        },
+      ]);
     } catch (e: any) {
       setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${e.message}` }]);
     } finally {
@@ -376,6 +386,7 @@ export function PremiumAssistant() {
       loadUsage();
     }
   };
+
 
   const pushAssistant = (content: string, options?: string[], grid?: boolean) =>
     setMessages((prev) => [...prev, { role: "assistant", content, options, grid }]);
