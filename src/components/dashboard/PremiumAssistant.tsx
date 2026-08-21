@@ -249,6 +249,11 @@ export function PremiumAssistant() {
   const [followUp, setFollowUp] = useState<string | null>(null);
   const answersRef = useRef<{ q: string; a: string }[]>([]);
   const pendingImageRef = useRef<string | undefined>(undefined);
+  const esporteRef = useRef(false);
+  const [showReturn, setShowReturn] = useState(false);
+  const [favBusy, setFavBusy] = useState(false);
+  const { add: addFavorite } = useFavorites();
+
 
   useEffect(() => {
     session.messages = messages;
