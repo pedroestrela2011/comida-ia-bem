@@ -790,6 +790,16 @@ export function PremiumAssistant() {
         </button>
       )}
 
+      {!open && showReturn && (
+        <button
+          onClick={() => { setShowReturn(false); setOpen(true); setTab("chat"); }}
+          className="fixed bottom-[88px] right-5 z-50 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold shadow-lg"
+          style={{ backgroundColor: "#ffffff", border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 10 }}
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao Assistente
+        </button>
+      )}
+
       {/* Plan lock modal */}
       <Dialog open={lockOpen} onOpenChange={setLockOpen}>
         <DialogContent className="max-w-sm text-center">
