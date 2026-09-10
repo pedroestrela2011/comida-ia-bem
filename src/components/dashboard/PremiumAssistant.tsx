@@ -696,12 +696,58 @@ export function PremiumAssistant() {
               )}
               {m.content}
               {m.cardapio && !m.saved && !readonly && (
+                <div className="mt-2 space-y-1.5">
+                  <button
+                    onClick={() => salvarCardapio(i)}
+                    className="w-full px-3 py-2 text-xs font-semibold text-white"
+                    style={{ backgroundColor: GREEN, borderRadius: 8 }}
+                  >
+                    {m.cardapioTipo === "esporte" ? "Salvar em Modo Esporte →" : "Salvar em Meus Cardápios →"}
+                  </button>
+                  <button
+                    onClick={() => editarCardapio(i)}
+                    className="w-full px-3 py-2 text-xs font-semibold"
+                    style={{ backgroundColor: "#ffffff", border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 8 }}
+                  >
+                    Editar antes de salvar ✏️
+                  </button>
+                </div>
+              )}
+              {m.receita && !readonly && (
+                <div className="mt-2 space-y-1.5">
+                  {!m.savedReceita && (
+                    <button
+                      onClick={() => salvarReceita(i)}
+                      className="w-full px-3 py-2 text-xs font-semibold text-white"
+                      style={{ backgroundColor: GREEN, borderRadius: 8 }}
+                    >
+                      Salvar em Receitas →
+                    </button>
+                  )}
+                  <button
+                    onClick={() => favoritarReceita(i)}
+                    disabled={favBusy || m.favorited}
+                    className="w-full px-3 py-2 text-xs font-semibold disabled:opacity-60"
+                    style={{ backgroundColor: "#ffffff", border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 8 }}
+                  >
+                    {m.favorited ? "Nos favoritos ⭐" : "Adicionar aos favoritos ⭐"}
+                  </button>
+                  <button
+                    onClick={() => goTo("/dashboard/receitas")}
+                    className="w-full px-3 py-2 text-xs font-semibold"
+                    style={{ backgroundColor: GREEN_SOFT, border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 8 }}
+                  >
+                    Ver em Receitas →
+                  </button>
+                </div>
+              )}
+              {m.analise && !readonly && (
                 <button
-                  onClick={() => salvarCardapio(i)}
+                  onClick={() => verAnalise(i)}
                   className="mt-2 w-full px-3 py-2 text-xs font-semibold text-white"
                   style={{ backgroundColor: GREEN, borderRadius: 8 }}
                 >
-                  Salvar em Meus Cardápios →
+                  Ver análise completa no Analisador de Pratos →
                 </button>
               )}
             </div>
