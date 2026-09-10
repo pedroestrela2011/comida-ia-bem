@@ -39,6 +39,8 @@ type SavedConversa = { id: number; created_at: string; titulo: string; messages:
 
 const RECEITAS_STORAGE_KEY = "saved_recipes_v1";
 export const ANALISE_HANDOFF_KEY = "assistant_analise_handoff_v1";
+export const CARDAPIO_EDIT_KEY = "assistant_cardapio_edit_v1";
+export const CARDAPIO_ESPORTE_EDIT_KEY = "assistant_cardapio_esporte_edit_v1";
 
 // Session-only history: lives while the page is loaded, wiped on reload/logout.
 const session: { messages: Msg[]; welcomed: boolean } = { messages: [], welcomed: false };
