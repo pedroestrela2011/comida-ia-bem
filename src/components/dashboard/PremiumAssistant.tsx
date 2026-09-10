@@ -555,24 +555,83 @@ export function PremiumAssistant() {
     reader.readAsDataURL(file);
   };
 
+  const goTo = (path: string) => {
+    setOpen(false);
+    setShowReturn(true);
+    navigate(path);
+  };
+
   const salvarCardapio = async (index: number) => {
     const msg = messages[index];
     if (!msg?.cardapio) return;
+    const esporte = msg.cardapioTipo === "esporte";
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const { error } = await supabase
         .from("cardapios_salvos")
-        .insert({ user_id: user.id, dados: msg.cardapio, tipo: "normal" });
+        .insert({ user_id: user.id, dados: msg.cardapio, tipo: esporte ? "esporte" : "normal" });
       if (error) throw error;
-      setMessages((prev) => prev.map((m, i) => (i === index ? { ...m, saved: true } : m)));
       setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "✅ Cardápio salvo com sucesso! Você pode acessá-lo em Meu Cardápio → Salvos." },
+        ...prev.map((m, i) => (i === index ? { ...m, saved: true } : m)),
+        {
+          role: "assistant" as const,
+          content: esporte
+            ? "✅ Cardápio esportivo salvo! Acesse em Modo Esporte → Salvos."
+            : "✅ Cardápio salvo com sucesso! Você pode acessá-lo em Meu Cardápio → Salvos.",
+        },
       ]);
     } catch (e: any) {
       toast({ title: "Erro ao salvar cardápio", description: e.message, variant: "destructive" });
     }
+  };
+
+  const editarCardapio = (index: number) => {
+    const msg = messages[index];
+    if (!msg?.cardapio) return;
+    const esporte = msg.cardapioTipo === "esporte";
+    try {
+      localStorage.setItem(
+        esporte ? CARDAPIO_ESPORTE_EDIT_KEY : CARDAPIO_EDIT_KEY,
+        JSON.stringify(msg.cardapio),
+      );
+    } catch { /* ignore */ }
+    goTo(esporte ? "/dashboard/modo-esporte" : "/dashboard/cardapio");
+  };
+
+  const salvarReceita = (index: number) => {
+    const msg = messages[index];
+    if (!msg?.receita) return;
+    try {
+      const raw = localStorage.getItem(RECEITAS_STORAGE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      const arr = Array.isArray(list) ? list : [];
+      localStorage.setItem(RECEITAS_STORAGE_KEY, JSON.stringify([msg.receita, ...arr].slice(0, 50)));
+      setMessages((prev) => [
+        ...prev.map((m, i) => (i === index ? { ...m, savedReceita: true } : m)),
+        { role: "assistant" as const, content: "✅ Receita salva! Acesse em Receitas → Salvas." },
+      ]);
+    } catch (e: any) {
+      toast({ title: "Erro ao salvar receita", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const favoritarReceita = async (index: number) => {
+    const msg = messages[index];
+    if (!msg?.receita || favBusy) return;
+    setFavBusy(true);
+    const ok = await addFavorite(msg.receita, "receitas");
+    setFavBusy(false);
+    if (ok) setMessages((prev) => prev.map((m, i) => (i === index ? { ...m, favorited: true } : m)));
+  };
+
+  const verAnalise = (index: number) => {
+    const msg = messages[index];
+    if (!msg?.analise) return;
+    try {
+      localStorage.setItem(ANALISE_HANDOFF_KEY, JSON.stringify(msg.analise));
+    } catch { /* ignore */ }
+    goTo("/dashboard/analisador-prato");
   };
 
   const salvarConversa = () => {
