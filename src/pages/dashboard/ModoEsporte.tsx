@@ -233,6 +233,18 @@ export default function ModoEsporte() {
 
   useEffect(() => { fetchSaved(); }, []);
 
+  // Cardápio esportivo enviado do Assistente Premium para edição antes de salvar
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("assistant_cardapio_esporte_edit_v1");
+      if (!raw) return;
+      localStorage.removeItem("assistant_cardapio_esporte_edit_v1");
+      setCardapio(JSON.parse(raw) as CardapioEsporteData);
+      setMainTab("criar");
+      toast({ title: "Cardápio importado do Assistente", description: "Ajuste o que quiser e salve." });
+    } catch { /* ignore */ }
+  }, []);
+
   const toggleArray = (arr: string[], val: string) => {
     if (val === "nenhuma") return ["nenhuma"];
     const without = arr.filter(v => v !== "nenhuma");
