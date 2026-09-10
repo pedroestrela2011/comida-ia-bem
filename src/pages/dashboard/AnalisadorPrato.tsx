@@ -66,6 +66,24 @@ export default function AnalisadorPrato() {
   const { registerAction } = useDailyScore();
   const { awardXP } = useGamification();
 
+  // Prato enviado pelo Assistente Premium
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("assistant_analise_handoff_v1");
+      if (!raw) return;
+      localStorage.removeItem("assistant_analise_handoff_v1");
+      const parsed = JSON.parse(raw);
+      const lista = String(parsed?.alimentos || "").trim();
+      if (lista) {
+        setAlimentos(lista);
+        toast({
+          title: "Prato importado do Assistente Premium",
+          description: 'Revise os alimentos e toque em "Analisar prato".',
+        });
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
