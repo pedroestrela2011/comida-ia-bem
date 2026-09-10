@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChefHat, Loader2, Sparkles, Clock, Users, BookOpen, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
