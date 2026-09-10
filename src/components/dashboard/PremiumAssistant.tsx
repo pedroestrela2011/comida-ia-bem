@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const WEEKLY_LIMIT = 30;
 const GREEN = "#2d6a4f";
@@ -38,6 +39,8 @@ type SavedConversa = { id: number; created_at: string; titulo: string; messages:
 
 const RECEITAS_STORAGE_KEY = "saved_recipes_v1";
 export const ANALISE_HANDOFF_KEY = "assistant_analise_handoff_v1";
+export const CARDAPIO_EDIT_KEY = "assistant_cardapio_edit_v1";
+export const CARDAPIO_ESPORTE_EDIT_KEY = "assistant_cardapio_esporte_edit_v1";
 
 // Session-only history: lives while the page is loaded, wiped on reload/logout.
 const session: { messages: Msg[]; welcomed: boolean } = { messages: [], welcomed: false };
@@ -552,24 +555,83 @@ export function PremiumAssistant() {
     reader.readAsDataURL(file);
   };
 
+  const goTo = (path: string) => {
+    setOpen(false);
+    setShowReturn(true);
+    navigate(path);
+  };
+
   const salvarCardapio = async (index: number) => {
     const msg = messages[index];
     if (!msg?.cardapio) return;
+    const esporte = msg.cardapioTipo === "esporte";
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const { error } = await supabase
         .from("cardapios_salvos")
-        .insert({ user_id: user.id, dados: msg.cardapio, tipo: "normal" });
+        .insert({ user_id: user.id, dados: msg.cardapio, tipo: esporte ? "esporte" : "normal" });
       if (error) throw error;
-      setMessages((prev) => prev.map((m, i) => (i === index ? { ...m, saved: true } : m)));
       setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "✅ Cardápio salvo com sucesso! Você pode acessá-lo em Meu Cardápio → Salvos." },
+        ...prev.map((m, i) => (i === index ? { ...m, saved: true } : m)),
+        {
+          role: "assistant" as const,
+          content: esporte
+            ? "✅ Cardápio esportivo salvo! Acesse em Modo Esporte → Salvos."
+            : "✅ Cardápio salvo com sucesso! Você pode acessá-lo em Meu Cardápio → Salvos.",
+        },
       ]);
     } catch (e: any) {
       toast({ title: "Erro ao salvar cardápio", description: e.message, variant: "destructive" });
     }
+  };
+
+  const editarCardapio = (index: number) => {
+    const msg = messages[index];
+    if (!msg?.cardapio) return;
+    const esporte = msg.cardapioTipo === "esporte";
+    try {
+      localStorage.setItem(
+        esporte ? CARDAPIO_ESPORTE_EDIT_KEY : CARDAPIO_EDIT_KEY,
+        JSON.stringify(msg.cardapio),
+      );
+    } catch { /* ignore */ }
+    goTo(esporte ? "/dashboard/modo-esporte" : "/dashboard/cardapio");
+  };
+
+  const salvarReceita = (index: number) => {
+    const msg = messages[index];
+    if (!msg?.receita) return;
+    try {
+      const raw = localStorage.getItem(RECEITAS_STORAGE_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      const arr = Array.isArray(list) ? list : [];
+      localStorage.setItem(RECEITAS_STORAGE_KEY, JSON.stringify([msg.receita, ...arr].slice(0, 50)));
+      setMessages((prev) => [
+        ...prev.map((m, i) => (i === index ? { ...m, savedReceita: true } : m)),
+        { role: "assistant" as const, content: "✅ Receita salva! Acesse em Receitas → Salvas." },
+      ]);
+    } catch (e: any) {
+      toast({ title: "Erro ao salvar receita", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const favoritarReceita = async (index: number) => {
+    const msg = messages[index];
+    if (!msg?.receita || favBusy) return;
+    setFavBusy(true);
+    const ok = await addFavorite(msg.receita, "receitas");
+    setFavBusy(false);
+    if (ok) setMessages((prev) => prev.map((m, i) => (i === index ? { ...m, favorited: true } : m)));
+  };
+
+  const verAnalise = (index: number) => {
+    const msg = messages[index];
+    if (!msg?.analise) return;
+    try {
+      localStorage.setItem(ANALISE_HANDOFF_KEY, JSON.stringify(msg.analise));
+    } catch { /* ignore */ }
+    goTo("/dashboard/analisador-prato");
   };
 
   const salvarConversa = () => {
@@ -634,12 +696,58 @@ export function PremiumAssistant() {
               )}
               {m.content}
               {m.cardapio && !m.saved && !readonly && (
+                <div className="mt-2 space-y-1.5">
+                  <button
+                    onClick={() => salvarCardapio(i)}
+                    className="w-full px-3 py-2 text-xs font-semibold text-white"
+                    style={{ backgroundColor: GREEN, borderRadius: 8 }}
+                  >
+                    {m.cardapioTipo === "esporte" ? "Salvar em Modo Esporte →" : "Salvar em Meus Cardápios →"}
+                  </button>
+                  <button
+                    onClick={() => editarCardapio(i)}
+                    className="w-full px-3 py-2 text-xs font-semibold"
+                    style={{ backgroundColor: "#ffffff", border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 8 }}
+                  >
+                    Editar antes de salvar ✏️
+                  </button>
+                </div>
+              )}
+              {m.receita && !readonly && (
+                <div className="mt-2 space-y-1.5">
+                  {!m.savedReceita && (
+                    <button
+                      onClick={() => salvarReceita(i)}
+                      className="w-full px-3 py-2 text-xs font-semibold text-white"
+                      style={{ backgroundColor: GREEN, borderRadius: 8 }}
+                    >
+                      Salvar em Receitas →
+                    </button>
+                  )}
+                  <button
+                    onClick={() => favoritarReceita(i)}
+                    disabled={favBusy || m.favorited}
+                    className="w-full px-3 py-2 text-xs font-semibold disabled:opacity-60"
+                    style={{ backgroundColor: "#ffffff", border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 8 }}
+                  >
+                    {m.favorited ? "Nos favoritos ⭐" : "Adicionar aos favoritos ⭐"}
+                  </button>
+                  <button
+                    onClick={() => goTo("/dashboard/receitas")}
+                    className="w-full px-3 py-2 text-xs font-semibold"
+                    style={{ backgroundColor: GREEN_SOFT, border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 8 }}
+                  >
+                    Ver em Receitas →
+                  </button>
+                </div>
+              )}
+              {m.analise && !readonly && (
                 <button
-                  onClick={() => salvarCardapio(i)}
+                  onClick={() => verAnalise(i)}
                   className="mt-2 w-full px-3 py-2 text-xs font-semibold text-white"
                   style={{ backgroundColor: GREEN, borderRadius: 8 }}
                 >
-                  Salvar em Meus Cardápios →
+                  Ver análise completa no Analisador de Pratos →
                 </button>
               )}
             </div>
@@ -679,6 +787,16 @@ export function PremiumAssistant() {
           style={{ backgroundColor: GREEN }}
         >
           <Bot className="h-7 w-7" style={{ color: "#ffffff" }} />
+        </button>
+      )}
+
+      {!open && showReturn && (
+        <button
+          onClick={() => { setShowReturn(false); setOpen(true); setTab("chat"); }}
+          className="fixed bottom-[88px] right-5 z-50 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold shadow-lg"
+          style={{ backgroundColor: "#ffffff", border: `1px solid ${GREEN}`, color: GREEN_DARK, borderRadius: 10 }}
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao Assistente
         </button>
       )}
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChefHat, Loader2, Sparkles, Clock, Users, BookOpen, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -132,6 +132,15 @@ export default function Receitas() {
   const [activeTab, setActiveTab] = useState("criar");
   const [viewingSaved, setViewingSaved] = useState<Receita | null>(null);
   const [limitOpen, setLimitOpen] = useState(false);
+
+  // Receitas salvas (inclui as salvas pelo Assistente Premium)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("saved_recipes_v1");
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) setSaved(parsed as Receita[]);
+    } catch { /* ignore */ }
+  }, []);
 
   const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
   const { planLabel } = useUserPlan();
