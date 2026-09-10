@@ -133,6 +133,15 @@ export default function Receitas() {
   const [viewingSaved, setViewingSaved] = useState<Receita | null>(null);
   const [limitOpen, setLimitOpen] = useState(false);
 
+  // Receitas salvas (inclui as salvas pelo Assistente Premium)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("saved_recipes_v1");
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) setSaved(parsed as Receita[]);
+    } catch { /* ignore */ }
+  }, []);
+
   const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
   const { planLabel } = useUserPlan();
   const { awardXP } = useGamification();
