@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const WEEKLY_LIMIT = 30;
 const GREEN = "#2d6a4f";
