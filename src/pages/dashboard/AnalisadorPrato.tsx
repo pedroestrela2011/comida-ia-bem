@@ -66,7 +66,7 @@ export default function AnalisadorPrato() {
   const { registerAction } = useDailyScore();
   const { awardXP } = useGamification();
 
-  // Prato enviado pelo Assistente Premium
+  // Prato enviado pelo Assistente Premium: preenche e já roda a análise completa (com receita)
   useEffect(() => {
     try {
       const raw = localStorage.getItem("assistant_analise_handoff_v1");
@@ -78,10 +78,12 @@ export default function AnalisadorPrato() {
         setAlimentos(lista);
         toast({
           title: "Prato importado do Assistente Premium",
-          description: 'Revise os alimentos e toque em "Analisar prato".',
+          description: "Gerando a análise completa do prato...",
         });
+        void analisarPrato(lista);
       }
     } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,8 +145,9 @@ export default function AnalisadorPrato() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const analisarPrato = async () => {
-    if (!alimentos.trim()) {
+  const analisarPrato = async (listaOverride?: string) => {
+    const lista = (listaOverride ?? alimentos).trim();
+    if (!lista) {
       toast({ title: "Informe os alimentos do prato.", variant: "destructive" });
       return;
     }
@@ -160,7 +163,7 @@ export default function AnalisadorPrato() {
       }
 
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
-        body: { type: "analisador_prato", preferences: { alimentos: alimentos.trim() } },
+        body: { type: "analisador_prato", preferences: { alimentos: lista } },
       });
 
       if (error) throw error;
@@ -301,7 +304,7 @@ export default function AnalisadorPrato() {
             rows={5}
             className="resize-none"
           />
-          <Button onClick={analisarPrato} disabled={loading || photoLoading} className="w-full sm:w-auto">
+          <Button onClick={() => analisarPrato()} disabled={loading || photoLoading} className="w-full sm:w-auto">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
