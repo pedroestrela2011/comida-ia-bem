@@ -66,7 +66,7 @@ export default function AnalisadorPrato() {
   const { registerAction } = useDailyScore();
   const { awardXP } = useGamification();
 
-  // Prato enviado pelo Assistente Premium
+  // Prato enviado pelo Assistente Premium: preenche e já roda a análise completa (com receita)
   useEffect(() => {
     try {
       const raw = localStorage.getItem("assistant_analise_handoff_v1");
@@ -78,10 +78,12 @@ export default function AnalisadorPrato() {
         setAlimentos(lista);
         toast({
           title: "Prato importado do Assistente Premium",
-          description: 'Revise os alimentos e toque em "Analisar prato".',
+          description: "Gerando a análise completa do prato...",
         });
+        void analisarPrato(lista);
       }
     } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
