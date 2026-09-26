@@ -304,7 +304,7 @@ export default function AnalisadorPrato() {
             rows={5}
             className="resize-none"
           />
-          <Button onClick={analisarPrato} disabled={loading || photoLoading} className="w-full sm:w-auto">
+          <Button onClick={() => analisarPrato()} disabled={loading || photoLoading} className="w-full sm:w-auto">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
