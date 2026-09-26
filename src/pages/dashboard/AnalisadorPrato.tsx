@@ -145,8 +145,9 @@ export default function AnalisadorPrato() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const analisarPrato = async () => {
-    if (!alimentos.trim()) {
+  const analisarPrato = async (listaOverride?: string) => {
+    const lista = (listaOverride ?? alimentos).trim();
+    if (!lista) {
       toast({ title: "Informe os alimentos do prato.", variant: "destructive" });
       return;
     }
@@ -162,7 +163,7 @@ export default function AnalisadorPrato() {
       }
 
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
-        body: { type: "analisador_prato", preferences: { alimentos: alimentos.trim() } },
+        body: { type: "analisador_prato", preferences: { alimentos: lista } },
       });
 
       if (error) throw error;
