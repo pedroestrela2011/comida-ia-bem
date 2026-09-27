@@ -92,15 +92,31 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-foreground mb-4">Legal</h4>
             <ul className="space-y-2">
-              {links.legal.map((link) => (
+              {legalLinks.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-muted-foreground hover:text-primary transition-colors">
+                  <Link to={link.to} className="text-muted-foreground hover:text-primary transition-colors">
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* Aviso de saúde */}
+        <div className="rounded-xl border border-border bg-muted/50 p-4 md:p-5 mb-8">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            <strong className="text-foreground">Aviso importante:</strong> o ComaFacil tem finalidade
+            informativa e educativa e não substitui a consulta ou o acompanhamento de nutricionista,
+            médico ou outro profissional de saúde habilitado. Os conteúdos são gerados por
+            inteligência artificial e os valores nutricionais são estimativas. Pessoas com diabetes,
+            hipertensão, alergias, restrições alimentares, gestantes e lactantes devem consultar um
+            profissional antes de seguir qualquer sugestão.{" "}
+            <Link to="/aviso-medico" className="text-primary underline">
+              Leia o aviso completo
+            </Link>
+            .
+          </p>
         </div>
 
         {/* Bottom */}
