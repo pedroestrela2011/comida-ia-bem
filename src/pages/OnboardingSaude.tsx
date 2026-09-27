@@ -138,6 +138,22 @@ const OnboardingSaude = () => {
               }}
             />
           )}
+
+          <div className="mt-8 rounded-lg border border-border bg-muted/50 p-4">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Suas informações de saúde são dados sensíveis e serão usadas apenas para personalizar
+              seus cardápios e alertas. Você pode revogar essa autorização e excluir seus dados
+              quando quiser.{" "}
+              <Link to="/privacidade" className="text-primary underline">
+                Política de Privacidade
+              </Link>
+              . O ComaFacil não substitui nutricionista ou médico —{" "}
+              <Link to="/aviso-medico" className="text-primary underline">
+                leia o aviso de saúde
+              </Link>
+              .
+            </p>
+          </div>
         </div>
       </div>
     </div>
