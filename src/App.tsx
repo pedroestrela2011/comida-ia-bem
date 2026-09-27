@@ -61,6 +61,9 @@ const App = () => (
           <Route path="/verificar-email" element={<VerificarEmail />} />
           <Route path="/planos" element={<Planos />} />
           <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
+          <Route path="/termos" element={<Termos />} />
+          <Route path="/privacidade" element={<Privacidade />} />
+          <Route path="/aviso-medico" element={<AvisoMedico />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Navigate to="inicio" replace />} />
             <Route path="inicio" element={<Inicio />} />
