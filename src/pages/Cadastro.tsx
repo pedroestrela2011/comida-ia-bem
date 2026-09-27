@@ -313,8 +313,28 @@ const Cadastro = () => {
           </Button>
 
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Ao continuar, você concorda com nossos termos e política de privacidade.
+            Ao continuar, você concorda com os{" "}
+            <Link to="/termos" className="text-primary underline">
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link to="/privacidade" className="text-primary underline">
+              Política de Privacidade
+            </Link>
+            , e autoriza o uso das informações de saúde que você informar para personalizar suas
+            sugestões alimentares.
           </p>
+
+          <div className="mt-4 rounded-lg border border-border bg-muted/50 p-3">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              O ComaFacil não substitui nutricionista ou médico. As sugestões são geradas por
+              inteligência artificial e têm caráter informativo.{" "}
+              <Link to="/aviso-medico" className="text-primary underline">
+                Aviso de saúde
+              </Link>
+              .
+            </p>
+          </div>
         </div>
       </div>
     </div>
