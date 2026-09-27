@@ -11,6 +11,9 @@ import Login from "./pages/Login";
 import VerificarEmail from "./pages/VerificarEmail";
 import CheckoutSucesso from "./pages/CheckoutSucesso";
 import Planos from "./pages/Planos";
+import Termos from "./pages/Termos";
+import Privacidade from "./pages/Privacidade";
+import AvisoMedico from "./pages/AvisoMedico";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Cardapio from "./pages/dashboard/Cardapio";
@@ -58,6 +61,9 @@ const App = () => (
           <Route path="/verificar-email" element={<VerificarEmail />} />
           <Route path="/planos" element={<Planos />} />
           <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
+          <Route path="/termos" element={<Termos />} />
+          <Route path="/privacidade" element={<Privacidade />} />
+          <Route path="/aviso-medico" element={<AvisoMedico />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Navigate to="inicio" replace />} />
             <Route path="inicio" element={<Inicio />} />
