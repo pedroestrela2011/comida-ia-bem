@@ -15,11 +15,13 @@ const Footer = () => {
       { label: "Contato", href: "#" },
       { label: "FAQ", href: "#" },
     ],
-    legal: [
-      { label: "Termos de Uso", href: "#" },
-      { label: "Privacidade", href: "#" },
-    ],
   };
+
+  const legalLinks = [
+    { label: "Termos de Uso", to: "/termos" },
+    { label: "Política de Privacidade", to: "/privacidade" },
+    { label: "Aviso de Saúde", to: "/aviso-medico" },
+  ];
 
   const socials = [
     { icon: Instagram, href: "#", label: "Instagram" },
