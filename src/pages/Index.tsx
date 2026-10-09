@@ -9,6 +9,7 @@ import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
 import SectionTransition from "@/components/landing/SectionTransition";
+import HealthDisclaimerModal from "@/components/landing/HealthDisclaimerModal";
 
 const Index = () => {
   return (
@@ -27,6 +28,7 @@ const Index = () => {
         </SectionTransition>
       </main>
       <Footer />
+      <HealthDisclaimerModal />
     </div>
   );
 };
