@@ -49,7 +49,7 @@ const VisualDemo = () => {
               className="group bg-card rounded-2xl overflow-hidden border border-border shadow-md hover:shadow-xl transition-all animate-fade-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className={`relative aspect-video bg-gradient-to-br ${demo.accent} flex items-center justify-center overflow-hidden`}>
+              <div className={`relative ${"animated" in demo && demo.animated ? "min-h-[280px] py-5" : "aspect-video"} bg-gradient-to-br ${demo.accent} flex items-center justify-center overflow-hidden`}>
                 <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_1px_1px,hsl(var(--foreground))_1px,transparent_0)] [background-size:20px_20px]" />
                 {"animated" in demo && demo.animated ? (
                   <div className="relative w-full flex items-center justify-center px-4">
