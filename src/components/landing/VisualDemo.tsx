@@ -1,4 +1,5 @@
 import { Calendar, Camera, UtensilsCrossed, TrendingUp } from "lucide-react";
+import MealPlannerDemoAnimation from "./demos/MealPlannerDemoAnimation";
 
 const demos = [
   {
@@ -6,6 +7,7 @@ const demos = [
     title: "Criação de Cardápio",
     description: "Cardápio semanal gerado em segundos com base nos seus objetivos.",
     accent: "from-primary/20 to-primary/5",
+    animated: true,
   },
   {
     icon: Camera,
@@ -47,11 +49,17 @@ const VisualDemo = () => {
               className="group bg-card rounded-2xl overflow-hidden border border-border shadow-md hover:shadow-xl transition-all animate-fade-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className={`relative aspect-video bg-gradient-to-br ${demo.accent} flex items-center justify-center overflow-hidden`}>
+              <div className={`relative ${"animated" in demo && demo.animated ? "min-h-[280px] py-5" : "aspect-video"} bg-gradient-to-br ${demo.accent} flex items-center justify-center overflow-hidden`}>
                 <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_1px_1px,hsl(var(--foreground))_1px,transparent_0)] [background-size:20px_20px]" />
-                <div className="relative w-20 h-20 rounded-2xl bg-card/90 backdrop-blur shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <demo.icon className="w-10 h-10 text-primary" />
-                </div>
+                {"animated" in demo && demo.animated ? (
+                  <div className="relative w-full flex items-center justify-center px-4">
+                    <MealPlannerDemoAnimation />
+                  </div>
+                ) : (
+                  <div className="relative w-20 h-20 rounded-2xl bg-card/90 backdrop-blur shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <demo.icon className="w-10 h-10 text-primary" />
+                  </div>
+                )}
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-foreground mb-2">{demo.title}</h3>
