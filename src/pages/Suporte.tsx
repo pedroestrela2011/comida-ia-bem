@@ -46,7 +46,10 @@ const Suporte = () => {
     setSending(true);
     const { data: sessionData } = await supabase.auth.getSession();
     const { error } = await supabase.from("support_messages").insert({
-      ...parsed.data,
+      nome: parsed.data.nome,
+      email: parsed.data.email,
+      assunto: parsed.data.assunto,
+      mensagem: parsed.data.mensagem,
       user_id: sessionData.session?.user.id ?? null,
     });
     setSending(false);
