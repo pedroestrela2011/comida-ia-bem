@@ -1,68 +1,9 @@
+import { PLANS } from "@/data/plans";
 import { Button } from "@/components/ui/button";
-import { Check, X, Star, Crown, Zap } from "lucide-react";
+import { Check, X, Star, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const plans = [
-  {
-    name: "Essencial",
-    price: "23,90",
-    description: "Comece sua jornada com o básico",
-    icon: Zap,
-    features: [
-      { text: "3 downloads de PDF por mês", included: true },
-      { text: "Analisador de pratos\u00a0", included: true },
-      { text: "Até 3 cardápios por conta", included: true },
-      { text: "Lista de compras automática", included: true },
-      { text: "Criação de receitas com IA", included: true },
-      { text: "Chatbot com limite de uso", included: true },
-      { text: "Rastreador de progresso", included: false },
-      { text: "Score Diário e Conquistas", included: false },
-      { text: "Modo Esporte", included: false },
-      { text: "\u00a0Adaptador de dietas", included: false },
-    ],
-    highlighted: false,
-    badge: null,
-  },
-  {
-    name: "Equilíbrio",
-    price: "41,90",
-    description: "Melhor custo-benefício",
-    icon: Star,
-    features: [
-      { text: "10 downloads de PDF por mês", included: true },
-      { text: "Cardápios ilimitados", included: true },
-      { text: "Lista de compras completa", included: true },
-      { text: "Rastreador de progresso", included: true },
-      { text: "Analisador de pratos\u00a0", included: true },
-      { text: "\u00a0Adaptador de dietas", included: true },
-      { text: "Modo Esporte completo", included: true },
-      { text: "Chatbot com ate 15 perguntas diarias", included: true },
-      { text: "Feedback nutricional automático", included: true },
-      { text: "Score Diário e Conquistas", included: false },
-    ],
-    highlighted: true,
-    badge: "Mais Popular",
-  },
-  {
-    name: "Performance",
-    price: "83,90",
-    description: "Desbloqueie todo o potencial",
-    icon: Crown,
-    features: [
-      { text: "30 downloads de PDF por mês", included: true },
-      { text: "Tudo do Equilíbrio", included: true },
-      { text: "Score Diário, streak e níveis", included: true },
-      { text: "Sistema de Conquistas completo", included: true },
-      { text: "Sugestões nutricionais avançadas", included: true },
-      { text: "Ajuste automático de cardápio", included: true },
-      { text: "Chat Bot com ate 25 perguntas diarias.", included: true },
-      { text: "\u00a0Nutricionista IA pessoal", included: true },
-      { text: "Análise avançada de pratos", included: true },
-    ],
-    highlighted: false,
-    badge: "Premium",
-  },
-];
+const plans = PLANS;
 
 const Pricing = () => {
   return (

@@ -1,74 +1,18 @@
+import { PLANS } from "@/data/plans";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, ArrowLeft, Crown, Star, Zap } from "lucide-react";
+import { Check, ArrowLeft, Star } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PENDING_SIGNUP_KEY } from "./Cadastro";
 import { PLAN_CONFIG, PlanType } from "@/contexts/SubscriptionContext";
 
-type PlanCard = {
-  id: PlanType;
-  name: string;
-  price: string;
-  description: string;
-  icon: typeof Zap;
-  features: string[];
-  highlighted: boolean;
-  badge?: string;
-};
-
-const plans: PlanCard[] = [
-  {
-    id: "essencial",
-    name: "Essencial",
-    price: PLAN_CONFIG.essencial.price,
-    description: "Comece sua jornada com o básico",
-    icon: Zap,
-    features: [
-      "Cardápios semanais completos",
-      "Até 3 cardápios por conta",
-      "Lista de compras automática",
-      "Criação de receitas com IA",
-      "Chatbot com limite de uso",
-    ],
-    highlighted: false,
-  },
-  {
-    id: "equilibrio",
-    name: "Equilíbrio",
-    price: PLAN_CONFIG.equilibrio.price,
-    description: "Melhor custo-benefício",
-    icon: Star,
-    features: [
-      "Cardápios ilimitados",
-      "Marcar refeições como concluídas",
-      "Analisador de Prato completo",
-      "Rastreador de Progresso",
-      "Modo Esporte completo",
-      "Chatbot ilimitado",
-    ],
-    highlighted: true,
-    badge: "Mais escolhido",
-  },
-  {
-    id: "performance",
-    name: "Performance",
-    price: PLAN_CONFIG.performance.price,
-    description: "Desbloqueie todo o potencial",
-    icon: Crown,
-    features: [
-      "Tudo do Equilíbrio",
-      "Score Diário, streak e níveis",
-      "Sistema de Conquistas completo",
-      "Insights personalizados com IA",
-      "Prioridade no chatbot",
-      "Acesso antecipado a novidades",
-    ],
-    highlighted: false,
-  },
-];
+const plans = PLANS.map((plan) => ({
+  ...plan,
+  features: plan.features.filter((feature) => feature.included).map((feature) => feature.text),
+}));
 
 const EscolherPlano = () => {
   const navigate = useNavigate();
@@ -298,16 +242,17 @@ const EscolherPlano = () => {
 
         <div className="text-center mt-8 space-y-3">
           <p className="text-sm text-muted-foreground">
-            Após selecionar, você será direcionado ao pagamento e poderá acessar o dashboard imediatamente.
+            Ao selecionar um plano, você será direcionado ao pagamento. Sem pagar, o teste de 7 dias inclui apenas o Cardápio e 1 PDF.
           </p>
-          <button
+          <Button
+            variant="link"
             type="button"
             onClick={handleSkip}
             className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4 disabled:opacity-50"
             disabled={loading}
           >
-            Pular pagamento e criar conta gratuita
-          </button>
+            Continuar sem pagar — testar por 7 dias
+          </Button>
         </div>
       </div>
     </div>

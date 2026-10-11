@@ -28,27 +28,7 @@ const SubscriptionContext = createContext<SubscriptionState>({
 
 export const useSubscription = () => useContext(SubscriptionContext);
 
-// Stripe product/price mapping
-export const PLAN_CONFIG = {
-  essencial: {
-    product_id: "prod_UH384VjqiDfjkk",
-    price_id: "price_1TIV2IJlzscuia2SQCTSFa5u",
-    label: "Essencial",
-    price: "19,90",
-  },
-  equilibrio: {
-    product_id: "prod_UH38eWsa8YkfG9",
-    price_id: "price_1TIV2ZJlzscuia2SjJfXkJHU",
-    label: "Equilíbrio",
-    price: "27,90",
-  },
-  performance: {
-    product_id: "prod_UH39mhR0txjsdp",
-    price_id: "price_1TIV2sJlzscuia2SsODpd2HD",
-    label: "Performance",
-    price: "35,90",
-  },
-} as const;
+export { PLAN_CONFIG } from "@/data/plans";
 
 // Module-level cache so remounting the provider (e.g. navigating back to
 // the dashboard) doesn't re-trigger the full-screen "Carregando..." gate.
