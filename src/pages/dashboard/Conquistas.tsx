@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy, Flame, Star, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import { GamificationDisabledNotice } from "@/components/dashboard/GamificationDisabledNotice";
 
 const categoryLabels: Record<string, { label: string; icon: React.ElementType }> = {
   streak: { label: "Sequência", icon: Flame },
@@ -71,6 +72,8 @@ export default function Conquistas() {
       </motion.div>
 
       {/* Progress overview */}
+      <GamificationDisabledNotice />
+
       <motion.div variants={item}>
         <Card className="border-2 border-primary/20">
           <CardContent className="pt-6 pb-4 text-center space-y-3">
