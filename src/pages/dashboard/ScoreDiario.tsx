@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flame, Trophy, Zap, UtensilsCrossed, TrendingUp, Dumbbell, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { GamificationDisabledNotice } from "@/components/dashboard/GamificationDisabledNotice";
 
 const actionItems = [
   { key: "cardapio", label: "Cardápio do dia", max: 40, icon: UtensilsCrossed, color: "text-green-500" },
@@ -63,6 +64,8 @@ export default function ScoreDiario() {
       </motion.div>
 
       {/* Main Score Card */}
+      <GamificationDisabledNotice />
+
       <motion.div variants={scaleIn}>
         <Card className="border-2 border-primary/20 overflow-hidden">
           <CardContent className="pt-6 pb-4 text-center space-y-3">
