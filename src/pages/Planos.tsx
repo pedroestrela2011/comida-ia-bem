@@ -1,68 +1,12 @@
+import { PLANS } from "@/data/plans";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, X, ArrowLeft, Crown, Star, Zap } from "lucide-react";
+import { Check, X, ArrowLeft, Star } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
-const plans = [
-  {
-    id: "essencial",
-    name: "Essencial",
-    price: "23,90",
-    description: "Comece sua jornada com o básico",
-    icon: Zap,
-    features: [
-      { text: "Cardápios semanais completos", included: true },
-      { text: "Até 3 cardápios por conta", included: true },
-      { text: "Lista de compras automática", included: true },
-      { text: "Criação de receitas com IA", included: true },
-      { text: "Chatbot com limite de uso", included: true },
-      { text: "Marcar refeições como concluídas", included: false },
-      { text: "Score Diário e Conquistas", included: false },
-      { text: "Modo Esporte", included: false },
-      { text: "Analisador de Prato", included: false },
-    ],
-    highlighted: false,
-  },
-  {
-    id: "equilibrio",
-    name: "Equilíbrio",
-    price: "41,90",
-    description: "Melhor custo-benefício",
-    icon: Star,
-    features: [
-      { text: "Cardápios ilimitados", included: true },
-      { text: "Lista de compras completa", included: true },
-      { text: "Marcar refeições como concluídas", included: true },
-      { text: "Analisador de Prato completo", included: true },
-      { text: "Rastreador de Progresso", included: true },
-      { text: "Modo Esporte completo", included: true },
-      { text: "Chatbot ilimitado", included: true },
-      { text: "Feedback nutricional automático", included: true },
-      { text: "Score Diário e Conquistas", included: false },
-    ],
-    highlighted: true,
-  },
-  {
-    id: "performance",
-    name: "Performance",
-    price: "83,90",
-    description: "Desbloqueie todo o potencial",
-    icon: Crown,
-    features: [
-      { text: "Tudo do Equilíbrio", included: true },
-      { text: "Score Diário, streak e níveis", included: true },
-      { text: "Sistema de Conquistas completo", included: true },
-      { text: "Sugestões nutricionais avançadas", included: true },
-      { text: "Ajuste automático de cardápio", included: true },
-      { text: "Insights personalizados com IA", included: true },
-      { text: "Prioridade no chatbot", included: true },
-      { text: "Acesso antecipado a novidades", included: true },
-    ],
-    highlighted: false,
-  },
-];
+const plans = PLANS;
 
 const Planos = () => {
   const navigate = useNavigate();
@@ -100,7 +44,7 @@ const Planos = () => {
             Escolha seu plano
           </h1>
           <p className="text-muted-foreground text-lg">
-            Todos os planos incluem 7 dias grátis. Cancele quando quiser.
+            Teste grátis por 7 dias com acesso ao Cardápio e 1 PDF. Cancele a assinatura quando quiser.
           </p>
         </div>
 

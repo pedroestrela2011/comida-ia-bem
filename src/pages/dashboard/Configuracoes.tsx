@@ -1,3 +1,4 @@
+import { PLANS } from "@/data/plans";
 import { useState, useEffect, useRef } from "react";
 import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, X, Bell, Sparkles, HeartPulse } from "lucide-react";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
@@ -755,62 +756,7 @@ function DadosSaudeTab() {
   );
 }
 
-const plansData = [
-  {
-    id: "essencial",
-    name: "Essencial",
-    price: "19,90",
-    description: "Comece sua jornada com o básico",
-    icon: Zap,
-    features: [
-      { text: "Cardápios semanais completos", included: true },
-      { text: "Até 3 cardápios por conta", included: true },
-      { text: "Lista de compras automática", included: true },
-      { text: "Criação de receitas com IA", included: true },
-      { text: "Chatbot com limite de uso", included: true },
-      { text: "Marcar refeições como concluídas", included: false },
-      { text: "Score Diário e Conquistas", included: false },
-      { text: "Modo Esporte", included: false },
-      { text: "Analisador de Prato", included: false },
-    ],
-  },
-  {
-    id: "equilibrio",
-    name: "Equilíbrio",
-    price: "27,90",
-    description: "Melhor custo-benefício",
-    icon: Star,
-    popular: true,
-    features: [
-      { text: "Cardápios ilimitados", included: true },
-      { text: "Lista de compras completa", included: true },
-      { text: "Marcar refeições como concluídas", included: true },
-      { text: "Analisador de Prato completo", included: true },
-      { text: "Rastreador de Progresso", included: true },
-      { text: "Modo Esporte completo", included: true },
-      { text: "Chatbot ilimitado", included: true },
-      { text: "Feedback nutricional automático", included: true },
-      { text: "Score Diário e Conquistas", included: false },
-    ],
-  },
-  {
-    id: "performance",
-    name: "Performance",
-    price: "35,90",
-    description: "Desbloqueie todo o potencial",
-    icon: Crown,
-    features: [
-      { text: "Tudo do Equilíbrio", included: true },
-      { text: "Score Diário, streak e níveis", included: true },
-      { text: "Sistema de Conquistas completo", included: true },
-      { text: "Sugestões nutricionais avançadas", included: true },
-      { text: "Ajuste automático de cardápio", included: true },
-      { text: "Insights personalizados com IA", included: true },
-      { text: "Prioridade no chatbot", included: true },
-      { text: "Acesso antecipado a novidades", included: true },
-    ],
-  },
-];
+const plansData = PLANS;
 
 function PlanosTab() {
   const { plan: currentPlan, subscribed, subscriptionEnd, loading: subLoading, refreshSubscription } = useSubscription();

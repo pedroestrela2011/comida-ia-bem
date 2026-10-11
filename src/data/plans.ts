@@ -1,0 +1,91 @@
+import { Crown, Star, Zap } from "lucide-react";
+
+// Existing billing identifiers are preserved; this catalog controls display only.
+export const PLAN_CONFIG = {
+  essencial: {
+    product_id: "prod_UH384VjqiDfjkk",
+    price_id: "price_1TIV2IJlzscuia2SQCTSFa5u",
+    label: "Essencial",
+    price: "23,90",
+  },
+  equilibrio: {
+    product_id: "prod_UH38eWsa8YkfG9",
+    price_id: "price_1TIV2ZJlzscuia2SjJfXkJHU",
+    label: "Equilíbrio",
+    price: "41,90",
+  },
+  performance: {
+    product_id: "prod_UH39mhR0txjsdp",
+    price_id: "price_1TIV2sJlzscuia2SsODpd2HD",
+    label: "Performance",
+    price: "83,90",
+  },
+} as const;
+
+export const PLANS = [
+  {
+    id: "essencial",
+    name: PLAN_CONFIG.essencial.label,
+    price: PLAN_CONFIG.essencial.price,
+    description: "Comece sua jornada com o básico",
+    icon: Zap,
+    features: [
+      { text: "3 downloads de PDF por mês", included: true },
+      { text: "Até 3 cardápios por conta", included: true },
+      { text: "Lista de compras automática", included: true },
+      { text: "Criação de receitas com IA", included: true },
+      { text: "Analisador de pratos", included: true },
+      { text: "Chatbot: até 7 perguntas por dia", included: true },
+      { text: "Rastreador de progresso", included: false },
+      { text: "Adaptador de dietas", included: false },
+      { text: "Modo Esporte", included: false },
+      { text: "Score Diário e Conquistas", included: false },
+      { text: "Assistente Premium", included: false },
+    ],
+    highlighted: false,
+    popular: false,
+    badge: null,
+  },
+  {
+    id: "equilibrio",
+    name: PLAN_CONFIG.equilibrio.label,
+    price: PLAN_CONFIG.equilibrio.price,
+    description: "Melhor custo-benefício",
+    icon: Star,
+    features: [
+      { text: "10 downloads de PDF por mês", included: true },
+      { text: "Cardápios ilimitados", included: true },
+      { text: "Lista de compras automática", included: true },
+      { text: "Criação de receitas com IA", included: true },
+      { text: "Analisador de pratos", included: true },
+      { text: "Rastreador de progresso", included: true },
+      { text: "Adaptador de dietas", included: true },
+      { text: "Modo Esporte completo", included: true },
+      { text: "Chatbot: até 15 perguntas por dia", included: true },
+      { text: "Score Diário e Conquistas", included: false },
+      { text: "Assistente Premium", included: false },
+    ],
+    highlighted: true,
+    popular: true,
+    badge: "Mais Popular",
+  },
+  {
+    id: "performance",
+    name: PLAN_CONFIG.performance.label,
+    price: PLAN_CONFIG.performance.price,
+    description: "Desbloqueie todo o potencial",
+    icon: Crown,
+    features: [
+      { text: "Tudo do Equilíbrio", included: true },
+      { text: "30 downloads de PDF por mês", included: true },
+      { text: "Score Diário, sequência e níveis", included: true },
+      { text: "Sistema de Conquistas completo", included: true },
+      { text: "Chatbot: até 25 perguntas por dia", included: true },
+      { text: "Assistente Premium exclusivo", included: true },
+      { text: "Assistente Premium: 30 mensagens por semana", included: true },
+    ],
+    highlighted: false,
+    popular: false,
+    badge: "Premium",
+  },
+] as const;
