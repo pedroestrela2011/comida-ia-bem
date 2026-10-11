@@ -12,6 +12,7 @@ import VerificarEmail from "./pages/VerificarEmail";
 import CheckoutSucesso from "./pages/CheckoutSucesso";
 import Planos from "./pages/Planos";
 import Termos from "./pages/Termos";
+import Suporte from "./pages/Suporte";
 import Privacidade from "./pages/Privacidade";
 import AvisoMedico from "./pages/AvisoMedico";
 import NotFound from "./pages/NotFound";
@@ -62,6 +63,7 @@ const App = () => (
           <Route path="/planos" element={<Planos />} />
           <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
           <Route path="/termos" element={<Termos />} />
+          <Route path="/suporte" element={<Suporte />} />
           <Route path="/privacidade" element={<Privacidade />} />
           <Route path="/aviso-medico" element={<AvisoMedico />} />
           <Route path="/dashboard" element={<DashboardLayout />}>

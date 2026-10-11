@@ -11,8 +11,8 @@ const Footer = () => {
       { label: "Preços", href: "#precos" },
     ],
     suporte: [
-      { label: "Central de Ajuda", href: "#" },
-      { label: "Contato", href: "#" },
+      { label: "Central de Ajuda", href: "/suporte" },
+      { label: "Contato", href: "/suporte" },
       { label: "FAQ", href: "#" },
     ],
   };
