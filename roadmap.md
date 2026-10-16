@@ -1,2 +1,2 @@
-- [ ] Unificar os preços e benefícios exibidos na escolha de planos, cadastro, página inicial e configurações.
-- [ ] Verificar as páginas atualizadas sem alterar a cobrança no Stripe.
+- [x] Unificar os preços e benefícios exibidos na escolha de planos, cadastro, página inicial e configurações.
+- [x] Verificar os preços e benefícios na escolha do cadastro e página de planos, sem alterar a cobrança no Stripe.
