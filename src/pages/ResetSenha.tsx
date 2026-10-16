@@ -7,6 +7,7 @@ import { ArrowLeft, Eye, EyeOff, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PasswordStrength from "@/components/PasswordStrength";
+import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER } from "@/lib/password";
 
 const ResetSenha = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const ResetSenha = () => {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (form.senha.length < 6) e.senha = "A senha deve ter pelo menos 6 caracteres";
+    if (!checkPassword(form.senha).valid) e.senha = PASSWORD_HINT;
     if (form.confirmar !== form.senha) e.confirmar = "As senhas não coincidem";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -132,7 +133,7 @@ const ResetSenha = () => {
               <Input
                 id="senha"
                 type={showPassword ? "text" : "password"}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={PASSWORD_PLACEHOLDER}
                 value={form.senha}
                 onChange={(e) => setForm({ ...form, senha: e.target.value })}
                 className={errors.senha ? "border-destructive pr-10" : "pr-10"}

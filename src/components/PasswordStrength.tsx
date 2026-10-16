@@ -1,21 +1,15 @@
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PASSWORD_REQUIREMENTS } from "@/lib/password";
 
 interface PasswordStrengthProps {
   password: string;
 }
 
-const requirements = [
-  { label: "Pelo menos 8 caracteres", test: (p: string) => p.length >= 8 },
-  { label: "Pelo menos 1 número", test: (p: string) => /[0-9]/.test(p) },
-  { label: "Pelo menos 1 letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
-];
-
 const PasswordStrength = ({ password }: PasswordStrengthProps) => {
-  if (!password) return null;
-
-  const met = requirements.map((r) => r.test(password));
+  const met = PASSWORD_REQUIREMENTS.map((r) => r.test(password));
   const score = met.filter(Boolean).length;
+  const empty = password.length === 0;
 
   // 0-1 requisitos = Fraca, 2 = Média, 3 = Forte
   const level = score <= 1 ? 0 : score === 2 ? 1 : 2;
@@ -30,15 +24,24 @@ const PasswordStrength = ({ password }: PasswordStrengthProps) => {
       <div className="flex items-center gap-2">
         <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
           <div
-            className={cn("h-full rounded-full transition-all duration-300", config.bar, config.width)}
+            className={cn(
+              "h-full rounded-full transition-all duration-300",
+              empty ? "w-0 bg-muted-foreground/30" : cn(config.bar, config.width)
+            )}
           />
         </div>
-        <span className={cn("text-xs font-semibold min-w-[3.5rem] text-right", config.text)}>
-          {config.label}
+        <span
+          className={cn(
+            "text-xs font-semibold min-w-[4.5rem] text-right",
+            empty ? "text-muted-foreground" : config.text
+          )}
+        >
+          {empty ? "Requisitos" : config.label}
         </span>
       </div>
+      <p className="text-xs font-medium text-muted-foreground">A senha precisa ter:</p>
       <ul className="space-y-1">
-        {requirements.map((r, i) => (
+        {PASSWORD_REQUIREMENTS.map((r, i) => (
           <li
             key={r.label}
             className={cn(
