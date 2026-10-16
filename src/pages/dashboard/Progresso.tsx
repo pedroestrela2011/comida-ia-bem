@@ -54,6 +54,7 @@ const SONO_NUM: Record<string, number> = { ruim: 1, regular: 2, boa: 3, excelent
 
 export default function Progresso() {
   const [records, setRecords] = useState<ProgressRecord[]>([]);
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("registro");
