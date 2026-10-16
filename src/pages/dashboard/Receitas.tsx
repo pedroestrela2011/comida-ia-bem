@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { ChefHat, Loader2, Sparkles, Clock, Users, BookOpen, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, ArrowLeft, Download } from "lucide-react";
 import { CookingModeButton } from "@/components/dashboard/CookingMode";
+import { ServingsIngredients } from "@/components/dashboard/ServingsIngredients";
+import { parseServings } from "@/lib/scale-ingredient";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -92,16 +94,7 @@ function ReceitaDetail({ receita, onDownload }: { receita: Receita; onDownload: 
         </div>
       )}
 
-      <div>
-        <h3 className="font-semibold mb-2">Ingredientes</h3>
-        <ul className="space-y-1">
-          {receita.ingredientes?.map((ing, i) => (
-            <li key={i} className="text-sm flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />{ing}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ServingsIngredients ingredientes={receita.ingredientes ?? []} basePorcoes={parseServings(receita.porcoes)} />
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-2">

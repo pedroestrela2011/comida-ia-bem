@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { exportCardapioPDF, getCardapioPDFPreviewUrl } from "@/lib/cardapio-pdf";
 import { CookingModeButton } from "@/components/dashboard/CookingMode";
+import { ServingsIngredients } from "@/components/dashboard/ServingsIngredients";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -197,14 +198,7 @@ function RefeicaoDetail({ refeicao, label, onSwap, onDownload }: { refeicao: Ref
             </div>
           )}
 
-          <div>
-            <h4 className="text-sm font-semibold mb-1.5">Ingredientes</h4>
-            <ul className="space-y-1">
-              {refeicao.ingredientes?.map((ing, i) => (
-                <li key={i} className="text-xs flex items-center gap-2"><span className="h-1 w-1 rounded-full bg-primary shrink-0" />{ing}</li>
-              ))}
-            </ul>
-          </div>
+          <ServingsIngredients compact ingredientes={refeicao.ingredientes ?? []} basePorcoes={1} />
 
           {steps.length > 0 && (
             <div>
