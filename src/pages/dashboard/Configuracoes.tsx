@@ -417,7 +417,7 @@ export default function Configuracoes() {
                   type={showNovaSenha ? "text" : "password"}
                   value={novaSenha}
                   onChange={e => setNovaSenha(e.target.value)}
-                  placeholder="Mínimo 8 caracteres, número e maiúscula"
+                  placeholder={PASSWORD_PLACEHOLDER}
                   className="pr-10"
                 />
                 <button type="button" onClick={() => setShowNovaSenha(!showNovaSenha)}
