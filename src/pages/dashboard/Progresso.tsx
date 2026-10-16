@@ -11,7 +11,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2 } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2, User } from "lucide-react";
+
+interface ProfileInfo {
+  nome: string;
+  peso_kg: number | null;
+  altura_cm: number | null;
+  imc: number | null;
+  objetivo: string | null;
+}
+
+const OBJETIVO_LABELS: Record<string, string> = {
+  emagrecer: "Emagrecer",
+  ganhar_massa: "Ganhar massa muscular",
+  manter: "Manter peso",
+  saude: "Melhorar saúde",
+  performance: "Performance esportiva",
+};
 import { useDailyScore } from "@/hooks/useDailyScore";
 import { useGamification } from "@/hooks/useGamification";
 import { format } from "date-fns";
