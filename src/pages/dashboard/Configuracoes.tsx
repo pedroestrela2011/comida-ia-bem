@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useGamification } from "@/hooks/useGamification";
 import { WelcomeGamificationDialog } from "@/components/dashboard/WelcomeGamificationDialog";
 import PasswordStrength from "@/components/PasswordStrength";
+import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER } from "@/lib/password";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",
@@ -179,8 +180,8 @@ export default function Configuracoes() {
   };
 
   const changePassword = async () => {
-    if (novaSenha.length < 6) {
-      toast({ title: "Senha deve ter no mínimo 6 caracteres", variant: "destructive" });
+    if (!checkPassword(novaSenha).valid) {
+      toast({ title: PASSWORD_HINT, variant: "destructive" });
       return;
     }
     if (novaSenha !== confirmarSenha) {
