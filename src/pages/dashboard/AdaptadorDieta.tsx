@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
+import { useCheckedItems } from "@/hooks/useCheckedItems";
+import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 import {
   FileText, Image as ImageIcon, ClipboardPaste, Sparkles, Loader2, Save,
   ShoppingBasket, AlertTriangle, Wand2, ChefHat, Clock, Trash2, X, CheckCircle2,
   Pencil, Plus, CalendarPlus, ArrowLeft, CalendarDays, Upload, ScanText, Brain, Utensils,
+  CheckCheck, Eraser,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -93,6 +97,7 @@ export default function AdaptadorDieta() {
   const [converting, setConverting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<any[]>([]);
+  const [dietKey, setDietKey] = useState<string | null>(null);
   const [tab, setTab] = useState("nova");
   const navigate = useNavigate();
 
@@ -227,7 +232,7 @@ export default function AdaptadorDieta() {
       toast({ title: "Envie ou cole o plano alimentar antes de continuar.", variant: "destructive" });
       return;
     }
-    setLoading(true); setResult(null); setFatalError(null);
+    setLoading(true); setResult(null); setFatalError(null); setDietKey(null);
 
     // If text-only flow, mark upload/extract as done
     if (sourceType === "text") {
@@ -538,6 +543,7 @@ export default function AdaptadorDieta() {
           {result && !editing && (
             <AdaptedResultView
               result={result}
+              storageKey={dietKey ? `dieta-${dietKey}` : "dieta-atual"}
               onSalvar={salvar}
               saving={saving}
               scoreColor={scoreColor}
@@ -573,7 +579,7 @@ export default function AdaptadorDieta() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Button size="sm" variant="outline" onClick={() => { setResult(s.resultado); setTab("nova"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                <Button size="sm" variant="outline" onClick={() => { setResult(s.resultado); setDietKey(s.id); setTab("nova"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
                   Ver dieta adaptada
                 </Button>
               </CardContent>
@@ -585,12 +591,22 @@ export default function AdaptadorDieta() {
   );
 }
 
-function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onConverter, converting, onAdicionarAoCardapio, adding }: {
+function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onConverter, converting, onAdicionarAoCardapio, adding, storageKey }: {
   result: AdaptedResult; onSalvar: () => void; saving: boolean; scoreColor: (n?: number) => string;
   onEditar: () => void; onConverter: () => void; converting: boolean;
   onAdicionarAoCardapio: (semanas: number) => void; adding: boolean;
+  /** isola as marcações de compras desta dieta das demais */
+  storageKey: string;
 }) {
   const comp = result.compatibilidade;
+  const { checked, toggle, markAll, clear } = useCheckedItems(storageKey);
+  const semanal = result.lista_compras?.semanal || {};
+  const estoque = result.lista_compras?.mensal_estoque || [];
+  const comprasKeys = [
+    ...Object.entries(semanal).flatMap(([cat, itens]) => (itens || []).map((it) => `${cat}::${it}`)),
+    ...estoque.map((it) => `estoque::${it}`),
+  ];
+  const comprados = comprasKeys.filter((k) => checked[k]).length;
   const [addOpen, setAddOpen] = useState(false);
   const [semanas, setSemanas] = useState("1");
   return (
