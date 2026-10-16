@@ -16,6 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useGamification } from "@/hooks/useGamification";
 import { WelcomeGamificationDialog } from "@/components/dashboard/WelcomeGamificationDialog";
+import PasswordStrength from "@/components/PasswordStrength";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",
@@ -415,7 +416,7 @@ export default function Configuracoes() {
                   type={showNovaSenha ? "text" : "password"}
                   value={novaSenha}
                   onChange={e => setNovaSenha(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8 caracteres, número e maiúscula"
                   className="pr-10"
                 />
                 <button type="button" onClick={() => setShowNovaSenha(!showNovaSenha)}
@@ -423,6 +424,7 @@ export default function Configuracoes() {
                   {showNovaSenha ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              <PasswordStrength password={novaSenha} />
             </div>
 
             <div className="space-y-2">

@@ -132,7 +132,7 @@ const ResetSenha = () => {
               <Input
                 id="senha"
                 type={showPassword ? "text" : "password"}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres, número e maiúscula"
                 value={form.senha}
                 onChange={(e) => setForm({ ...form, senha: e.target.value })}
                 className={errors.senha ? "border-destructive pr-10" : "pr-10"}
