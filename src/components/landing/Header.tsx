@@ -1,25 +1,56 @@
 import { useState, useEffect } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+
+const navLinks = [
+  { id: "precos", label: "Preços" },
+  { id: "como-funciona", label: "Como Funciona" },
+  { id: "beneficios", label: "Benefícios" },
+];
+
+type ActiveInfo = { id: string; top: number };
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion();
 
+  // Destaca o link da seção que está sendo vista enquanto a pessoa rola a página.
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
+
+      const marker = window.innerHeight * 0.35;
+      let closest: ActiveInfo | null = null;
+      navLinks.forEach(({ id }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const top = el.getBoundingClientRect().top;
+        if (top <= marker && (!closest || top > closest.top)) closest = { id, top };
+      });
+      setActiveId(closest ? closest.id : null);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, []);
 
-  const navLinks = [
-    { href: "#precos", label: "Preços" },
-    { href: "#como-funciona", label: "Como Funciona" },
-    { href: "#beneficios", label: "Benefícios" },
-  ];
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    window.history.replaceState(null, "", `#${id}`);
+    setActiveId(id);
+  };
 
   return (
     <header
@@ -43,15 +74,33 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-foreground/80 hover:text-primary transition-colors font-medium"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const active = activeId === link.id;
+              return (
+                <a
+                  key={link.id}
+                  href={`#${link.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection(link.id);
+                  }}
+                  aria-current={active ? "true" : undefined}
+                  className={cn(
+                    "relative py-1 font-medium transition-colors",
+                    active ? "text-primary" : "text-foreground/80 hover:text-primary"
+                  )}
+                >
+                  {link.label}
+                  {active && (
+                    <motion.span
+                      layoutId="nav-underline"
+                      className="absolute left-0 right-0 -bottom-1 h-[3px] rounded-full bg-primary"
+                      transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                    />
+                  )}
+                </a>
+              );
+            })}
           </nav>
 
           {/* CTA Button */}
@@ -79,10 +128,18 @@ const Header = () => {
             <nav className="flex flex-col gap-4">
               {navLinks.map((link) => (
                 <a
-                  key={link.href}
-                  href={link.href}
-                  className="text-foreground/80 hover:text-primary transition-colors font-medium py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  key={link.id}
+                  href={`#${link.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMobileMenuOpen(false);
+                    scrollToSection(link.id);
+                  }}
+                  aria-current={activeId === link.id ? "true" : undefined}
+                  className={cn(
+                    "font-medium py-2 transition-colors",
+                    activeId === link.id ? "text-primary" : "text-foreground/80 hover:text-primary"
+                  )}
                 >
                   {link.label}
                 </a>
