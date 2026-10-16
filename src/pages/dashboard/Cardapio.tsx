@@ -3,6 +3,7 @@ import { CalendarDays, ShoppingCart, Loader2, Sparkles, Clock, Flame, Dumbbell, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { exportCardapioPDF, getCardapioPDFPreviewUrl } from "@/lib/cardapio-pdf";
+import { CookingModeButton } from "@/components/dashboard/CookingMode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -207,7 +208,10 @@ function RefeicaoDetail({ refeicao, label, onSwap, onDownload }: { refeicao: Ref
 
           {steps.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold mb-1.5">Modo de Preparo</h4>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <h4 className="text-sm font-semibold">Modo de Preparo</h4>
+                <CookingModeButton steps={steps} title={refeicao.nome} />
+              </div>
               <ol className="space-y-2">
                 {steps.map((step, i) => (
                   <li key={i} className="text-xs flex gap-2">
