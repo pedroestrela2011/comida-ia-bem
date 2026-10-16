@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ChefHat, Loader2, Sparkles, Clock, Users, BookOpen, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, ArrowLeft, Download } from "lucide-react";
 import { CookingModeButton } from "@/components/dashboard/CookingMode";
 import { ServingsIngredients } from "@/components/dashboard/ServingsIngredients";
-import { parseServings } from "@/lib/scale-ingredient";
+import { parseServings, scaleIngredient } from "@/lib/scale-ingredient";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,8 @@ const difficultyColor = (d?: string) => {
 };
 
 function ReceitaDetail({ receita, onDownload }: { receita: Receita; onDownload: (r: Receita) => void }) {
+  const basePorcoes = parseServings(receita.porcoes);
+  const [porcoes, setPorcoes] = useState(basePorcoes);
   return (
     <div className="relative rounded-xl border border-border bg-card p-6 space-y-5">
       <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -94,12 +96,12 @@ function ReceitaDetail({ receita, onDownload }: { receita: Receita; onDownload: 
         </div>
       )}
 
-      <ServingsIngredients ingredientes={receita.ingredientes ?? []} basePorcoes={parseServings(receita.porcoes)} />
+      <ServingsIngredients ingredientes={receita.ingredientes ?? []} basePorcoes={basePorcoes} porcoes={porcoes} onPorcoesChange={setPorcoes} />
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-2">
           <h3 className="font-semibold">Modo de Preparo</h3>
-          <CookingModeButton steps={receita.modo_preparo ?? []} title={receita.nome} />
+          <CookingModeButton steps={receita.modo_preparo ?? []} title={receita.nome} ingredientes={(receita.ingredientes ?? []).map((i) => scaleIngredient(i, porcoes / basePorcoes))} porcoesLabel={`${porcoes} ${porcoes === 1 ? "porção" : "porções"}`} />
         </div>
         <ol className="space-y-3">
           {receita.modo_preparo?.map((step, i) => (

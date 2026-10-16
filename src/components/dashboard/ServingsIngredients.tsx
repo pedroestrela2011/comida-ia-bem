@@ -8,10 +8,14 @@ interface Props {
   ingredientes: string[];
   basePorcoes: number;
   compact?: boolean;
+  porcoes?: number;
+  onPorcoesChange?: (n: number) => void;
 }
 
-export function ServingsIngredients({ ingredientes, basePorcoes, compact }: Props) {
-  const [porcoes, setPorcoes] = useState(basePorcoes);
+export function ServingsIngredients({ ingredientes, basePorcoes, compact, porcoes: controlled, onPorcoesChange }: Props) {
+  const [local, setLocal] = useState(basePorcoes);
+  const porcoes = controlled ?? local;
+  const setPorcoes = (fn: (p: number) => number) => { const n = fn(porcoes); setLocal(n); onPorcoesChange?.(n); };
   const factor = porcoes / basePorcoes;
   return (
     <div>
