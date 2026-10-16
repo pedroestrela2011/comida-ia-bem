@@ -81,14 +81,26 @@ export default function Progresso() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("progress_records")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true });
+    const [{ data, error }, { data: profileData }] = await Promise.all([
+      supabase
+        .from("progress_records")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("profiles")
+        .select("nome, peso_kg, altura_cm, imc, objetivo")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
 
     if (!error && data) {
       setRecords(data as ProgressRecord[]);
+    }
+    if (profileData) {
+      setProfile(profileData as ProfileInfo);
+      // Pré-preenche o peso com o dado da conta quando o campo está vazio
+      setPeso((prev) => prev || (profileData.peso_kg != null ? String(profileData.peso_kg) : ""));
     }
     setLoading(false);
   };
