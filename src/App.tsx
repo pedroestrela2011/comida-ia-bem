@@ -8,6 +8,8 @@ import Cadastro from "./pages/Cadastro";
 import OnboardingSaude from "./pages/OnboardingSaude";
 import EscolherPlano from "./pages/EscolherPlano";
 import Login from "./pages/Login";
+import RecuperarSenha from "./pages/RecuperarSenha";
+import ResetSenha from "./pages/ResetSenha";
 import VerificarEmail from "./pages/VerificarEmail";
 import CheckoutSucesso from "./pages/CheckoutSucesso";
 import Planos from "./pages/Planos";
@@ -59,6 +61,8 @@ const App = () => (
           <Route path="/onboarding-saude" element={<OnboardingSaude />} />
           <Route path="/escolher-plano" element={<EscolherPlano />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+          <Route path="/reset-password" element={<ResetSenha />} />
           <Route path="/verificar-email" element={<VerificarEmail />} />
           <Route path="/planos" element={<Planos />} />
           <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
