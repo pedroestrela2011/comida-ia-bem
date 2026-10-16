@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { exportCardapioPDF, getCardapioPDFPreviewUrl } from "@/lib/cardapio-pdf";
 import { CookingModeButton } from "@/components/dashboard/CookingMode";
 import { ServingsIngredients } from "@/components/dashboard/ServingsIngredients";
+import { scaleIngredient } from "@/lib/scale-ingredient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -107,6 +108,8 @@ const difficultyColor = (d?: string) => {
 };
 
 function RefeicaoDetail({ refeicao, label, onSwap, onDownload }: { refeicao: Refeicao; label: string; onSwap?: (preferencia: string) => void; onDownload?: (r: Refeicao) => void }) {
+  const basePorcoes = 1;
+  const [porcoes, setPorcoes] = useState(basePorcoes);
   const [expanded, setExpanded] = useState(false);
   const [showSwap, setShowSwap] = useState(false);
   const [swapText, setSwapText] = useState("");
@@ -198,13 +201,13 @@ function RefeicaoDetail({ refeicao, label, onSwap, onDownload }: { refeicao: Ref
             </div>
           )}
 
-          <ServingsIngredients compact ingredientes={refeicao.ingredientes ?? []} basePorcoes={1} />
+          <ServingsIngredients compact ingredientes={refeicao.ingredientes ?? []} basePorcoes={basePorcoes} porcoes={porcoes} onPorcoesChange={setPorcoes} />
 
           {steps.length > 0 && (
             <div>
               <div className="flex items-center justify-between gap-2 mb-1.5">
                 <h4 className="text-sm font-semibold">Modo de Preparo</h4>
-                <CookingModeButton steps={steps} title={refeicao.nome} />
+                <CookingModeButton steps={steps} title={refeicao.nome} ingredientes={(refeicao.ingredientes ?? []).map((i) => scaleIngredient(i, porcoes / basePorcoes))} porcoesLabel={`${porcoes} ${porcoes === 1 ? "porção" : "porções"}`} />
               </div>
               <ol className="space-y-2">
                 {steps.map((step, i) => (
