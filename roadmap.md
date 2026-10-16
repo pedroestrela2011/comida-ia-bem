@@ -1,2 +1,2 @@
 - [x] Unificar os preços e benefícios exibidos na escolha de planos, cadastro, página inicial e configurações.
-- [x] Verificar os preços e benefícios na escolha do cadastro e página de planos, sem alterar a cobrança no Stripe.
+- [x] Verificar os preços e benefícios na escolha do cadastro e página de planos, sem alterar a cobrança no Stripe.- [x] Deixar a lista de compras interativa: marcar itens já comprados, com progresso, "marcar todos" e "limpar", salvo por cardápio e por dieta adaptada.
