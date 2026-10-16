@@ -145,6 +145,7 @@ const ResetSenha = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            <PasswordStrength password={form.senha} />
             {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
           </div>
 
