@@ -447,7 +447,7 @@ export default function Cardapio() {
       {showList ? (
         <ShoppingListPanel
           cardapio={data.cardapio as any}
-          storageKey="cardapio"
+          storageKey={`cardapio-${viewingSaved?.id ?? "atual"}`}
           canDownload={canDownload}
           onLimitReached={() => setLimitOpen(true)}
           onRegisterDownload={async () => { await registerDownload("lista_compras"); awardXP("pdf"); }}

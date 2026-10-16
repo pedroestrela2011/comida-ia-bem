@@ -325,7 +325,7 @@ export default function ModoEsporte() {
       {showList ? (
         <ShoppingListPanel
           cardapio={data.cardapio as any}
-          storageKey="esporte"
+          storageKey={`esporte-${viewingSaved?.id ?? "atual"}`}
           destacarProteina
           canDownload={canDownload}
           onLimitReached={() => setLimitOpen(true)}

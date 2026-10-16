@@ -10,6 +10,7 @@ import {
 } from "@/lib/shopping-list";
 import { exportListaComprasPDF } from "@/lib/lista-compras-pdf";
 import { toast } from "@/hooks/use-toast";
+import { useCheckedItems } from "@/hooks/useCheckedItems";
 
 const CATEGORY_ICON: Record<ShoppingCategory, React.ComponentType<{ className?: string }>> = {
   proteinas: Beef,
@@ -45,18 +46,10 @@ export function ShoppingListPanel({
   const list = useMemo(() => buildShoppingList(cardapio), [cardapio]);
   const periodo = useMemo(() => periodoLabel(), []);
 
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const { checked, setChecked, toggle, markAll, clear } = useCheckedItems(storageKey);
   const [updated, setUpdated] = useState(false);
   const [newKeys, setNewKeys] = useState<string[]>([]);
   const prevKeysRef = useRef<string[] | null>(null);
-
-  // Restaura marcações salvas localmente
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(`lista-compras:${storageKey}`);
-      if (raw) setChecked(JSON.parse(raw));
-    } catch { /* ignore */ }
-  }, [storageKey]);
 
   // Atualização reativa: detecta itens novos/removidos e preserva marcações
   useEffect(() => {
@@ -84,20 +77,8 @@ export function ShoppingListPanel({
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [list]);
 
-  // Persiste marcações
-  useEffect(() => {
-    try {
-      localStorage.setItem(`lista-compras:${storageKey}`, JSON.stringify(checked));
-    } catch { /* ignore */ }
-  }, [checked, storageKey]);
-
-  const toggle = (key: string) => setChecked((c) => ({ ...c, [key]: !c[key] }));
-  const marcarTodos = () => {
-    const next: Record<string, boolean> = {};
-    list.items.forEach((i) => { next[i.key] = true; });
-    setChecked(next);
-  };
-  const limpar = () => setChecked({});
+  const marcarTodos = () => markAll(list.items.map((i) => i.key));
+  const limpar = () => clear();
 
   const baixarPdf = async () => {
     if (!canDownload) { onLimitReached?.(); return; }
@@ -121,7 +102,7 @@ export function ShoppingListPanel({
             <h2 className="text-lg font-semibold">Lista de Compras</h2>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {periodo} · {totalMarcados} de {list.items.length} itens marcados
+            {periodo} · {totalMarcados} de {list.items.length} itens comprados
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -136,6 +117,20 @@ export function ShoppingListPanel({
           </Button>
         </div>
       </div>
+
+      {list.items.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${Math.round((totalMarcados / list.items.length) * 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {totalMarcados} de {list.items.length} itens comprados
+          </p>
+        </div>
+      )}
 
       {updated && (
         <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-foreground animate-fade-in">
