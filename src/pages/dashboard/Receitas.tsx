@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChefHat, Loader2, Sparkles, Clock, Users, BookOpen, Flame, Dumbbell, Wheat, Droplets, Salad, BarChart3, Lightbulb, ArrowLeft, Download } from "lucide-react";
+import { CookingModeButton } from "@/components/dashboard/CookingMode";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -103,7 +104,10 @@ function ReceitaDetail({ receita, onDownload }: { receita: Receita; onDownload: 
       </div>
 
       <div>
-        <h3 className="font-semibold mb-2">Modo de Preparo</h3>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="font-semibold">Modo de Preparo</h3>
+          <CookingModeButton steps={receita.modo_preparo ?? []} title={receita.nome} />
+        </div>
         <ol className="space-y-3">
           {receita.modo_preparo?.map((step, i) => (
             <li key={i} className="text-sm flex gap-3">
