@@ -130,6 +130,18 @@ export default function Progresso() {
     if (error) {
       toast({ title: "Erro ao salvar registro.", variant: "destructive" });
     } else {
+      // Sincroniza o peso/IMC mais recente com o perfil da conta
+      const pesoNum = parseFloat(peso);
+      if (!isNaN(pesoNum)) {
+        const altura = profile?.altura_cm;
+        const imc = altura && altura > 0
+          ? Math.round((pesoNum / Math.pow(altura / 100, 2)) * 100) / 100
+          : profile?.imc ?? null;
+        await supabase
+          .from("profiles")
+          .update({ peso_kg: pesoNum, imc })
+          .eq("user_id", user.id);
+      }
       toast({ title: "Registro salvo com sucesso! 🎉" });
       await registerAction("progresso", 20, { action: "registro_progresso" });
       awardXP("progresso");
