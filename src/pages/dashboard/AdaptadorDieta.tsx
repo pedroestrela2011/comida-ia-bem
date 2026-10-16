@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
+import { useCheckedItems } from "@/hooks/useCheckedItems";
+import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { FavoriteButton } from "@/components/dashboard/FavoriteButton";
 import {
   FileText, Image as ImageIcon, ClipboardPaste, Sparkles, Loader2, Save,
   ShoppingBasket, AlertTriangle, Wand2, ChefHat, Clock, Trash2, X, CheckCircle2,
   Pencil, Plus, CalendarPlus, ArrowLeft, CalendarDays, Upload, ScanText, Brain, Utensils,
+  CheckCheck, Eraser,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -93,6 +97,7 @@ export default function AdaptadorDieta() {
   const [converting, setConverting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<any[]>([]);
+  const [dietKey, setDietKey] = useState<string | null>(null);
   const [tab, setTab] = useState("nova");
   const navigate = useNavigate();
 
@@ -227,7 +232,7 @@ export default function AdaptadorDieta() {
       toast({ title: "Envie ou cole o plano alimentar antes de continuar.", variant: "destructive" });
       return;
     }
-    setLoading(true); setResult(null); setFatalError(null);
+    setLoading(true); setResult(null); setFatalError(null); setDietKey(null);
 
     // If text-only flow, mark upload/extract as done
     if (sourceType === "text") {
@@ -538,6 +543,7 @@ export default function AdaptadorDieta() {
           {result && !editing && (
             <AdaptedResultView
               result={result}
+              storageKey={dietKey ? `dieta-${dietKey}` : "dieta-atual"}
               onSalvar={salvar}
               saving={saving}
               scoreColor={scoreColor}
@@ -573,7 +579,7 @@ export default function AdaptadorDieta() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Button size="sm" variant="outline" onClick={() => { setResult(s.resultado); setTab("nova"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                <Button size="sm" variant="outline" onClick={() => { setResult(s.resultado); setDietKey(s.id); setTab("nova"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
                   Ver dieta adaptada
                 </Button>
               </CardContent>
@@ -585,12 +591,22 @@ export default function AdaptadorDieta() {
   );
 }
 
-function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onConverter, converting, onAdicionarAoCardapio, adding }: {
+function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onConverter, converting, onAdicionarAoCardapio, adding, storageKey }: {
   result: AdaptedResult; onSalvar: () => void; saving: boolean; scoreColor: (n?: number) => string;
   onEditar: () => void; onConverter: () => void; converting: boolean;
   onAdicionarAoCardapio: (semanas: number) => void; adding: boolean;
+  /** isola as marcações de compras desta dieta das demais */
+  storageKey: string;
 }) {
   const comp = result.compatibilidade;
+  const { checked, toggle, markAll, clear } = useCheckedItems(storageKey);
+  const semanal = result.lista_compras?.semanal || {};
+  const estoque = result.lista_compras?.mensal_estoque || [];
+  const comprasKeys = [
+    ...Object.entries(semanal).flatMap(([cat, itens]) => (itens || []).map((it) => `${cat}::${it}`)),
+    ...estoque.map((it) => `estoque::${it}`),
+  ];
+  const comprados = comprasKeys.filter((k) => checked[k]).length;
   const [addOpen, setAddOpen] = useState(false);
   const [semanas, setSemanas] = useState("1");
   return (
@@ -767,10 +783,27 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
       {/* Lista de compras */}
       {result.lista_compras && (
         <Card>
-          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><ShoppingBasket className="h-5 w-5 text-primary" /> Lista de compras</CardTitle>
-            <CardDescription>Organizada por categoria.</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2"><ShoppingBasket className="h-5 w-5 text-primary" /> Lista de compras</CardTitle>
+              <CardDescription>Marque o que você já comprou — {comprados} de {comprasKeys.length} itens.</CardDescription>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button size="sm" variant="outline" onClick={() => markAll(comprasKeys)}>
+                <CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Marcar todos
+              </Button>
+              <Button size="sm" variant="outline" onClick={clear}>
+                <Eraser className="mr-1.5 h-3.5 w-3.5" /> Limpar
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300"
+                style={{ width: `${comprasKeys.length ? Math.round((comprados / comprasKeys.length) * 100) : 0}%` }}
+              />
+            </div>
             {result.lista_compras.semanal && (
               <div>
                 <p className="font-medium text-sm mb-2">Semanal</p>
@@ -779,8 +812,20 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
                     itens && itens.length > 0 && (
                       <div key={cat} className="rounded-md border bg-muted/30 p-3">
                         <p className="text-xs font-semibold text-foreground mb-1">{CATEGORIA_LABELS[cat] || cat}</p>
-                        <ul className="text-xs text-muted-foreground space-y-0.5">
-                          {itens.map((it, i) => <li key={i} className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-primary/60" /> {it}</li>)}
+                        <ul className="text-xs space-y-1">
+                          {itens.map((it, i) => {
+                            const itemKey = `${cat}::${it}`;
+                            const isChecked = !!checked[itemKey];
+                            const id = `${storageKey}-${cat}-${i}`;
+                            return (
+                              <li key={i} className="flex items-start gap-2">
+                                <Checkbox id={id} checked={isChecked} onCheckedChange={() => toggle(itemKey)} className="mt-0.5" />
+                                <label htmlFor={id} className={cn("flex-1 cursor-pointer leading-snug", isChecked ? "line-through text-muted-foreground/60" : "text-foreground")}>
+                                  {it}
+                                </label>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     )
@@ -791,8 +836,20 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
             {result.lista_compras.mensal_estoque && result.lista_compras.mensal_estoque.length > 0 && (
               <div>
                 <p className="font-medium text-sm mb-2">Estoque mensal</p>
-                <div className="flex flex-wrap gap-1">
-                  {result.lista_compras.mensal_estoque.map((it, i) => <Badge key={i} variant="outline">{it}</Badge>)}
+                <div className="grid gap-1.5 sm:grid-cols-2 md:grid-cols-3">
+                  {result.lista_compras.mensal_estoque.map((it, i) => {
+                    const itemKey = `estoque::${it}`;
+                    const isChecked = !!checked[itemKey];
+                    const id = `${storageKey}-estoque-${i}`;
+                    return (
+                      <div key={i} className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
+                        <Checkbox id={id} checked={isChecked} onCheckedChange={() => toggle(itemKey)} />
+                        <label htmlFor={id} className={cn("text-xs cursor-pointer flex-1", isChecked ? "line-through text-muted-foreground/60" : "text-foreground")}>
+                          {it}
+                        </label>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
