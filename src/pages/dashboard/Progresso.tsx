@@ -11,7 +11,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2 } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2, User } from "lucide-react";
+
+interface ProfileInfo {
+  nome: string;
+  peso_kg: number | null;
+  altura_cm: number | null;
+  imc: number | null;
+  objetivo: string | null;
+}
+
+const OBJETIVO_LABELS: Record<string, string> = {
+  emagrecer: "Emagrecer",
+  ganhar_massa: "Ganhar massa muscular",
+  manter: "Manter peso",
+  saude: "Melhorar saúde",
+  performance: "Performance esportiva",
+};
 import { useDailyScore } from "@/hooks/useDailyScore";
 import { useGamification } from "@/hooks/useGamification";
 import { format } from "date-fns";
@@ -38,6 +54,7 @@ const SONO_NUM: Record<string, number> = { ruim: 1, regular: 2, boa: 3, excelent
 
 export default function Progresso() {
   const [records, setRecords] = useState<ProgressRecord[]>([]);
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("registro");
@@ -64,14 +81,26 @@ export default function Progresso() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("progress_records")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true });
+    const [{ data, error }, { data: profileData }] = await Promise.all([
+      supabase
+        .from("progress_records")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("profiles")
+        .select("nome, peso_kg, altura_cm, imc, objetivo")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
 
     if (!error && data) {
       setRecords(data as ProgressRecord[]);
+    }
+    if (profileData) {
+      setProfile(profileData as ProfileInfo);
+      // Pré-preenche o peso com o dado da conta quando o campo está vazio
+      setPeso((prev) => prev || (profileData.peso_kg != null ? String(profileData.peso_kg) : ""));
     }
     setLoading(false);
   };
@@ -101,6 +130,18 @@ export default function Progresso() {
     if (error) {
       toast({ title: "Erro ao salvar registro.", variant: "destructive" });
     } else {
+      // Sincroniza o peso/IMC mais recente com o perfil da conta
+      const pesoNum = parseFloat(peso);
+      if (!isNaN(pesoNum)) {
+        const altura = profile?.altura_cm;
+        const imc = altura && altura > 0
+          ? Math.round((pesoNum / Math.pow(altura / 100, 2)) * 100) / 100
+          : profile?.imc ?? null;
+        await supabase
+          .from("profiles")
+          .update({ peso_kg: pesoNum, imc })
+          .eq("user_id", user.id);
+      }
       toast({ title: "Registro salvo com sucesso! 🎉" });
       await registerAction("progresso", 20, { action: "registro_progresso" });
       awardXP("progresso");
@@ -182,6 +223,40 @@ export default function Progresso() {
         <h1 className="text-xl md:text-2xl font-bold text-foreground">Rastreador de Progresso</h1>
         <p className="text-sm text-muted-foreground">Acompanhe sua evolução física e de saúde ao longo do tempo.</p>
       </div>
+
+      {/* Dados da conta vinculados */}
+      {profile && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <User className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">
+                Dados da sua conta{profile.nome ? ` — ${profile.nome}` : ""}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground block text-xs">Peso atual</span>
+                <span className="font-medium">{profile.peso_kg != null ? `${profile.peso_kg} kg` : "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">Altura</span>
+                <span className="font-medium">{profile.altura_cm != null ? `${profile.altura_cm} cm` : "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">IMC</span>
+                <span className="font-medium">{profile.imc != null ? profile.imc : "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">Objetivo</span>
+                <span className="font-medium">
+                  {profile.objetivo ? (OBJETIVO_LABELS[profile.objetivo] || profile.objetivo) : "—"}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Motivational Feedback */}
       {feedback.length > 0 && (
