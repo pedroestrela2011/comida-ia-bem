@@ -224,6 +224,40 @@ export default function Progresso() {
         <p className="text-sm text-muted-foreground">Acompanhe sua evolução física e de saúde ao longo do tempo.</p>
       </div>
 
+      {/* Dados da conta vinculados */}
+      {profile && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <User className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">
+                Dados da sua conta{profile.nome ? ` — ${profile.nome}` : ""}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground block text-xs">Peso atual</span>
+                <span className="font-medium">{profile.peso_kg != null ? `${profile.peso_kg} kg` : "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">Altura</span>
+                <span className="font-medium">{profile.altura_cm != null ? `${profile.altura_cm} cm` : "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">IMC</span>
+                <span className="font-medium">{profile.imc != null ? profile.imc : "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs">Objetivo</span>
+                <span className="font-medium">
+                  {profile.objetivo ? (OBJETIVO_LABELS[profile.objetivo] || profile.objetivo) : "—"}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Motivational Feedback */}
       {feedback.length > 0 && (
         <Card className="border-primary/30 bg-primary/5">
