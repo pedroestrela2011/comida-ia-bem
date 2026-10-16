@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import PasswordStrength from "@/components/PasswordStrength";
 
 const ResetSenha = () => {
   const navigate = useNavigate();
@@ -144,6 +145,7 @@ const ResetSenha = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            <PasswordStrength password={form.senha} />
             {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
           </div>
 
