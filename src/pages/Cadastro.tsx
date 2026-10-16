@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import PasswordStrength from "@/components/PasswordStrength";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",

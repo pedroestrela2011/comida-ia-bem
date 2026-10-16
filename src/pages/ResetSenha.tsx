@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import PasswordStrength from "@/components/PasswordStrength";
 
 const ResetSenha = () => {
   const navigate = useNavigate();
