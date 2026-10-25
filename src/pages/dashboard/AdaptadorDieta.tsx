@@ -3,6 +3,10 @@ import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
 import { useCheckedItems } from "@/hooks/useCheckedItems";
 import { cn } from "@/lib/utils";
+import { scaleIngredient } from "@/lib/scale-ingredient";
+import { exportAdaptedShoppingPDF } from "@/lib/adapted-shopping-pdf";
+import { usePdfLimit } from "@/hooks/usePdfLimit";
+import { PdfLimitModal } from "@/components/dashboard/PdfLimitModal";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +23,7 @@ import {
   FileText, Image as ImageIcon, ClipboardPaste, Sparkles, Loader2, Save,
   ShoppingBasket, AlertTriangle, Wand2, ChefHat, Clock, Trash2, X, CheckCircle2,
   Pencil, Plus, CalendarPlus, ArrowLeft, CalendarDays, Upload, ScanText, Brain, Utensils,
-  CheckCheck, Eraser,
+  CheckCheck, Eraser, Download, Minus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -599,6 +603,23 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
   storageKey: string;
 }) {
   const comp = result.compatibilidade;
+  const pdfLimit = usePdfLimit();
+  const [pdfLimitOpen, setPdfLimitOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [shoppingPortions, setShoppingPortions] = useState(1);
+  useEffect(() => { setShoppingPortions(1); }, [storageKey]);
+  const downloadShoppingPDF = async () => {
+    if (pdfLimit.loading || exporting || !result.lista_compras) return;
+    if (!pdfLimit.canDownload) { setPdfLimitOpen(true); return; }
+    setExporting(true);
+    try {
+      exportAdaptedShoppingPDF(result.lista_compras, checked, shoppingPortions, CATEGORIA_LABELS);
+      await pdfLimit.registerDownload("lista_compras_dieta_adaptada");
+      toast({ title: "PDF da lista de compras gerado!" });
+    } catch {
+      toast({ title: "Não foi possível gerar o PDF", description: "Tente novamente.", variant: "destructive" });
+    } finally { setExporting(false); }
+  };
   const { checked, toggle, markAll, clear } = useCheckedItems(storageKey);
   const semanal = result.lista_compras?.semanal || {};
   const estoque = result.lista_compras?.mensal_estoque || [];
@@ -783,12 +804,15 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
       {/* Lista de compras */}
       {result.lista_compras && (
         <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-3 space-y-0">
             <div>
               <CardTitle className="text-lg flex items-center gap-2"><ShoppingBasket className="h-5 w-5 text-primary" /> Lista de compras</CardTitle>
               <CardDescription>Marque o que você já comprou — {comprados} de {comprasKeys.length} itens.</CardDescription>
             </div>
-            <div className="flex gap-2 shrink-0">
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" onClick={downloadShoppingPDF} disabled={pdfLimit.loading || exporting || comprasKeys.length === 0}>
+                <Download className="mr-1.5 h-3.5 w-3.5" /> PDF
+              </Button>
               <Button size="sm" variant="outline" onClick={() => markAll(comprasKeys)}>
                 <CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Marcar todos
               </Button>
@@ -798,6 +822,15 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-medium">Porções</span>
+              <div className="flex items-center gap-2">
+                <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Diminuir porções da lista" disabled={shoppingPortions <= 1} onClick={() => setShoppingPortions((n) => Math.max(1, n - 1))}><Minus className="h-4 w-4" /></Button>
+                <span className="min-w-20 text-center text-sm" aria-live="polite">{shoppingPortions} {shoppingPortions === 1 ? "porção" : "porções"}</span>
+                <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Aumentar porções da lista" onClick={() => setShoppingPortions((n) => n + 1)}><Plus className="h-4 w-4" /></Button>
+              </div>
+              <span className="text-xs text-muted-foreground">Base: 1 porção corresponde às quantidades da lista original.</span>
+            </div>
             <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-300"
@@ -821,7 +854,7 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
                               <li key={i} className="flex items-start gap-2">
                                 <Checkbox id={id} checked={isChecked} onCheckedChange={() => toggle(itemKey)} className="mt-0.5" />
                                 <label htmlFor={id} className={cn("flex-1 cursor-pointer leading-snug", isChecked ? "line-through text-muted-foreground/60" : "text-foreground")}>
-                                  {it}
+                                  {scaleIngredient(it, shoppingPortions)}
                                 </label>
                               </li>
                             );
@@ -845,7 +878,7 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
                       <div key={i} className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
                         <Checkbox id={id} checked={isChecked} onCheckedChange={() => toggle(itemKey)} />
                         <label htmlFor={id} className={cn("text-xs cursor-pointer flex-1", isChecked ? "line-through text-muted-foreground/60" : "text-foreground")}>
-                          {it}
+                          {scaleIngredient(it, shoppingPortions)}
                         </label>
                       </div>
                     );
@@ -857,6 +890,7 @@ function AdaptedResultView({ result, onSalvar, saving, scoreColor, onEditar, onC
         </Card>
       )}
 
+      <PdfLimitModal open={pdfLimitOpen} onOpenChange={setPdfLimitOpen} used={pdfLimit.used} limit={pdfLimit.limit} planLabel={pdfLimit.plan} />
       {/* Dificuldades identificadas */}
       {result.dificuldades_originais && result.dificuldades_originais.length > 0 && (
         <Card className="border-yellow-500/30">
