@@ -200,6 +200,80 @@ export type Database = {
         }
         Relationships: []
       }
+      food_tracking_days: {
+        Row: {
+          created_at: string
+          day_date: string
+          finalized: boolean
+          finalized_at: string | null
+          id: string
+          meals: Json
+          updated_at: string
+          user_id: string
+          week_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_date: string
+          finalized?: boolean
+          finalized_at?: string | null
+          id?: string
+          meals?: Json
+          updated_at?: string
+          user_id: string
+          week_id: string
+        }
+        Update: {
+          created_at?: string
+          day_date?: string
+          finalized?: boolean
+          finalized_at?: string | null
+          id?: string
+          meals?: Json
+          updated_at?: string
+          user_id?: string
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_tracking_days_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "food_tracking_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_tracking_weeks: {
+        Row: {
+          cardapio_id: string | null
+          cardapio_snapshot: Json
+          created_at: string
+          id: string
+          timezone: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          cardapio_id?: string | null
+          cardapio_snapshot: Json
+          created_at?: string
+          id?: string
+          timezone?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          cardapio_id?: string | null
+          cardapio_snapshot?: Json
+          created_at?: string
+          id?: string
+          timezone?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       pdf_downloads: {
         Row: {
           created_at: string
