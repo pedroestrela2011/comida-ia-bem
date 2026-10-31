@@ -1,3 +1,26 @@
+## Acompanhamento Alimentar — plano atual
+
+- Adicionar uma aba independente no Meu Progresso, preservando registros corporais, gráficos e histórico.
+- Escolher um cardápio salvo por semana (segunda a domingo), guardar uma cópia e bloquear trocas até a próxima semana.
+- Registrar refeições cumpridas ou substituídas por descrição/foto confirmada; finalizar o dia bloqueia novas alterações. Dias passados ficam disponíveis para consulta.
+- Mostrar progresso diário, visão dos sete dias e resumo calculado sem IA: 60% refeições do cardápio cumpridas + 40% dias registrados, sem bônus ou penalidade pelo objetivo. O objetivo personaliza somente a mensagem.
+- Incorporar refeições concluídas e comparação semanal ao Início; integrar quatro conquistas ao sistema opcional e lembrete dentro do painel a partir das 21h.
+- Resumo disponível após o fim da semana ou a finalização de domingo; calculado a partir dos registros persistidos, sem depender de o navegador estar aberto à meia-noite.
+
+### Detalhes técnicos
+
+- Tabelas privadas por usuário, com seleção semanal e registros finalizados protegidos no servidor.
+- Uma fonte de dados compartilhada para acompanhamento, resumo e conquistas, com datas no fuso escolhido na vinculação.
+- Testes de limites, cálculo 60/40, substituições, travas e conquistas; verificação autenticada de ponta a ponta.
+
+### Impedimento atual
+
+O Lovable Cloud não está acessível: consulta de leitura retorna indisponibilidade e a migração retorna tenant/user não encontrado. Nenhuma tabela foi criada; a migração foi revertida automaticamente. A implementação depende da restauração dessa conexão para não oferecer registros que possam se perder.
+
+---
+
+## Plano anterior (referência)
+
 ## Objetivo
 
 Inserir um fluxo de onboarding de saúde em 3 etapas entre o cadastro (`/cadastro`) e o painel de planos (`/escolher-plano`), sem tocar em nenhum dos dois. Persistir os dados no perfil e usá-los automaticamente nas funções existentes.

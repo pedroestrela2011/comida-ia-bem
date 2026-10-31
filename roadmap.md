@@ -1,2 +1,5 @@
+- [ ] Adicionar Acompanhamento Alimentar ao Meu Progresso com cardápio semanal, refeições e substituições por texto/foto. Bloqueado: Lovable Cloud ainda inicializando, sem acesso ao armazenamento.
+- [ ] Integrar visão/resumo semanal, Início, conquistas opcionais e lembrete das 21h. Depende dos registros persistidos no Lovable Cloud.
+- [ ] Verificar cálculos, bloqueios e fluxo autenticado do acompanhamento. Depende da conexão do Lovable Cloud restabelecida.
 - [x] Unificar os preços e benefícios exibidos na escolha de planos, cadastro, página inicial e configurações.
 - [x] Verificar os preços e benefícios na escolha do cadastro e página de planos, sem alterar a cobrança no Stripe.- [x] Deixar a lista de compras interativa: marcar itens já comprados, com progresso, "marcar todos" e "limpar", salvo por cardápio e por dieta adaptada.
