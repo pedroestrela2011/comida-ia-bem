@@ -28,6 +28,10 @@ export type AchievementContext = {
   earlyMorningCardapio: boolean;
   everLostStreak: boolean;
   reachedMaxLevel: boolean;
+  acompDiasFinalizados?: number;
+  acompSubstituicoes?: number;
+  acompSemanas?: number;
+  acompSemanasCompletas?: number;
 };
 
 export type AchievementDef = {
@@ -49,6 +53,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { key: "perfect_week", title: "Semana Blindada", description: "7 dias com todas refeições marcadas", icon: "🛡️", category: "alimentacao", rarity: "rara", condition: (c) => c.perfectDaysStreak >= 7 },
   { key: "perfect_30", title: "Arquiteto do Prato", description: "30 dias completos", icon: "🏛️", category: "alimentacao", rarity: "epica", condition: (c) => c.perfectDays >= 30 },
   { key: "perfect_90", title: "Lenda da Mesa", description: "3 meses completos", icon: "👑", category: "alimentacao", rarity: "lendaria", condition: (c) => c.perfectDays >= 90 },
+
+  // Acompanhamento Alimentar
+  { key: "acomp_semana_1", title: "Compromisso Firmado", description: "Vincule um cardápio à semana", icon: "📅", category: "alimentacao", rarity: "comum", condition: (c) => (c.acompSemanas ?? 0) >= 1 },
+  { key: "acomp_dia_1", title: "Dia Fechado", description: "Finalize um dia do acompanhamento", icon: "🔒", category: "alimentacao", rarity: "comum", condition: (c) => (c.acompDiasFinalizados ?? 0) >= 1 },
+  { key: "acomp_sub_5", title: "Trocas Conscientes", description: "Registre 5 substituições", icon: "🔄", category: "alimentacao", rarity: "rara", condition: (c) => (c.acompSubstituicoes ?? 0) >= 5 },
+  { key: "acomp_semana_completa", title: "Semana Registrada", description: "Finalize os 7 dias de uma semana", icon: "🗓️", category: "alimentacao", rarity: "epica", condition: (c) => (c.acompSemanasCompletas ?? 0) >= 1 },
 
   // Receitas
   { key: "rec_1", title: "Fogão Ligado", description: "Primeira receita criada", icon: "🍳", category: "receitas", rarity: "comum", condition: (c) => c.receitas >= 1 },

@@ -14,8 +14,8 @@ describe("acompanhamento alimentar", () => {
 
   it("nota 60% cumpridas + 40% dias registrados", () => {
     const all = Object.fromEntries(Object.keys(day).map((k) => [k, { status: "cumprida" as const }]));
-    const days = Array.from({ length: 7 }, (_, i) => ({ day_date: `2026-10-${26 + i <= 31 ? 26 + i : 0}`, meals: all, finalized: true }));
-    days[6].day_date = "2026-11-01";
+    const dates = ["2026-10-26","2026-10-27","2026-10-28","2026-10-29","2026-10-30","2026-10-31","2026-11-01"];
+    const days = dates.map((d) => ({ day_date: d, meals: all, finalized: true }));
     expect(calcWeek(snap, W, days).nota).toBe(100);
     // só segunda, tudo cumprido: 60*5/35 + 40*1/7 = 8.57+5.71 = 14
     expect(calcWeek(snap, W, [days[0]]).nota).toBe(14);
