@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2, User } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2, User, Utensils } from "lucide-react";
+import FoodTracking from "@/components/dashboard/FoodTracking";
 
 interface ProfileInfo {
   nome: string;
@@ -275,7 +276,7 @@ export default function Progresso() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="registro" className="flex items-center gap-1.5">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">{isFirstRecord ? "Primeiro Registro" : "Novo Registro"}</span>
@@ -291,7 +292,16 @@ export default function Progresso() {
             <span className="hidden sm:inline">Histórico</span>
             <span className="sm:hidden">Histórico</span>
           </TabsTrigger>
+          <TabsTrigger value="alimentar" className="flex items-center gap-1.5">
+            <Utensils className="h-4 w-4" />
+            <span className="hidden sm:inline">Acompanhamento Alimentar</span>
+            <span className="sm:hidden">Alimentar</span>
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="alimentar" className="mt-4">
+          <FoodTracking objetivo={profile?.objetivo} />
+        </TabsContent>
 
         {/* REGISTRO TAB */}
         <TabsContent value="registro" className="space-y-4 mt-4">

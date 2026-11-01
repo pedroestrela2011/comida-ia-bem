@@ -109,6 +109,13 @@ export function useGamification() {
       .eq("user_id", userId) as any;
 
     const evts = (events || []) as any[];
+    const [{ data: ftWeeks }, { data: ftDays }] = await Promise.all([
+      supabase.from("food_tracking_weeks").select("id").eq("user_id", userId),
+      supabase.from("food_tracking_days").select("week_id, meals, finalized").eq("user_id", userId),
+    ]);
+    const fd = (ftDays || []) as any[];
+    const finalizedByWeek: Record<string, number> = {};
+    fd.forEach((d) => { if (d.finalized) finalizedByWeek[d.week_id] = (finalizedByWeek[d.week_id] || 0) + 1; });
     const count = (t: string) => evts.filter(e => e.action_type === t).length;
 
     const featuresUsed = new Set<string>();
@@ -139,6 +146,10 @@ export function useGamification() {
       earlyMorningCardapio,
       everLostStreak: !!(evts as any).find((e: any) => e.metadata?.streak_lost),
       reachedMaxLevel: currentXP.total_xp >= 10000,
+      acompSemanas: (ftWeeks || []).length,
+      acompDiasFinalizados: fd.filter((d) => d.finalized).length,
+      acompSubstituicoes: fd.reduce((n, d) => n + Object.values(d.meals || {}).filter((m: any) => m?.status === "substituida").length, 0),
+      acompSemanasCompletas: Object.values(finalizedByWeek).filter((n) => n >= 7).length,
     };
   }, []);
 

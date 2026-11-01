@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { CalendarDays, ChefHat, Camera, Dumbbell, MessageCircle } from "lucide-react";
 import { useWeeklySummary } from "@/hooks/useWeeklySummary";
 import { useWeeklyNarrative } from "@/hooks/useWeeklyNarrative";
+import { useFoodTracking } from "@/hooks/useFoodTracking";
+import { calcWeek, hourInTz, todayInTz } from "@/lib/food-tracking";
 
 const shortcuts = [
   { title: "Meu Cardápio", icon: CalendarDays, url: "/dashboard/cardapio" },
@@ -38,6 +40,12 @@ export default function Inicio() {
   const navigate = useNavigate();
   const { current, previous, nome } = useWeeklySummary(8);
   const { texto, loading } = useWeeklyNarrative(current, previous);
+  const ft = useFoodTracking();
+  const ftToday = todayInTz(ft.tz);
+  const ftRec = ft.days.find((d) => d.day_date === ftToday);
+  const ftCur = ft.week ? calcWeek(ft.week.cardapio_snapshot, ft.week.week_start, ft.days) : null;
+  const ftPrev = ft.prevWeek ? calcWeek(ft.prevWeek.cardapio_snapshot, ft.prevWeek.week_start, ft.prevDays) : null;
+  const lembrete = !!ft.week && hourInTz(ft.tz) >= 21 && !ftRec?.finalized;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -65,6 +73,22 @@ export default function Inicio() {
           {loading ? "Preparando seu resumo..." : texto}
         </p>
       </section>
+
+      {lembrete && (
+        <button onClick={() => navigate("/dashboard/progresso")} className="w-full text-left rounded-2xl border border-primary/40 bg-primary/10 p-4 text-sm text-foreground">
+          Já são 21h: registre suas refeições de hoje e finalize o dia no Acompanhamento Alimentar.
+        </button>
+      )}
+
+      {ft.week && ftCur && (
+        <section className="rounded-2xl border border-border bg-muted/40 p-5">
+          <h2 className="font-semibold text-foreground">Acompanhamento Alimentar</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Hoje: {Object.values(ftRec?.meals || {}).filter((m: any) => m.status === "cumprida").length} refeições concluídas · Semana: {ftCur.cumpridas} de {ftCur.planejadas} cumpridas
+            {ftPrev ? ` · Semana passada: ${ftPrev.cumpridas} de ${ftPrev.planejadas}` : ""}
+          </p>
+        </section>
+      )}
     </div>
   );
 }
