@@ -65,7 +65,7 @@ serve(async (req) => {
 
     if (action === "grant" || action === "revoke") {
       const email = String(body.email ?? "").trim().toLowerCase();
-      if (!email || !email.includes("@")) return json({ error: "E-mail inválido" }, 400);
+      if (!email || !email.includes("@")) return json({ error: "E-mail inválido" }, 200);
 
       // Find user by email via admin listUsers (paginate up to a few pages)
       let targetUserId: string | null = null;
@@ -76,7 +76,7 @@ serve(async (req) => {
         if (match) targetUserId = match.id;
         if (data.users.length < 200) break;
       }
-      if (!targetUserId) return json({ error: "Usuário não encontrado com esse e-mail" }, 404);
+      if (!targetUserId) return json({ error: "Nenhuma conta encontrada com esse e-mail. A pessoa precisa se cadastrar primeiro." }, 200);
 
       if (action === "grant") {
         const { error } = await supabase
@@ -86,7 +86,7 @@ serve(async (req) => {
         return json({ ok: true });
       } else {
         if (targetUserId === caller.id) {
-          return json({ error: "Você não pode remover seu próprio acesso de admin" }, 400);
+          return json({ error: "Você não pode remover seu próprio acesso de admin" }, 200);
         }
         const { error } = await supabase
           .from("user_roles")
