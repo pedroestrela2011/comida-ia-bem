@@ -85,6 +85,27 @@ ${hasCritical ? '5. Inclua em "dicas" ou "descricao" um breve motivo educativo q
     let systemPrompt = "";
     let userPrompt = "";
 
+    // Limite mensal de criação de cardápios (criar + recriar), reset no dia 1 (America/Sao_Paulo)
+    const MENU_MONTHLY_LIMIT = 4;
+    let menuLimitApplies = false;
+    if (type === "cardapio") {
+      const { data: adminRow } = await serviceForHealth.from("user_roles").select("id").eq("user_id", userIdForHealth).eq("role", "admin").maybeSingle();
+      menuLimitApplies = !adminRow;
+      if (menuLimitApplies) {
+        const now = new Date();
+        const sp = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        const offsetMs = now.getTime() - sp.getTime();
+        const monthStart = new Date(Date.UTC(sp.getFullYear(), sp.getMonth(), 1) + offsetMs);
+        const { count } = await serviceForHealth.from("menu_creations").select("id", { count: "exact", head: true })
+          .eq("user_id", userIdForHealth).gte("created_at", monthStart.toISOString());
+        if ((count ?? 0) >= MENU_MONTHLY_LIMIT) {
+          return new Response(JSON.stringify({ error: "Você atingiu seu limite de 4 cardápios este mês.", code: "menu_limit" }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    }
+
     if (type === "cardapio") {
       systemPrompt = `Você é um nutricionista brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, PLENAMENTE ADAPTADO ao contexto de saúde do usuário (condições clínicas, restrições, alergias e objetivo) — este contexto tem PRIORIDADE MÁXIMA sobre as preferências.
 Cada dia deve ter: cafe_da_manha, lanche_manha, almoco, lanche_tarde, jantar.
@@ -98,6 +119,7 @@ IMPORTANTE: objetivo, restrições alimentares, alergias e condições de saúde
 Orçamento: ${p.orcamento || "moderado"}
 Alimentos que gosta: ${p.preferencias || "nenhuma preferência especial"}
 Alimentos que NÃO gosta (EVITAR no cardápio): ${p.nao_gosta || "nenhum"}
+${Array.isArray(p.evitar_pratos) && p.evitar_pratos.length ? `RECRIAÇÃO: crie um cardápio DIFERENTE do anterior, com refeições e combinações variadas, mantendo objetivo e restrições. NÃO repita estes pratos: ${p.evitar_pratos.slice(0, 60).map((x: unknown) => String(x).slice(0, 80)).join("; ")}` : ""}
 Deficiências nutricionais a reforçar: ${p.deficiencias || "nenhuma"}`;
     } else if (type === "cardapio_esporte") {
       systemPrompt = `Você é um nutricionista esportivo brasileiro especializado. Gere um cardápio semanal completo (segunda a domingo) em JSON, personalizado para atletas e praticantes de atividade física, sempre respeitando restrições, alergias e condições clínicas do usuário (contexto de saúde tem PRIORIDADE MÁXIMA).
@@ -333,6 +355,15 @@ Use emojis ocasionalmente para ser mais amigável.`;
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
+
+    if (type === "cardapio") {
+      let ok = false;
+      try { const m = content.match(/\{[\s\S]*\}/); ok = !!(m && JSON.parse(m[0])?.cardapio); } catch { ok = false; }
+      if (!ok) {
+        return new Response(JSON.stringify({ error: "Resposta inválida da IA" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await serviceForHealth.from("menu_creations").insert({ user_id: userIdForHealth, kind: preferences?.recriar ? "recriar" : "criar" });
+    }
 
     return new Response(JSON.stringify({ content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

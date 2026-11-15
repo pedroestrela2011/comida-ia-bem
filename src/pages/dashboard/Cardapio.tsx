@@ -25,6 +25,10 @@ import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { HealthProfileSummary } from "@/components/dashboard/HealthProfileSummary";
 import { GenerationOverlay } from "@/components/dashboard/GenerationOverlay";
 import { ShoppingListPanel } from "@/components/dashboard/ShoppingListPanel";
+import { RecreateMenuButton } from "@/components/dashboard/RecreateMenuButton";
+import { useMenuCreations } from "@/hooks/useMenuCreations";
+import { mealNames } from "@/lib/menu-limit";
+import { toast as sonnerToast } from "sonner";
 
 
 
@@ -241,6 +245,8 @@ export default function Cardapio() {
   const [savedCardapios, setSavedCardapios] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string }[]>([]);
   const [viewingSaved, setViewingSaved] = useState<{ id: string; dados: CardapioData; created_at: string; tipo: string } | null>(null);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [currentSavedId, setCurrentSavedId] = useState<string | null>(null);
+  const menuCreations = useMenuCreations();
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   const [pdfMode, setPdfMode] = useState<"dia" | "semana">("semana");
   const [pdfSource, setPdfSource] = useState<CardapioData | null>(null);
@@ -248,7 +254,7 @@ export default function Cardapio() {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [limitOpen, setLimitOpen] = useState(false);
   const { used, limit, canDownload, isUnlimited, registerDownload } = usePdfLimit();
-  const { planLabel } = useUserPlan();
+  const { planLabel, isAdmin } = useUserPlan();
 
   const openPdfDialog = (data: CardapioData) => {
     if (!canDownload) { setLimitOpen(true); return; }
@@ -370,11 +376,16 @@ export default function Cardapio() {
       const content = data.content || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("Resposta inválida da IA");
-      setCardapio(JSON.parse(jsonMatch[0]) as CardapioData);
+      setCardapio({ ...(JSON.parse(jsonMatch[0]) as CardapioData), __prefs: preferences } as CardapioData);
+      setCurrentSavedId(null);
+      menuCreations.refresh();
       awardXP("cardapio");
       toast({ title: "Cardápio gerado com sucesso!" });
     } catch (e: any) {
-      toast({ title: "Erro ao gerar cardápio", description: e.message, variant: "destructive" });
+      menuCreations.refresh();
+      let msg = e.message;
+      try { const b = await e?.context?.json?.(); if (b?.error) msg = b.error; } catch { /* ignore */ }
+      toast({ title: "Erro ao gerar cardápio", description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -391,11 +402,41 @@ export default function Cardapio() {
         .select("id, dados, created_at, tipo")
         .single();
       if (error) throw error;
+      setCurrentSavedId(data.id);
       setSavedCardapios(prev => [{ id: data.id, dados: data.dados as unknown as CardapioData, created_at: data.created_at, tipo: data.tipo || "normal" }, ...prev]);
       await registerAction("cardapio", 40, { action: "salvar_cardapio" });
       toast({ title: "Cardápio salvo!" });
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const recriarCardapio = async (source: CardapioData, savedId: string | null, apply: (d: CardapioData) => void) => {
+    const prevPrefs = (source as any).__prefs;
+    if (!prevPrefs) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+        body: { type: "cardapio", preferences: { ...prevPrefs, recriar: true, evitar_pratos: mealNames(source.cardapio as any) } },
+      });
+      if (error) throw error;
+      const jsonMatch = (data.content || "").match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("invalid");
+      const novo = { ...(JSON.parse(jsonMatch[0]) as CardapioData), __prefs: prevPrefs } as CardapioData;
+      if (savedId) {
+        const { error: upErr } = await supabase.from("cardapios_salvos").update({ dados: novo as any }).eq("id", savedId);
+        if (upErr) throw upErr;
+        setSavedCardapios(prev => prev.map(c => c.id === savedId ? { ...c, dados: novo } : c));
+      }
+      apply(novo);
+      sonnerToast.success("Cardápio recriado com sucesso!", { duration: 4000 });
+    } catch (e: any) {
+      let msg = "Não foi possível recriar o cardápio. Tente novamente.";
+      try { const b = await e?.context?.json?.(); if (b?.code === "menu_limit") msg = b.error; } catch { /* ignore */ }
+      toast({ title: msg, variant: "destructive" });
+    } finally {
+      menuCreations.refresh();
+      setLoading(false);
     }
   };
 
@@ -582,6 +623,10 @@ export default function Cardapio() {
                     <BookOpen className="mr-2 h-4 w-4" /> Salvar
                   </Button>
                   <Button variant="outline" onClick={() => setCardapio(null)}>Novo Cardápio</Button>
+                  {(cardapio as any).__prefs && (
+                    <RecreateMenuButton remaining={menuCreations.remaining} limit={menuCreations.limit} unlimited={isAdmin} disabled={loading}
+                      onConfirm={() => recriarCardapio(cardapio, currentSavedId, setCardapio)} />
+                  )}
                 </div>
                 <Button
                   onClick={() => openPdfDialog(cardapio)}
@@ -603,9 +648,15 @@ export default function Cardapio() {
                 <ArrowLeft className="mr-1.5 h-4 w-4" /> Voltar
               </Button>
               <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap items-start">
                 <Button variant="outline" size="sm" onClick={() => setShowList(!showList)}>
                   <ShoppingCart className="mr-2 h-4 w-4" /> {showList ? "Ver Cardápio" : "Lista de Compras"}
                 </Button>
+                {(viewingSaved.dados as any).__prefs && (
+                  <RecreateMenuButton size="sm" remaining={menuCreations.remaining} limit={menuCreations.limit} unlimited={isAdmin} disabled={loading}
+                    onConfirm={() => { const v = viewingSaved; recriarCardapio(v.dados, v.id, (d) => setViewingSaved({ ...v, dados: d })); }} />
+                )}
+                </div>
                 <Button
                   size="sm"
                   onClick={() => openPdfDialog(viewingSaved.dados)}
