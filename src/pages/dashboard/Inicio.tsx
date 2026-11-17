@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, ChefHat, Camera, Dumbbell, MessageCircle } from "lucide-react";
+import { CalendarDays, ChefHat, Camera, Dumbbell, MessageCircle, Star, Trophy, Heart, Wand2, TrendingUp, Settings } from "lucide-react";
 import { useWeeklySummary } from "@/hooks/useWeeklySummary";
 import { useWeeklyNarrative } from "@/hooks/useWeeklyNarrative";
 import { useFoodTracking } from "@/hooks/useFoodTracking";
@@ -11,6 +11,12 @@ const shortcuts = [
   { title: "Analisar Prato", icon: Camera, url: "/dashboard/analisador-prato" },
   { title: "Modo Esporte", icon: Dumbbell, url: "/dashboard/modo-esporte" },
   { title: "Conversa Saudável", icon: MessageCircle, url: "/dashboard/chat" },
+  { title: "Score Diário", icon: Star, url: "/dashboard/score" },
+  { title: "Conquistas", icon: Trophy, url: "/dashboard/conquistas" },
+  { title: "Favoritos", icon: Heart, url: "/dashboard/favoritos" },
+  { title: "Adaptador de Dietas", icon: Wand2, url: "/dashboard/adaptador-dieta" },
+  { title: "Meu Progresso", icon: TrendingUp, url: "/dashboard/progresso" },
+  { title: "Configurações", icon: Settings, url: "/dashboard/configuracoes" },
 ];
 
 const MESES = [
@@ -51,7 +57,7 @@ export default function Inicio() {
     <div className="space-y-6 max-w-5xl">
       <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting(nome)}</h1>
 
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
         {shortcuts.map((s) => (
           <button
             key={s.title}

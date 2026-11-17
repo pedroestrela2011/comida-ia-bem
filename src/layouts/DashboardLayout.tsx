@@ -1,7 +1,19 @@
+import { PanelLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+
+function MenuToggle() {
+  const { toggleSidebar } = useSidebar();
+  return (
+    <Button variant="ghost" size="sm" onClick={toggleSidebar} aria-label="Abrir ou fechar o menu" className="gap-2 px-2">
+      <PanelLeft className="h-4 w-4" />
+      <span className="text-sm font-medium">Menu</span>
+    </Button>
+  );
+}
 import { AppSidebar } from "@/components/AppSidebar";
 import { ScoreReminders } from "@/components/dashboard/ScoreReminders";
 import { PageTransition } from "@/components/PageTransition";
@@ -36,7 +48,7 @@ function DashboardShell() {
         <AppSidebar />
         <main className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b border-border px-3 md:px-4 shrink-0">
-            <SidebarTrigger />
+            <MenuToggle />
           </header>
           <div className="flex-1 p-3 md:p-6 overflow-auto">
             <TrialBanner />
