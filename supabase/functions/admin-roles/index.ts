@@ -1,3 +1,4 @@
+import { isMfaSatisfied } from "../_shared/mfa.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -30,6 +31,7 @@ serve(async (req) => {
     const { data: userData, error: userErr } = await supabase.auth.getUser(token);
     if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
     const caller = userData.user;
+    if (!(await isMfaSatisfied(token, caller.id))) return json({ error: "MFA_REQUIRED" }, 403);
 
     // Verify caller is admin
     const { data: isAdminData } = await supabase.rpc("has_role", {
