@@ -107,8 +107,8 @@ const OnboardingSaude = () => {
       (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate())
     ) age--;
 
-    // Minors enter the permanent base account; only adults see paid plans.
-    navigate(age < 18 ? "/dashboard" : "/escolher-plano", { replace: true });
+    // The plan page shows a permanent free tier and guardian invitation to minors.
+    navigate("/escolher-plano", { replace: true });
   };
 
   const pct = step === 1 ? 33 : step === 2 ? 66 : 100;
