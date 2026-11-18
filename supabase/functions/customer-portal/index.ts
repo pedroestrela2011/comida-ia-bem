@@ -35,7 +35,8 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!supabaseUrl || !serviceRoleKey || !stripeKey) {
+    const appUrl = Deno.env.get("APP_URL");
+    if (!supabaseUrl || !serviceRoleKey || !stripeKey || !appUrl) {
       return json({ error: "Billing portal unavailable" }, 503);
     }
 
@@ -68,10 +69,7 @@ serve(async (req) => {
     );
     if (!customer) return json({ error: "Nenhum cadastro de cobrança vinculado a esta conta" }, 404);
 
-    const configuredOrigin = Deno.env.get("APP_URL");
-    const requestOrigin = req.headers.get("origin");
-    const returnOrigin = configuredOrigin || requestOrigin;
-    if (!returnOrigin) return json({ error: "URL de retorno não configurada" }, 503);
+    const returnOrigin = appUrl;
     let safeOrigin: string;
     try {
       const parsed = new URL(returnOrigin);
