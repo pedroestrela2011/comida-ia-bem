@@ -19,6 +19,8 @@ const EscolherPlano = () => {
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
   const [loading, setLoading] = useState(false);
   const [isMinor, setIsMinor] = useState(false);
+  const [guardianLink, setGuardianLink] = useState<string | null>(null);
+  const [guardianLoading, setGuardianLoading] = useState(false);
   const [pending, setPending] = useState<{ nome: string; email: string } | null>(null);
 
   useEffect(() => {
@@ -90,6 +92,30 @@ const EscolherPlano = () => {
     }
   };
 
+  const handleGuardianRequest = async () => {
+    setGuardianLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-guardian-request");
+      if (error) throw error;
+      if (!data?.url) throw new Error("Não foi possível gerar o link.");
+      setGuardianLink(data.url);
+      try {
+        await navigator.clipboard.writeText(data.url);
+        toast({ title: "Link copiado", description: "Envie este link ao responsável adulto." });
+      } catch {
+        toast({ title: "Link criado", description: "Copie o link exibido na tela e envie ao responsável." });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Não foi possível gerar o link",
+        description: err?.message || "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setGuardianLoading(false);
+    }
+  };
+
   const handleSelect = (planId: PlanType) => createAccount(planId);
   const handleSkip = () => navigate("/dashboard", { replace: true });
 
@@ -134,8 +160,20 @@ const EscolherPlano = () => {
             <CardContent className="text-center text-sm text-muted-foreground">
               A contratação de planos pagos deve ser feita por um responsável adulto. Você pode continuar usando a conta gratuita.
             </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={handleSkip}>Continuar para minha conta</Button>
+            <CardFooter className="flex-col gap-3">
+              <Button className="w-full" onClick={handleGuardianRequest} disabled={guardianLoading}>
+                {guardianLoading ? "Gerando link..." : "Solicitar pagamento ao responsável"}
+              </Button>
+              {guardianLink && (
+                <div className="w-full rounded-md border p-3 text-left">
+                  <p className="text-xs text-muted-foreground mb-2">Link válido por 24 horas:</p>
+                  <a className="text-sm text-primary underline break-all" href={guardianLink}>{guardianLink}</a>
+                  <Button variant="outline" size="sm" className="w-full mt-3" onClick={() => navigator.clipboard.writeText(guardianLink)}>
+                    Copiar link
+                  </Button>
+                </div>
+              )}
+              <Button className="w-full" variant="outline" onClick={handleSkip}>Continuar com a conta gratuita</Button>
             </CardFooter>
           </Card>
         ) : (
