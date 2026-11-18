@@ -62,6 +62,16 @@ serve(async (req) => {
       return json({ error: "Esta solicitação está disponível apenas para contas de 12 a 17 anos" }, 403);
     }
 
+    const { count: recentRequests, error: rateLimitError } = await supabase
+      .from("guardian_checkout_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("beneficiary_user_id", user.id)
+      .gt("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+    if (rateLimitError) return json({ error: "Não foi possível validar a solicitação" }, 503);
+    if ((recentRequests ?? 0) >= 5) {
+      return json({ error: "Limite de links atingido. Aguarde uma hora antes de gerar outro." }, 429);
+    }
+
     const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
     const token = Array.from(tokenBytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
     const tokenHash = await sha256(token);
