@@ -8,6 +8,7 @@ import { Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PasswordStrength from "@/components/PasswordStrength";
 import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER } from "@/lib/password";
+import { supabase } from "@/integrations/supabase/client";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",
@@ -100,18 +101,51 @@ const Cadastro = () => {
 
     const dataNascimento = `${form.ano}-${form.mes.padStart(2, "0")}-${form.dia.padStart(2, "0")}`;
 
-    sessionStorage.setItem(
-      PENDING_SIGNUP_KEY,
-      JSON.stringify({
-        nome: form.nome,
-        email: form.email,
-        senha: form.senha,
-        data_nascimento: dataNascimento,
-        pais: form.pais,
-      })
-    );
+    setCheckingPassword(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.senha,
+        options: {
+          emailRedirectTo: `${window.location.origin}/verificar-email?flow=onboarding`,
+          data: {
+            nome: form.nome.trim(),
+            data_nascimento: dataNascimento,
+            pais: form.pais,
+          },
+        },
+      });
+      if (error) throw error;
 
-    navigate("/onboarding-saude");
+      // Never persist the password. Only non-secret profile details are kept
+      // temporarily while the authenticated user completes onboarding.
+      sessionStorage.setItem(
+        PENDING_SIGNUP_KEY,
+        JSON.stringify({
+          nome: form.nome.trim(),
+          email: form.email.trim(),
+          data_nascimento: dataNascimento,
+          pais: form.pais,
+        })
+      );
+
+      if (data.session) {
+        navigate("/onboarding-saude");
+      } else {
+        navigate("/verificar-email", { state: { email: form.email.trim(), flow: "onboarding" } });
+      }
+    } catch (err: any) {
+      const message = (err?.message || "").toLowerCase();
+      let description = err?.message || "Não foi possível criar sua conta. Tente novamente.";
+      if (message.includes("12 anos") || message.includes("pelo menos 12")) {
+        description = "É necessário ter pelo menos 12 anos completos para criar uma conta.";
+      } else if (message.includes("already registered") || message.includes("already exists")) {
+        description = "Este email já está cadastrado. Faça login na sua conta.";
+      }
+      toast({ title: "Não foi possível criar a conta", description, variant: "destructive" });
+    } finally {
+      setCheckingPassword(false);
+    }
   };
 
   return (
