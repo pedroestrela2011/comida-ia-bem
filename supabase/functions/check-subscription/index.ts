@@ -69,7 +69,7 @@ serve(async (req) => {
       .from("guardian_checkout_requests")
       .select("id, stripe_customer_id")
       .eq("beneficiary_user_id", user.id)
-      .eq("status", "checkout_created")
+      .in("status", ["checkout_created", "completed"])
       .not("stripe_customer_id", "is", null)
       .order("created_at", { ascending: false })
       .limit(10);
@@ -123,11 +123,13 @@ serve(async (req) => {
 
     const subscriptions = await stripe.subscriptions.list({
       customer: customer.id,
-      status: "active",
+      status: "all",
       limit: 10,
     });
     const subscription = subscriptions.data.find(
-      (item) => item.metadata?.supabase_user_id === user.id,
+      (item) =>
+        (item.status === "active" || item.status === "trialing") &&
+        item.metadata?.supabase_user_id === user.id,
     );
     if (!subscription) {
       await supabase.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
