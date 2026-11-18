@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import ResetSenha from "./pages/ResetSenha";
 import VerificarEmail from "./pages/VerificarEmail";
+import VerificarMFA from "./pages/VerificarMFA";
 import CheckoutSucesso from "./pages/CheckoutSucesso";
 import Planos from "./pages/Planos";
 import Termos from "./pages/Termos";
@@ -66,6 +67,7 @@ const App = () => (
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
           <Route path="/reset-password" element={<ResetSenha />} />
           <Route path="/verificar-email" element={<VerificarEmail />} />
+          <Route path="/verificar-2fa" element={<VerificarMFA />} />
           <Route path="/planos" element={<Planos />} />
           <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
           <Route path="/termos" element={<Termos />} />
