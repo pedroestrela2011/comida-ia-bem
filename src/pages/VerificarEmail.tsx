@@ -52,9 +52,11 @@ const VerificarEmail = () => {
             if (data?.url) {
               const win = window.open(data.url, "_blank", "noopener,noreferrer");
               if (!win) {
-                window.top
-                  ? (window.top.location.href = data.url)
-                  : (window.location.href = data.url);
+                if (window.top) {
+                  window.top.location.href = data.url;
+                } else {
+                  window.location.href = data.url;
+                }
               }
               navigate("/dashboard");
               return;
