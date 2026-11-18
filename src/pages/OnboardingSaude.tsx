@@ -99,14 +99,6 @@ const OnboardingSaude = () => {
     }
 
     sessionStorage.removeItem(PENDING_SIGNUP_KEY);
-    const birthDate = new Date(`${pending.data_nascimento}T00:00:00.000Z`);
-    const today = new Date();
-    let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
-    if (
-      today.getUTCMonth() < birthDate.getUTCMonth() ||
-      (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate())
-    ) age--;
-
     // The plan page shows a permanent free tier and guardian invitation to minors.
     navigate("/escolher-plano", { replace: true });
   };
