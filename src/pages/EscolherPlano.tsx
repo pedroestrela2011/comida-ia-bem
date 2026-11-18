@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PLAN_CONFIG, PlanType } from "@/contexts/SubscriptionContext";
+import { calculateAge, canCreateAccount } from "@/lib/account-age";
 
 const plans = PLANS.map((plan) => ({
   ...plan,
@@ -47,13 +48,16 @@ const EscolherPlano = () => {
         return;
       }
 
-      const birthDate = new Date(`${profile.data_nascimento}T00:00:00.000Z`);
-      const today = new Date();
-      let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
-      if (
-        today.getUTCMonth() < birthDate.getUTCMonth() ||
-        (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate())
-      ) age--;
+      const age = calculateAge(profile.data_nascimento);
+      if (!canCreateAccount(age)) {
+        toast({
+          title: "Não foi possível validar sua idade",
+          description: "Sua conta precisa ter uma data de nascimento válida e cumprir a idade mínima.",
+          variant: "destructive",
+        });
+        navigate("/dashboard", { replace: true });
+        return;
+      }
       setIsMinor(age < 18);
       setPending({
         nome: profile.nome || String(user.user_metadata?.nome || ""),
