@@ -1,6 +1,6 @@
 import { PLANS } from "@/data/plans";
 import { useState, useEffect, useRef } from "react";
-import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, ShieldCheck, Crown, Star, Zap, Check, X, Bell, Sparkles, HeartPulse } from "lucide-react";
+import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, Crown, Star, Zap, Check, X, Bell, Sparkles, HeartPulse } from "lucide-react";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { CONDICOES_OPCOES, NIVEIS_ATIVIDADE, OBJETIVOS, REFEICOES_OPCOES, RESTRICOES_OPCOES, faixaIMC, calcIMC } from "@/lib/health";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,16 +56,6 @@ export default function Configuracoes() {
   const [showNovaSenha, setShowNovaSenha] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
 
-  // Real Supabase TOTP MFA
-  const [mfaLoading, setMfaLoading] = useState(true);
-  const [mfaBusy, setMfaBusy] = useState(false);
-  const [mfaFactorId, setMfaFactorId] = useState("");
-  const [mfaQrCode, setMfaQrCode] = useState("");
-  const [mfaSecret, setMfaSecret] = useState("");
-  const [mfaCode, setMfaCode] = useState("");
-  const [mfaEnabled, setMfaEnabled] = useState(false);
-  const [mfaError, setMfaError] = useState("");
-
   // Appearance
   const [darkMode, setDarkMode] = useState(false);
   const [notificacoesScore, setNotificacoesScore] = useState(true);
@@ -76,128 +66,7 @@ export default function Configuracoes() {
 
   useEffect(() => {
     loadProfile();
-    void loadMfaStatus();
   }, []);
-
-  const loadMfaStatus = async () => {
-    setMfaLoading(true);
-    try {
-      const { data, error } = await supabase.auth.mfa.listFactors();
-      if (error) throw error;
-      const verified = data.totp.find((factor) => factor.status === "verified");
-      setMfaFactorId(verified?.id || "");
-      if (verified) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("Sessão não encontrada.");
-        const { data: enforcement, error: readError } = await supabase
-          .from("user_mfa_enforcement" as any)
-          .select("user_id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (readError) throw readError;
-        if (!enforcement) {
-          const { error: insertError } = await supabase
-            .from("user_mfa_enforcement" as any)
-            .insert({ user_id: user.id });
-          if (insertError) throw insertError;
-        }
-        setMfaEnabled(true);
-      } else {
-        setMfaEnabled(false);
-      }
-    } catch (error) {
-      setMfaError(error instanceof Error ? error.message : "Não foi possível consultar a verificação em duas etapas.");
-    } finally {
-      setMfaLoading(false);
-    }
-  };
-
-  const startMfaEnrollment = async () => {
-    setMfaBusy(true);
-    setMfaError("");
-    try {
-      const { data, error } = await supabase.auth.mfa.enroll({
-        factorType: "totp",
-        friendlyName: "ComaFacil",
-      });
-      if (error) throw error;
-      setMfaFactorId(data.id);
-      setMfaQrCode(data.totp.qr_code);
-      setMfaSecret(data.totp.secret);
-      setMfaCode("");
-    } catch (error) {
-      setMfaError(error instanceof Error ? error.message : "Não foi possível iniciar a configuração.");
-    } finally {
-      setMfaBusy(false);
-    }
-  };
-
-  const confirmMfaEnrollment = async () => {
-    if (!mfaFactorId || !/^\d{6}$/.test(mfaCode)) {
-      setMfaError("Digite o código de seis números exibido no aplicativo autenticador.");
-      return;
-    }
-    setMfaBusy(true);
-    setMfaError("");
-    try {
-      const { data: challengeData, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
-      if (challengeError) throw challengeError;
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId: mfaFactorId,
-        challengeId: challengeData.id,
-        code: mfaCode,
-      });
-      if (verifyError) throw verifyError;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Sessão não encontrada após confirmar o autenticador.");
-      const { error: enforcementError } = await supabase
-        .from("user_mfa_enforcement" as any)
-        .insert({ user_id: user.id });
-      if (enforcementError) {
-        await supabase.auth.mfa.unenroll({ factorId: mfaFactorId });
-        throw enforcementError;
-      }
-      setMfaQrCode("");
-      setMfaSecret("");
-      setMfaCode("");
-      await loadMfaStatus();
-      toast({ title: "Verificação em duas etapas ativada" });
-    } catch (error) {
-      setMfaError(error instanceof Error ? error.message : "Não foi possível confirmar o autenticador.");
-    } finally {
-      setMfaBusy(false);
-    }
-  };
-
-  const disableMfa = async () => {
-    if (!mfaFactorId) return;
-    setMfaBusy(true);
-    setMfaError("");
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Sessão não encontrada.");
-      const { error: deletePreferenceError } = await supabase
-        .from("user_mfa_enforcement" as any)
-        .delete()
-        .eq("user_id", user.id);
-      if (deletePreferenceError) throw deletePreferenceError;
-
-      const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId: mfaFactorId });
-      if (unenrollError) {
-        await supabase.from("user_mfa_enforcement" as any).insert({ user_id: user.id });
-        throw unenrollError;
-      }
-      setMfaEnabled(false);
-      setMfaFactorId("");
-      toast({ title: "Verificação em duas etapas desativada" });
-      await loadMfaStatus();
-    } catch (error) {
-      setMfaError(error instanceof Error ? error.message : "Não foi possível remover o autenticador.");
-    } finally {
-      setMfaBusy(false);
-    }
-  };
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
@@ -523,84 +392,6 @@ export default function Configuracoes() {
             </Button>
           </div>
 
-          {/* TOTP MFA managed by Supabase Auth */}
-          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-primary" /> Verificação em duas etapas
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Use um aplicativo autenticador compatível com códigos temporários. Depois de ativar, será necessário informar um código além da senha ao entrar na conta.
-            </p>
-
-            {mfaLoading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Consultando status...
-              </div>
-            ) : mfaEnabled ? (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-primary">Autenticador confirmado e ativo nesta conta.</p>
-                <Button variant="outline" onClick={disableMfa} disabled={mfaBusy}>
-                  {mfaBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Desativar verificação em duas etapas
-                </Button>
-              </div>
-            ) : mfaQrCode ? (
-              <div className="space-y-4">
-                <p className="text-sm text-foreground">
-                  Escaneie o QR code no seu aplicativo autenticador. Se não conseguir, informe manualmente a chave abaixo. Não compartilhe essa chave nem o QR code.
-                </p>
-                <div className="flex justify-center rounded-lg bg-white p-4">
-                  <img
-                    src={`data:image/svg+xml;utf8,${encodeURIComponent(mfaQrCode)}`}
-                    alt="QR code para configurar a verificação em duas etapas"
-                    className="h-48 w-48"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Chave de configuração manual</Label>
-                  <Input value={mfaSecret} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mfa-enroll-code">Código do aplicativo</Label>
-                  <Input
-                    id="mfa-enroll-code"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    maxLength={6}
-                    value={mfaCode}
-                    onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="000000"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={confirmMfaEnrollment} disabled={mfaBusy || mfaCode.length !== 6}>
-                    {mfaBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Confirmar e ativar
-                  </Button>
-                  <Button variant="outline" onClick={async () => {
-                    if (mfaFactorId) await supabase.auth.mfa.unenroll({ factorId: mfaFactorId });
-                    setMfaFactorId("");
-                    setMfaQrCode("");
-                    setMfaSecret("");
-                    setMfaCode("");
-                    setMfaError("");
-                  }} disabled={mfaBusy}>
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Button onClick={startMfaEnrollment} disabled={mfaBusy}>
-                {mfaBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Configurar autenticador
-              </Button>
-            )}
-
-            {mfaError && <p role="alert" className="text-sm text-destructive">{mfaError}</p>}
-            <p className="text-xs text-muted-foreground">
-              Guarde uma segunda forma de acesso, se possível, antes de depender exclusivamente deste dispositivo. Se perder o autenticador, será necessário recuperar o acesso com o suporte.
-            </p>
-          </div>
         </TabsContent>
 
         {/* ========== APARÊNCIA ========== */}
