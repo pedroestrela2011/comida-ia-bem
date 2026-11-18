@@ -57,6 +57,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        cache.plan = "essencial";
+        cache.subscribed = false;
+        cache.subscriptionEnd = null;
+        cache.trialEndsAt = null;
+        cache.loaded = true;
         setPlan("essencial");
         setSubscribed(false);
         setSubscriptionEnd(null);
