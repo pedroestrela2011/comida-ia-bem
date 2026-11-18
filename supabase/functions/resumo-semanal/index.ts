@@ -1,4 +1,3 @@
-import { isMfaSatisfied } from "../_shared/mfa.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -33,9 +32,6 @@ serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub as string;
-    if (!(await isMfaSatisfied(token, userId))) {
-      return new Response(JSON.stringify({ error: "MFA_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
 
     const body = await req.json().catch(() => ({}));
     const {
