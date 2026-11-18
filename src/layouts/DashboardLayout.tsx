@@ -139,14 +139,6 @@ export default function DashboardLayout() {
           await redirectToLogin(Boolean(error && isStaleAuthSessionError(error)));
           return;
         }
-        const { data: assurance, error: assuranceError } =
-          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (assuranceError) throw assuranceError;
-        if (assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
-          navigate("/verificar-2fa", { replace: true });
-          return;
-        }
-
         authCheckedOnce = true;
         setAuthLoading(false);
       })
