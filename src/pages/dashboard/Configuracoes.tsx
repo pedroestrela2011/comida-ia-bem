@@ -85,8 +85,26 @@ export default function Configuracoes() {
       const { data, error } = await supabase.auth.mfa.listFactors();
       if (error) throw error;
       const verified = data.totp.find((factor) => factor.status === "verified");
-      setMfaEnabled(Boolean(verified));
       setMfaFactorId(verified?.id || "");
+      if (verified) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Sessão não encontrada.");
+        const { data: enforcement, error: readError } = await supabase
+          .from("user_mfa_enforcement" as any)
+          .select("user_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (readError) throw readError;
+        if (!enforcement) {
+          const { error: insertError } = await supabase
+            .from("user_mfa_enforcement" as any)
+            .insert({ user_id: user.id });
+          if (insertError) throw insertError;
+        }
+        setMfaEnabled(true);
+      } else {
+        setMfaEnabled(false);
+      }
     } catch (error) {
       setMfaError(error instanceof Error ? error.message : "Não foi possível consultar a verificação em duas etapas.");
     } finally {
@@ -131,6 +149,15 @@ export default function Configuracoes() {
         code: mfaCode,
       });
       if (verifyError) throw verifyError;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sessão não encontrada após confirmar o autenticador.");
+      const { error: enforcementError } = await supabase
+        .from("user_mfa_enforcement" as any)
+        .insert({ user_id: user.id });
+      if (enforcementError) {
+        await supabase.auth.mfa.unenroll({ factorId: mfaFactorId });
+        throw enforcementError;
+      }
       setMfaQrCode("");
       setMfaSecret("");
       setMfaCode("");
@@ -148,8 +175,19 @@ export default function Configuracoes() {
     setMfaBusy(true);
     setMfaError("");
     try {
-      const { error } = await supabase.auth.mfa.unenroll({ factorId: mfaFactorId });
-      if (error) throw error;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sessão não encontrada.");
+      const { error: deletePreferenceError } = await supabase
+        .from("user_mfa_enforcement" as any)
+        .delete()
+        .eq("user_id", user.id);
+      if (deletePreferenceError) throw deletePreferenceError;
+
+      const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId: mfaFactorId });
+      if (unenrollError) {
+        await supabase.from("user_mfa_enforcement" as any).insert({ user_id: user.id });
+        throw unenrollError;
+      }
       setMfaEnabled(false);
       setMfaFactorId("");
       toast({ title: "Verificação em duas etapas desativada" });
