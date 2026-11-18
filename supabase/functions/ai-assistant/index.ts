@@ -1,4 +1,3 @@
-import { isMfaSatisfied } from "../_shared/mfa.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -23,9 +22,6 @@ serve(async (req) => {
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    if (!(await isMfaSatisfied(token, claimsData.claims.sub as string))) {
-      return new Response(JSON.stringify({ error: "MFA_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { type, messages, preferences, ingredients } = await req.json();
