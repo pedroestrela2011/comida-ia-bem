@@ -6,11 +6,11 @@ import { StepCorpo, CorpoData } from "@/components/onboarding/StepCorpo";
 import { StepObjetivos, ObjetivosData } from "@/components/onboarding/StepObjetivos";
 import { StepSaude, SaudeData } from "@/components/onboarding/StepSaude";
 import { calcIMC } from "@/lib/health";
+import { supabase } from "@/integrations/supabase/client";
 
 type PendingSignup = {
   nome: string;
   email: string;
-  senha: string;
   data_nascimento: string;
   pais: string;
   health?: any;
@@ -62,8 +62,15 @@ const OnboardingSaude = () => {
     }
   }, [navigate, toast]);
 
-  const finish = (dSaude: SaudeData) => {
+  const finish = async (dSaude: SaudeData) => {
     if (!pending || !corpo) return;
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      toast({ title: "Entre na sua conta para continuar", variant: "destructive" });
+      navigate("/login", { replace: true });
+      return;
+    }
+
     const health: Health = {
       peso_kg: corpo.peso_kg,
       altura_cm: corpo.altura_cm,
@@ -77,11 +84,31 @@ const OnboardingSaude = () => {
       condicoes_outras: dSaude.condicoes_outras,
       onboarding_completo: true,
     };
-    sessionStorage.setItem(
-      PENDING_SIGNUP_KEY,
-      JSON.stringify({ ...pending, health }),
-    );
-    navigate("/escolher-plano");
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(health)
+      .eq("user_id", authData.user.id);
+    if (error) {
+      toast({
+        title: "Não foi possível salvar seus dados",
+        description: "Verifique sua conexão e tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+    const birthDate = new Date(`${pending.data_nascimento}T00:00:00.000Z`);
+    const today = new Date();
+    let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
+    if (
+      today.getUTCMonth() < birthDate.getUTCMonth() ||
+      (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate())
+    ) age--;
+
+    // Minors enter the permanent base account; only adults see paid plans.
+    navigate(age < 18 ? "/dashboard" : "/escolher-plano", { replace: true });
   };
 
   const pct = step === 1 ? 33 : step === 2 ? 66 : 100;
