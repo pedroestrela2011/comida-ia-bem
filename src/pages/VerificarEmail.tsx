@@ -9,7 +9,8 @@ const VerificarEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean }) || {};
+  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean; flow?: string }) || {};
+  const onboardingFlow = state.flow === "onboarding" || new URLSearchParams(location.search).get("flow") === "onboarding";
   const email = state.email || "";
   const planoFromState = state.plano;
   const skipCheckout = state.skipCheckout === true;
@@ -21,6 +22,12 @@ const VerificarEmail = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         setRedirecting(true);
+
+        if (onboardingFlow) {
+          toast({ title: "Email verificado!", description: "Continue seu cadastro." });
+          navigate("/onboarding-saude", { replace: true });
+          return;
+        }
 
         if (skipCheckout) {
           toast({ title: "Email verificado!", description: "Bem-vindo ao ComaFacil." });
@@ -66,7 +73,7 @@ const VerificarEmail = () => {
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate, toast, planoFromState, skipCheckout]);
+  }, [navigate, toast, planoFromState, skipCheckout, onboardingFlow]);
 
   const handleResend = async () => {
     setResending(true);
