@@ -46,10 +46,11 @@ const ResponsavelContratar = () => {
       if (error) throw error;
       if (!data?.url) throw new Error("O checkout não retornou um endereço válido.");
       window.location.assign(data.url);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "O link pode ter expirado. Peça outro link ao titular da conta.";
       toast({
         title: "Não foi possível iniciar o pagamento",
-        description: err?.message || "O link pode ter expirado. Peça outro ao titular da conta.",
+        description: message,
         variant: "destructive",
       });
       setLoading(false);
