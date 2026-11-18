@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { PLAN_CONFIG, PlanType } from "@/data/plans";
+import { PLAN_CONFIG } from "@/data/plans";
+import { PlanType } from "@/contexts/SubscriptionContext";
 
 const ResponsavelContratar = () => {
   const [searchParams] = useSearchParams();
