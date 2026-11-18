@@ -354,8 +354,7 @@ const Cadastro = () => {
             <Link to="/privacidade" className="text-primary underline">
               Política de Privacidade
             </Link>
-            , e autoriza o uso das informações de saúde que você informar para personalizar suas
-            sugestões alimentares.
+. As informações de saúde solicitadas no onboarding são tratadas conforme a Política de Privacidade e a base legal aplicável.
           </p>
 
           <div className="mt-4 rounded-lg border border-border bg-muted/50 p-3">
