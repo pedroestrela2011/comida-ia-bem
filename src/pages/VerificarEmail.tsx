@@ -134,7 +134,11 @@ const VerificarEmail = () => {
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
-            <p className="text-sm text-muted-foreground">Você será redirecionado automaticamente para o checkout</p>
+            <p className="text-sm text-muted-foreground">
+              {onboardingFlow
+                ? "Depois da confirmação, você poderá concluir o onboarding da sua conta."
+                : "Depois da confirmação, você poderá continuar para a próxima etapa."}
+            </p>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
