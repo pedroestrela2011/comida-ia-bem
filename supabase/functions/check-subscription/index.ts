@@ -63,53 +63,55 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // A teen remains on the permanent free tier unless an adult has completed
-    // a one-time guardian checkout tied to this exact beneficiary account.
+    // Keep subscriptions paid by a responsible adult linked to the beneficiary,
+    // including after the beneficiary reaches adulthood.
+    const { data: guardianRequests } = await supabase
+      .from("guardian_checkout_requests")
+      .select("id, stripe_customer_id")
+      .eq("beneficiary_user_id", user.id)
+      .eq("status", "checkout_created")
+      .not("stripe_customer_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    for (const guardianRequest of guardianRequests ?? []) {
+      const guardianSubscriptions = await stripe.subscriptions.list({
+        customer: guardianRequest.stripe_customer_id,
+        status: "all",
+        limit: 10,
+      });
+      const linkedSubscription = guardianSubscriptions.data.find((item) =>
+        (item.status === "active" || item.status === "trialing") &&
+        item.metadata?.beneficiary_user_id === user.id &&
+        item.metadata?.guardian_request_id === guardianRequest.id
+      );
+      if (!linkedSubscription) continue;
+
+      const productId = linkedSubscription.items.data[0]?.price.product;
+      const guardianPlanMap: Record<string, string> = {
+        "prod_UH384VjqiDfjkk": "essencial",
+        "prod_UH38eWsa8YkfG9": "equilibrio",
+        "prod_UH39mhR0txjsdp": "performance",
+      };
+      const plan = guardianPlanMap[String(productId)] ?? "essencial";
+      const subscriptionEnd = new Date(linkedSubscription.current_period_end * 1000).toISOString();
+      await supabase.from("profiles").update({ plano: plan, trial_ends_at: null }).eq("user_id", user.id);
+      return json({
+        subscribed: true,
+        plan,
+        product_id: productId,
+        subscription_end: subscriptionEnd,
+        trial_ends_at: null,
+        paid_by_guardian: true,
+      });
+    }
+
+
     if (age < 18) {
-      const { data: guardianRequests } = await supabase
-        .from("guardian_checkout_requests")
-        .select("id, stripe_customer_id")
-        .eq("beneficiary_user_id", user.id)
-        .eq("status", "checkout_created")
-        .not("stripe_customer_id", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      for (const guardianRequest of guardianRequests ?? []) {
-        const guardianSubscriptions = await stripe.subscriptions.list({
-          customer: guardianRequest.stripe_customer_id,
-          status: "all",
-          limit: 10,
-        });
-        const linkedSubscription = guardianSubscriptions.data.find((item) =>
-          (item.status === "active" || item.status === "trialing") &&
-          item.metadata?.beneficiary_user_id === user.id &&
-          item.metadata?.guardian_request_id === guardianRequest.id
-        );
-        if (!linkedSubscription) continue;
-
-        const productId = linkedSubscription.items.data[0]?.price.product;
-        const guardianPlanMap: Record<string, string> = {
-          "prod_UH384VjqiDfjkk": "essencial",
-          "prod_UH38eWsa8YkfG9": "equilibrio",
-          "prod_UH39mhR0txjsdp": "performance",
-        };
-        const plan = guardianPlanMap[String(productId)] ?? "essencial";
-        const subscriptionEnd = new Date(linkedSubscription.current_period_end * 1000).toISOString();
-        await supabase.from("profiles").update({ plano: plan, trial_ends_at: null }).eq("user_id", user.id);
-        return json({
-          subscribed: true,
-          plan,
-          product_id: productId,
-          subscription_end: subscriptionEnd,
-          trial_ends_at: null,
-          paid_by_guardian: true,
-        });
-      }
-
       await supabase.from("profiles").update({ plano: "essencial", trial_ends_at: null }).eq("user_id", user.id);
       return json({ subscribed: false, plan: "essencial", trial_ends_at: null, subscription_end: null });
     }
+
     const customers = await stripe.customers.list({ email: user.email, limit: 100 });
     const customer = customers.data.find(
       (candidate) => candidate.metadata?.supabase_user_id === user.id && !candidate.deleted,
