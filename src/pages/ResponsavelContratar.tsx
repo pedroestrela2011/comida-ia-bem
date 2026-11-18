@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { PLAN_CONFIG } from "@/data/plans";
+import { PLAN_CONFIG, PLANS } from "@/data/plans";
 import { PlanType } from "@/contexts/SubscriptionContext";
 
 const ResponsavelContratar = () => {
@@ -86,9 +86,11 @@ const ResponsavelContratar = () => {
                   <Select value={plan} onValueChange={(value) => setPlan(value as PlanType)}>
                     <SelectTrigger><SelectValue placeholder="Selecione um plano" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="essencial">Essencial — R$ 23,90/mês</SelectItem>
-                      <SelectItem value="equilibrio">Equilíbrio — R$ 41,90/mês</SelectItem>
-                      <SelectItem value="performance">Performance — R$ 83,90/mês</SelectItem>
+                      {PLANS.map((availablePlan) => (
+                        <SelectItem key={availablePlan.id} value={availablePlan.id}>
+                          {availablePlan.name} — R$ {availablePlan.price}/mês
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
