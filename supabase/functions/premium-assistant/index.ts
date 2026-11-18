@@ -1,4 +1,3 @@
-import { isMfaSatisfied } from "../_shared/mfa.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -32,7 +31,6 @@ serve(async (req) => {
     const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) return json({ error: "Unauthorized" }, 401);
     const userId = claimsData.claims.sub as string;
-    if (!(await isMfaSatisfied(token, userId))) return json({ error: "MFA_REQUIRED" }, 403);
 
     const service = createClient(
       Deno.env.get("SUPABASE_URL")!,
