@@ -47,7 +47,8 @@ serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!supabaseUrl || !anonKey || !serviceRoleKey || !stripeKey) {
+    const appUrl = Deno.env.get("APP_URL");
+    if (!supabaseUrl || !anonKey || !serviceRoleKey || !stripeKey || !appUrl) {
       console.error("Missing checkout environment configuration");
       return json({ error: "Checkout temporariamente indisponível" }, 503);
     }
@@ -83,17 +84,15 @@ serve(async (req) => {
       return json({ error: "Plano ou preço inválido" }, 400);
     }
 
-    const origin = req.headers.get("origin");
-    if (!origin) return json({ error: "Origem da solicitação não identificada" }, 400);
     let siteOrigin: string;
     try {
-      const parsedOrigin = new URL(origin);
-      if (parsedOrigin.protocol !== "https:" && parsedOrigin.hostname !== "localhost") {
-        return json({ error: "Origem inválida" }, 400);
+      const configuredUrl = new URL(appUrl);
+      if (configuredUrl.protocol !== "https:" && configuredUrl.hostname !== "localhost") {
+        return json({ error: "APP_URL deve usar HTTPS" }, 503);
       }
-      siteOrigin = parsedOrigin.origin;
+      siteOrigin = configuredUrl.origin;
     } catch {
-      return json({ error: "Origem inválida" }, 400);
+      return json({ error: "APP_URL não está configurada corretamente" }, 503);
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
