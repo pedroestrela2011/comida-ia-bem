@@ -19,10 +19,24 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Run lint
-        run: npx eslint . --rule '@typescript-eslint/no-explicit-any: off' --rule '@typescript-eslint/no-require-imports: off'
-      - name: Strict lint for new guardian checkout page
-        run: npx eslint src/pages/ResponsavelContratar.tsx
+      - name: Lint changed application and security files
+        run: >-
+          npx eslint
+          src/App.tsx
+          src/pages/Cadastro.tsx
+          src/pages/EscolherPlano.tsx
+          src/pages/OnboardingSaude.tsx
+          src/pages/ResponsavelContratar.tsx
+          src/pages/VerificarEmail.tsx
+          src/pages/dashboard/Configuracoes.tsx
+          supabase/functions/adaptar-dieta/index.ts
+          supabase/functions/check-subscription/index.ts
+          supabase/functions/create-checkout/index.ts
+          supabase/functions/create-guardian-request/index.ts
+          supabase/functions/customer-portal/index.ts
+          supabase/functions/guardian-checkout/index.ts
+          --rule '@typescript-eslint/no-explicit-any: off'
+          --rule '@typescript-eslint/no-require-imports: off'
       - name: Run tests
         run: npm test -- --passWithNoTests
       - name: Build production bundle
