@@ -7,117 +7,109 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const logStep = (step: string, details?: any) => {
-  console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
-};
+function getAge(birthDate: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return null;
+  const date = new Date(`${birthDate}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== birthDate) return null;
+  const today = new Date();
+  let age = today.getUTCFullYear() - date.getUTCFullYear();
+  if (
+    today.getUTCMonth() < date.getUTCMonth() ||
+    (today.getUTCMonth() === date.getUTCMonth() && today.getUTCDate() < date.getUTCDate())
+  ) age--;
+  return age;
+}
+
+function json(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    logStep("Function started");
-
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!supabaseUrl || !serviceRoleKey || !stripeKey) {
+      return json({ error: "Subscription service unavailable" }, 503);
+    }
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      logStep("Missing authorization header");
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
+    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError || !userData?.user?.email) {
-      logStep("User not found or invalid token", { error: userError?.message });
-      return new Response(
-        JSON.stringify({ subscribed: false, plan: "essencial", subscription_end: null, trial_ends_at: null, user_missing: true }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
-    }
-    const user = userData.user;
-    logStep("User authenticated", { email: user.email });
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: authData, error: authError } = await supabase.auth.getUser(authHeader.slice(7));
+    const user = authData.user;
+    if (authError || !user?.email) return json({ error: "Unauthorized" }, 401);
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-
-    // Fetch trial_ends_at for this user
-    const { data: profileData } = await supabaseClient
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("trial_ends_at")
+      .select("data_nascimento, trial_ends_at")
       .eq("user_id", user.id)
       .maybeSingle();
-    const trialEndsAt = profileData?.trial_ends_at ?? null;
-
-    if (customers.data.length === 0) {
-      logStep("No Stripe customer found");
-      await supabaseClient.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
-      return new Response(JSON.stringify({ subscribed: false, plan: "essencial", trial_ends_at: trialEndsAt }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (profileError || !profile?.data_nascimento) {
+      return json({ error: "Profile age could not be validated" }, 403);
     }
 
-    const customerId = customers.data[0].id;
-    logStep("Found customer", { customerId });
+    const age = getAge(profile.data_nascimento);
+    if (age === null || age < 12) return json({ error: "Account age is invalid" }, 403);
+
+    // Ages 12-17 have a permanent base account and cannot inherit a paid
+    // subscription through an email match or a client-controlled profile field.
+    if (age < 18) {
+      await supabase.from("profiles").update({ plano: "essencial", trial_ends_at: null }).eq("user_id", user.id);
+      return json({ subscribed: false, plan: "essencial", trial_ends_at: null, subscription_end: null });
+    }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const customers = await stripe.customers.list({ email: user.email, limit: 100 });
+    const customer = customers.data.find(
+      (candidate) => candidate.metadata?.supabase_user_id === user.id && !candidate.deleted,
+    );
+    if (!customer) {
+      await supabase.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
+      return json({ subscribed: false, plan: "essencial", trial_ends_at: profile.trial_ends_at ?? null });
+    }
 
     const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
+      customer: customer.id,
       status: "active",
       limit: 10,
     });
-
-    if (subscriptions.data.length === 0) {
-      logStep("No active subscription");
-      await supabaseClient.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
-      return new Response(JSON.stringify({ subscribed: false, plan: "essencial", trial_ends_at: trialEndsAt }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const subscription = subscriptions.data.find(
+      (item) => item.metadata?.supabase_user_id === user.id,
+    );
+    if (!subscription) {
+      await supabase.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
+      return json({ subscribed: false, plan: "essencial", trial_ends_at: profile.trial_ends_at ?? null });
     }
 
-    const subscription = subscriptions.data[0];
-    const productId = subscription.items.data[0].price.product;
-    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-    logStep("Active subscription", { productId, subscriptionEnd });
-
-    // Map product to plan
+    const productId = subscription.items.data[0]?.price.product;
     const productPlanMap: Record<string, string> = {
       "prod_UH384VjqiDfjkk": "essencial",
       "prod_UH38eWsa8YkfG9": "equilibrio",
       "prod_UH39mhR0txjsdp": "performance",
     };
+    const plan = productPlanMap[String(productId)] ?? "essencial";
+    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
-    const plan = productPlanMap[productId as string] || "essencial";
-    logStep("Mapped plan", { plan });
-
-    // Sync plan to profile
-    await supabaseClient.from("profiles").update({ plano: plan }).eq("user_id", user.id);
-
-    return new Response(JSON.stringify({
+    await supabase.from("profiles").update({ plano: plan }).eq("user_id", user.id);
+    return json({
       subscribed: true,
       plan,
       product_id: productId,
       subscription_end: subscriptionEnd,
-      trial_ends_at: trialEndsAt,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      trial_ends_at: profile.trial_ends_at ?? null,
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: msg });
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error("Subscription check failed:", error instanceof Error ? error.message : "Unknown error");
+    return json({ error: "Could not check subscription" }, 500);
   }
 });
