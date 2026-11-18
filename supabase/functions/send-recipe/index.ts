@@ -1,3 +1,4 @@
+import { isMfaSatisfied } from "../_shared/mfa.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -28,6 +29,7 @@ serve(async (req) => {
     const { data: userData, error: userErr } = await supabase.auth.getUser(token);
     if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
     const sender = userData.user;
+    if (!(await isMfaSatisfied(token, sender.id))) return json({ error: "MFA_REQUIRED" }, 403);
 
     const body = await req.json().catch(() => ({}));
     const email = String(body.email ?? "").trim().toLowerCase();
