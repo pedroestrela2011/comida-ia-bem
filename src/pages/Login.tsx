@@ -35,8 +35,16 @@ const Login = () => {
       });
       if (error) throw error;
 
-      toast({ title: "Bem-vindo de volta!" });
-      navigate("/dashboard", { replace: true });
+      const { data: assurance, error: assuranceError } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (assuranceError) throw assuranceError;
+
+      toast({ title: "Senha confirmada" });
+      if (assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
+        navigate("/verificar-2fa", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err: any) {
       const msg = (err?.message || "").toLowerCase();
       let description = "Email ou senha incorretos.";
