@@ -32,7 +32,6 @@ type Profile = {
   pais: string | null;
   avatar_url: string | null;
   tema: string;
-  two_fa_enabled: boolean;
 };
 
 export default function Configuracoes() {
@@ -47,9 +46,6 @@ export default function Configuracoes() {
 
   // Form state
   const [nome, setNome] = useState("");
-  const [dia, setDia] = useState("");
-  const [mes, setMes] = useState("");
-  const [ano, setAno] = useState("");
   const [pais, setPais] = useState("");
 
   // Security
@@ -95,12 +91,6 @@ export default function Configuracoes() {
       setNome(p.nome || "");
       setPais(p.pais || "");
 
-      if (p.data_nascimento) {
-        const d = new Date(p.data_nascimento + "T00:00:00");
-        setDia(String(d.getDate()));
-        setMes(String(d.getMonth() + 1));
-        setAno(String(d.getFullYear()));
-      }
 
       if (p.tema === "dark") {
         setDarkMode(true);
@@ -146,16 +136,11 @@ export default function Configuracoes() {
         avatarUrl = urlData.publicUrl + "?t=" + Date.now();
       }
 
-      const dataNascimento = dia && mes && ano
-        ? `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`
-        : profile.data_nascimento;
-
       const { error } = await supabase
         .from("profiles")
         .update({
           nome,
           pais: pais || null,
-          data_nascimento: dataNascimento,
           avatar_url: avatarUrl,
         } as any)
         .eq("user_id", user.id);
@@ -169,7 +154,7 @@ export default function Configuracoes() {
         toast({ title: "Email de confirmação enviado", description: "Verifique sua caixa de entrada para confirmar a alteração." });
       }
 
-      setProfile({ ...profile, nome, pais, data_nascimento: dataNascimento, avatar_url: avatarUrl });
+      setProfile({ ...profile, nome, pais, avatar_url: avatarUrl });
       setAvatarFile(null);
       toast({ title: "Perfil atualizado com sucesso!" });
     } catch (e: any) {
@@ -213,24 +198,6 @@ export default function Configuracoes() {
       toast({ title: "Erro ao alterar senha", description: e.message, variant: "destructive" });
     } finally {
       setChangingPassword(false);
-    }
-  };
-
-  const toggle2FA = async () => {
-    if (!profile) return;
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const newVal = !profile.two_fa_enabled;
-      const { error } = await supabase
-        .from("profiles")
-        .update({ two_fa_enabled: newVal } as any)
-        .eq("user_id", user.id);
-      if (error) throw error;
-      setProfile({ ...profile, two_fa_enabled: newVal });
-      toast({ title: newVal ? "Verificação em duas etapas ativada" : "Verificação em duas etapas desativada" });
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
     }
   };
 
@@ -323,35 +290,17 @@ export default function Configuracoes() {
               <Input value={nome} onChange={e => setNome(e.target.value)} placeholder="Seu nome" />
             </div>
 
-            {/* Data de nascimento */}
+            {/* Data de nascimento: immutable after account creation */}
             <div className="space-y-2">
               <Label>Data de nascimento</Label>
-              <div className="grid grid-cols-3 gap-2">
-                <Select value={dia} onValueChange={setDia}>
-                  <SelectTrigger><SelectValue placeholder="Dia" /></SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                      <SelectItem key={d} value={String(d)}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={mes} onValueChange={setMes}>
-                  <SelectTrigger><SelectValue placeholder="Mês" /></SelectTrigger>
-                  <SelectContent>
-                    {["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map((m, i) => (
-                      <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={ano} onValueChange={setAno}>
-                  <SelectTrigger><SelectValue placeholder="Ano" /></SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map(y => (
-                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Input
+                value={profile?.data_nascimento ? new Date(`${profile.data_nascimento}T00:00:00`).toLocaleDateString("pt-BR") : "Não informada"}
+                disabled
+                readOnly
+              />
+              <p className="text-xs text-muted-foreground">
+                A data de nascimento não pode ser alterada nas configurações. Se houver um erro, fale com o suporte para análise.
+              </p>
             </div>
 
             {/* País */}
@@ -443,24 +392,14 @@ export default function Configuracoes() {
             </Button>
           </div>
 
-          {/* 2FA */}
-          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          {/* 2FA: do not advertise an unimplemented security control */}
+          <div className="rounded-xl border border-border bg-card p-6 space-y-3">
             <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-primary" /> Verificação em Duas Etapas
+              <ShieldCheck className="h-5 w-5 text-primary" /> Verificação em duas etapas
             </h2>
             <p className="text-sm text-muted-foreground">
-              Quando ativada, ao fazer login você receberá um código de verificação no seu email. 
-              Esse código deverá ser inserido para concluir o acesso, adicionando uma camada extra de segurança à sua conta.
+              A verificação em duas etapas ainda não está disponível nesta versão. Não exibimos um botão de ativação porque isso poderia sugerir uma proteção que ainda não está funcionando.
             </p>
-            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
-              <div>
-                <p className="font-medium text-foreground">
-                  {profile?.two_fa_enabled ? "Ativada" : "Desativada"}
-                </p>
-                <p className="text-xs text-muted-foreground">Verificação por email</p>
-              </div>
-              <Switch checked={profile?.two_fa_enabled || false} onCheckedChange={toggle2FA} />
-            </div>
           </div>
         </TabsContent>
 
