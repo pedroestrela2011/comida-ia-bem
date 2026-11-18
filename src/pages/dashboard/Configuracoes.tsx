@@ -115,18 +115,16 @@ export default function Configuracoes() {
   };
 
   const confirmMfaEnrollment = async () => {
-    if (!mfaFactorId || !/^\\d{6}$/.test(mfaCode)) {
+    if (!mfaFactorId || !/^\d{6}$/.test(mfaCode)) {
       setMfaError("Digite o código de seis números exibido no aplicativo autenticador.");
       return;
     }
     setMfaBusy(true);
     setMfaError("");
     try {
-      const { error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
-      if (challengeError) throw challengeError;
-      const { data: challengeData, error: challengeResultError } =
+      const { data: challengeData, error: challengeError } =
         await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
-      if (challengeResultError) throw challengeResultError;
+      if (challengeError) throw challengeError;
       const { error: verifyError } = await supabase.auth.mfa.verify({
         factorId: mfaFactorId,
         challengeId: challengeData.id,
@@ -532,7 +530,7 @@ export default function Configuracoes() {
                     autoComplete="one-time-code"
                     maxLength={6}
                     value={mfaCode}
-                    onChange={(event) => setMfaCode(event.target.value.replace(/\\D/g, "").slice(0, 6))}
+                    onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                     placeholder="000000"
                   />
                 </div>
