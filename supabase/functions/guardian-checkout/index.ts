@@ -127,7 +127,7 @@ serve(async (req) => {
         },
       },
       success_url: `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/responsavel/contratar?token=${token}&cancelled=1`,
+      cancel_url: `${origin}/responsavel/contratar?cancelled=1`,
     });
 
     const { error: saveError } = await supabase
