@@ -29,8 +29,13 @@ function getUserId(subscription: Stripe.Subscription): string | null {
     ?? metadataString(subscription.metadata, "beneficiary_user_id");
 }
 
+function isEntitled(subscription: Stripe.Subscription): boolean {
+  return subscription.status === "active" || subscription.status === "trialing";
+}
+
 async function syncSubscription(
   supabase: ReturnType<typeof createClient>,
+  stripe: Stripe,
   subscription: Stripe.Subscription,
 ) {
   const userId = getUserId(subscription);
@@ -39,25 +44,53 @@ async function syncSubscription(
     return;
   }
 
-  const hasAccess = subscription.status === "active" || subscription.status === "trialing";
-  const plan = hasAccess ? getPlan(subscription) : "essencial";
-  const { error } = await supabase
+  const customerId = typeof subscription.customer === "string"
+    ? subscription.customer
+    : subscription.customer.id;
+  const customerIds = new Set<string>([customerId]);
+
+  // A beneficiary may have more than one guardian checkout request. Check all
+  // linked customers before removing access after one subscription is canceled.
+  const { data: guardianRequests, error: guardianQueryError } = await supabase
+    .from("guardian_checkout_requests")
+    .select("id, stripe_customer_id")
+    .eq("beneficiary_user_id", userId)
+    .not("stripe_customer_id", "is", null);
+  if (guardianQueryError) throw guardianQueryError;
+
+  for (const request of guardianRequests ?? []) {
+    if (request.stripe_customer_id) customerIds.add(request.stripe_customer_id);
+  }
+
+  const subscriptionsByCustomer = await Promise.all(
+    Array.from(customerIds).map((id) =>
+      stripe.subscriptions.list({ customer: id, status: "all", limit: 100 })
+    ),
+  );
+
+  const currentEntitlement = subscriptionsByCustomer
+    .flatMap((result) => result.data)
+    .filter((candidate) => {
+      if (!isEntitled(candidate)) return false;
+      const candidateUserId = getUserId(candidate);
+      return candidateUserId === userId;
+    })
+    .sort((a, b) => b.created - a.created)[0];
+
+  const { error: profileError } = await supabase
     .from("profiles")
-    .update({ plano: plan, trial_ends_at: null })
+    .update({
+      plano: currentEntitlement ? getPlan(currentEntitlement) : "essencial",
+      ...(currentEntitlement ? { trial_ends_at: null } : {}),
+    })
     .eq("user_id", userId);
-  if (error) throw error;
+  if (profileError) throw profileError;
 
   const guardianRequestId = metadataString(subscription.metadata, "guardian_request_id");
   if (guardianRequestId) {
-    const customerId = typeof subscription.customer === "string"
-      ? subscription.customer
-      : subscription.customer.id;
     const { error: guardianError } = await supabase
       .from("guardian_checkout_requests")
-      .update({
-        status: hasAccess ? "completed" : "checkout_created",
-        stripe_customer_id: customerId,
-      })
+      .update({ status: "completed", stripe_customer_id: customerId })
       .eq("id", guardianRequestId)
       .eq("beneficiary_user_id", userId);
     if (guardianError) throw guardianError;
@@ -109,7 +142,11 @@ serve(async (req) => {
       || event.type === "customer.subscription.updated"
       || event.type === "customer.subscription.deleted"
     ) {
-      await syncSubscription(supabase, event.data.object as Stripe.Subscription);
+      // Stripe can deliver events out of order. Fetch the latest canonical
+      // subscription object instead of trusting an older event snapshot.
+      const eventSubscription = event.data.object as Stripe.Subscription;
+      const currentSubscription = await stripe.subscriptions.retrieve(eventSubscription.id);
+      await syncSubscription(supabase, stripe, currentSubscription);
     } else if (
       event.type === "checkout.session.completed"
       || event.type === "checkout.session.async_payment_succeeded"
@@ -120,7 +157,7 @@ serve(async (req) => {
           ? session.subscription
           : session.subscription.id;
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        await syncSubscription(supabase, subscription);
+        await syncSubscription(supabase, stripe, subscription);
       }
     }
     return json({ received: true });
