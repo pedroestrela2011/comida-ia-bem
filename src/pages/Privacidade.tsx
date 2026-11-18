@@ -40,9 +40,17 @@ const Privacidade = () => (
         limites dos planos.
       </p>
       <p>
-        <strong>Dados de assinatura e pagamento:</strong> plano contratado, situação da assinatura e
-        identificadores de cobrança. Os dados completos do cartão são tratados pelo provedor de
-        pagamento, e não são armazenados pelo ComaFacil.
+        <strong>Dados de assinatura e pagamento:</strong> plano contratado, situação da assinatura,
+        identificadores de cobrança e identificadores técnicos de clientes e sessões no provedor de
+        pagamento. Os dados completos do cartão são tratados pelo provedor de pagamento, e não são
+        armazenados pelo ComaFacil.
+      </p>
+      <p>
+        <strong>Dados do responsável pela contratação:</strong> quando um adulto contrata um plano
+        para uma conta adolescente, podemos tratar nome, e-mail, declaração de maioridade e
+        responsabilidade legal, vínculo do convite, status da solicitação e registros da contratação.
+        O link de convite utiliza um token de uso único armazenado no banco de dados em formato
+        criptográfico de hash.
       </p>
       <p>
         <strong>Dados técnicos e de funcionamento:</strong> informações estritamente necessárias
@@ -82,10 +90,16 @@ const Privacidade = () => (
         previstas na legislação aplicável.
       </p>
       <p>
-        A contratação de planos pagos por menores de 18 anos deverá ser realizada por responsável
-        legal, conforme os Termos de Uso e o procedimento específico de contratação. A participação
-        do responsável será solicitada sempre que exigida pela legislação ou necessária para a
-        contratação.
+        A contratação de planos pagos por menores de 18 anos deverá ser realizada por um adulto que
+        declare ser pai, mãe ou responsável legal, por meio de um convite individual com validade
+        limitada e uso único. O adulto informa nome e e-mail e realiza o pagamento sem precisar criar
+        uma conta ComaFacil.
+      </p>
+      <p>
+        O fluxo registra a declaração e os dados informados pelo adulto, mas não realiza verificação
+        documental automática do vínculo familiar ou da autoridade legal. Essa limitação deve ser
+        considerada na avaliação do procedimento e poderá exigir medidas adicionais antes da
+        disponibilização ampla da contratação.
       </p>
     </LegalSection>
 
@@ -94,7 +108,7 @@ const Privacidade = () => (
         <li>criar, manter e proteger contas e autenticar usuários;</li>
         <li>gerar cardápios, receitas, listas de compras e análises solicitadas;</li>
         <li>considerar alergias, restrições e informações fornecidas para adaptar respostas e alertas;</li>
-        <li>administrar planos, assinaturas, cobranças e limites de utilização;</li>
+        <li>administrar planos, assinaturas, cobranças, convites de responsáveis e limites de utilização;</li>
         <li>salvar preferências e conteúdos solicitados pelo usuário;</li>
         <li>prestar suporte e enviar comunicações operacionais;</li>
         <li>prevenir fraude, abuso, acessos não autorizados e falhas de segurança;</li>
@@ -135,7 +149,7 @@ const Privacidade = () => (
       <ul className="list-disc pl-5 space-y-2">
         <li>serviços de hospedagem, infraestrutura, banco de dados e autenticação;</li>
         <li>gateway e provedores de inteligência artificial, para processar solicitações de IA;</li>
-        <li>provedor de pagamento, para processar e administrar assinaturas;</li>
+        <li>provedor de pagamento, para processar e administrar assinaturas e identificar o adulto contratante;</li>
         <li>serviços de envio de e-mails operacionais e de suporte;</li>
         <li>autoridades públicas, quando houver obrigação legal, regulatória ou ordem válida.</li>
       </ul>
