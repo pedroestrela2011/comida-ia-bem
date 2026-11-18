@@ -1,5 +1,8 @@
 name: Validate application
 
+permissions:
+  contents: write
+
 on:
   pull_request:
     branches: [main]
@@ -21,12 +24,16 @@ jobs:
         run: |
           npm install --package-lock-only --no-audit --no-fund
           npm ci --no-audit --no-fund
-      - name: Export regenerated lockfile for repository update
-        uses: actions/upload-artifact@v4
-        with:
-          name: regenerated-package-lock
-          path: package-lock.json
-          if-no-files-found: error
+      - name: Commit synchronized lockfile to security branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/security/age-checkout-guardrails'
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add package-lock.json
+            git commit -m 'chore: synchronize npm lockfile'
+            git push
+          fi
       - name: Lint changed application and security files
         run: >-
           npx eslint
