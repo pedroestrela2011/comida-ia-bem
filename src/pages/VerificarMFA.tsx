@@ -52,7 +52,7 @@ export default function VerificarMFA() {
 
   const verify = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!factorId || !/^\\d{6}$/.test(code)) {
+    if (!factorId || !/^\d{6}$/.test(code)) {
       setError("Digite o código de seis números do aplicativo autenticador.");
       return;
     }
@@ -113,7 +113,7 @@ export default function VerificarMFA() {
                   autoComplete="one-time-code"
                   maxLength={6}
                   value={code}
-                  onChange={(event) => setCode(event.target.value.replace(/\\D/g, "").slice(0, 6))}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                   placeholder="000000"
                   className="text-center text-xl tracking-[0.4em]"
                   disabled={!factorId || verifying}
