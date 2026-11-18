@@ -1,4 +1,3 @@
-import { isMfaSatisfied } from "../_shared/mfa.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
@@ -59,7 +58,6 @@ serve(async (req) => {
     const { data: authData, error: authError } = await authClient.auth.getUser(token);
     if (authError || !authData.user?.email) return json({ error: "Não autenticado" }, 401);
     const user = authData.user;
-    if (!(await isMfaSatisfied(token, user.id))) return json({ error: "MFA_REQUIRED" }, 403);
 
     const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
