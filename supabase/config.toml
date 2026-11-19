@@ -18,3 +18,9 @@ verify_jwt = false
 [functions.premium-assistant]
 verify_jwt = false
 
+
+[functions.guardian-checkout]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false

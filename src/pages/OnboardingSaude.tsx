@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { PENDING_SIGNUP_KEY } from "./Cadastro";
 import { StepCorpo, CorpoData } from "@/components/onboarding/StepCorpo";
 import { StepObjetivos, ObjetivosData } from "@/components/onboarding/StepObjetivos";
 import { StepSaude, SaudeData } from "@/components/onboarding/StepSaude";
 import { calcIMC } from "@/lib/health";
+import { supabase } from "@/integrations/supabase/client";
 
 type PendingSignup = {
   nome: string;
   email: string;
-  senha: string;
   data_nascimento: string;
   pais: string;
-  health?: any;
 };
 
 type Health = {
@@ -29,6 +29,19 @@ type Health = {
   condicoes_outras: string;
   onboarding_completo: true;
 };
+
+function isUnder18OrBirthDateInvalid(value?: string) {
+  if (!value) return true;
+  const birth = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(birth.getTime()) || birth > new Date()) return true;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  if (
+    today.getMonth() < birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+  ) age -= 1;
+  return age < 18;
+}
 
 const OnboardingSaude = () => {
   const navigate = useNavigate();
@@ -58,12 +71,25 @@ const OnboardingSaude = () => {
     try {
       setPending(JSON.parse(raw));
     } catch {
+      sessionStorage.removeItem(PENDING_SIGNUP_KEY);
       navigate("/cadastro", { replace: true });
     }
   }, [navigate, toast]);
 
-  const finish = (dSaude: SaudeData) => {
+  const requiresGuardian = useMemo(
+    () => isUnder18OrBirthDateInvalid(pending?.data_nascimento),
+    [pending?.data_nascimento],
+  );
+
+  const finish = async (dSaude: SaudeData) => {
     if (!pending || !corpo) return;
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      toast({ title: "Entre na sua conta para continuar", variant: "destructive" });
+      navigate("/login", { replace: true });
+      return;
+    }
+
     const health: Health = {
       peso_kg: corpo.peso_kg,
       altura_cm: corpo.altura_cm,
@@ -77,14 +103,58 @@ const OnboardingSaude = () => {
       condicoes_outras: dSaude.condicoes_outras,
       onboarding_completo: true,
     };
-    sessionStorage.setItem(
-      PENDING_SIGNUP_KEY,
-      JSON.stringify({ ...pending, health }),
-    );
-    navigate("/escolher-plano");
+
+    const consentText = "Autorizo o uso dos dados de saúde e alimentação fornecidos para personalizar cardápios, receitas e alertas solicitados por mim. Sei que posso revogar esta autorização e que recursos dependentes desses dados poderão deixar de funcionar.";
+    const { error } = await supabase.rpc("save_health_profile_with_consent", {
+      p_profile_data: health,
+      p_policy_version: "2026-11-19",
+      p_consent_text: consentText,
+      p_confirm_consent: true,
+    });
+    if (error) {
+      toast({
+        title: "Não foi possível salvar seus dados",
+        description: error.message?.includes("responsável")
+          ? "Para menores de 18 anos, o cadastro de dados de saúde exige autorização do responsável. Esse fluxo ainda não está disponível."
+          : "Verifique sua conexão e tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+    navigate("/escolher-plano", { replace: true });
   };
 
   const pct = step === 1 ? 33 : step === 2 ? 66 : 100;
+
+  if (!pending) {
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Carregando cadastro...</div>;
+  }
+
+  // Until a validated guardian-authorization flow exists, do not collect health,
+  // body measurements, or dietary-profile data from anyone under 18.
+  if (requiresGuardian) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-10">
+        <div className="w-full max-w-lg space-y-5 rounded-xl border border-border bg-card p-6">
+          <h2 className="text-2xl font-display font-bold text-foreground">Vamos concluir seu cadastro</h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Para proteger seus dados, esta etapa não solicita informações de saúde, medidas corporais ou hábitos alimentares de menores de 18 anos. Você pode continuar usando as funções disponíveis sem preencher esses dados. Um responsável precisará concluir um fluxo próprio de autorização antes que esses recursos possam ser ativados.
+          </p>
+          <Button className="w-full" onClick={() => {
+            sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+            navigate("/escolher-plano", { replace: true });
+          }}>
+            Continuar sem informar dados de saúde
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Consulte a <Link to="/privacidade" className="text-primary underline">Política de Privacidade</Link>.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -97,10 +167,7 @@ const OnboardingSaude = () => {
             </span>
           </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all duration-500"
-              style={{ width: `${pct}%` }}
-            />
+            <div className="h-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
           </div>
         </div>
       </div>
@@ -110,8 +177,8 @@ const OnboardingSaude = () => {
           {step === 1 && (
             <StepCorpo
               initial={corpo?.raw ?? { peso: "", altura: "" }}
-              dataNascimento={pending?.data_nascimento}
-              pais={pending?.pais}
+              dataNascimento={pending.data_nascimento}
+              pais={pending.pais}
               onNext={(d) => {
                 setCorpo(d);
                 setStep(2);
@@ -138,20 +205,18 @@ const OnboardingSaude = () => {
               }}
             />
           )}
-
           <div className="mt-8 rounded-lg border border-border bg-muted/50 p-4">
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Suas informações de saúde são dados sensíveis e serão usadas apenas para personalizar
-              seus cardápios e alertas. Você pode revogar essa autorização e excluir seus dados
-              quando quiser.{" "}
-              <Link to="/privacidade" className="text-primary underline">
-                Política de Privacidade
-              </Link>
-              . O ComaFacil não substitui nutricionista ou médico —{" "}
-              <Link to="/aviso-medico" className="text-primary underline">
-                leia o aviso de saúde
-              </Link>
-              .
+              As informações de saúde são dados pessoais sensíveis e serão usadas para personalizar
+              cardápios e alertas, conforme a base legal aplicável. Consulte a{" "}
+              <Link to="/privacidade" className="text-primary underline">Política de Privacidade</Link>.
+              {" "}Para exercer seus direitos, incluindo solicitar revogação de consentimento quando
+              essa for a base legal, escreva para{" "}
+              <a href="mailto:privacidade@comafacil.com.br" className="text-primary underline">
+                privacidade@comafacil.com.br
+              </a>.
+              {" "}O Coma Fácil não substitui nutricionista ou médico —{" "}
+              <Link to="/aviso-medico" className="text-primary underline">leia o aviso de saúde</Link>.
             </p>
           </div>
         </div>

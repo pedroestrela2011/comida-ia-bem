@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { CONDICOES_OPCOES, RESTRICOES_OPCOES } from "@/lib/health";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export type SaudeData = {
   restricoes: string[];
@@ -51,9 +52,11 @@ export function StepSaude({
   onSubmit: (d: SaudeData) => void;
 }) {
   const [data, setData] = useState<SaudeData>(initial);
+  const [healthConsent, setHealthConsent] = useState(false);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!healthConsent) return;
     onSubmit(data);
   };
 
@@ -118,6 +121,16 @@ export function StepSaude({
         )}
       </div>
 
+      <div className="rounded-lg border border-border p-4 space-y-3">
+        <div className="flex items-start gap-3">
+          <Checkbox id="health-data-consent" checked={healthConsent} onCheckedChange={(checked) => setHealthConsent(checked === true)} />
+          <Label htmlFor="health-data-consent" className="text-sm leading-relaxed cursor-pointer">
+            Autorizo, de forma livre, informada e específica, o uso dos dados de saúde e alimentação que forneci para personalizar cardápios, receitas e alertas solicitados por mim. Sei que posso retirar esta autorização nas configurações; recursos que dependem desses dados poderão deixar de funcionar. Consulte a <a href="/privacidade" className="text-primary underline">Política de Privacidade</a>.
+          </Label>
+        </div>
+        <p className="text-xs text-muted-foreground">Esta autorização é separada da aceitação dos Termos de Uso. Se você tem menos de 18 anos, não marque esta opção em seu próprio nome: será necessária uma autorização válida de seu responsável, por um fluxo próprio.</p>
+      </div>
+
       <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
         <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
         <p>
@@ -129,7 +142,7 @@ export function StepSaude({
         <Button type="button" variant="outline" size="lg" onClick={onBack} className="h-12 gap-2">
           <ArrowLeft size={18} /> Voltar
         </Button>
-        <Button type="submit" size="lg" disabled={submitting} className="flex-1 h-12 gap-2">
+        <Button type="submit" size="lg" disabled={submitting || !healthConsent} className="flex-1 h-12 gap-2">
           {submitting ? "Salvando..." : "Concluir e Continuar"} {!submitting && <ArrowRight size={18} />}
         </Button>
       </div>

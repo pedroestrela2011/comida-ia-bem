@@ -9,7 +9,8 @@ const VerificarEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean }) || {};
+  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean; flow?: string }) || {};
+  const onboardingFlow = state.flow === "onboarding" || new URLSearchParams(location.search).get("flow") === "onboarding";
   const email = state.email || "";
   const planoFromState = state.plano;
   const skipCheckout = state.skipCheckout === true;
@@ -21,6 +22,12 @@ const VerificarEmail = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         setRedirecting(true);
+
+        if (onboardingFlow) {
+          toast({ title: "Email verificado!", description: "Continue seu cadastro." });
+          navigate("/onboarding-saude", { replace: true });
+          return;
+        }
 
         if (skipCheckout) {
           toast({ title: "Email verificado!", description: "Bem-vindo ao ComaFacil." });
@@ -45,9 +52,11 @@ const VerificarEmail = () => {
             if (data?.url) {
               const win = window.open(data.url, "_blank", "noopener,noreferrer");
               if (!win) {
-                window.top
-                  ? (window.top.location.href = data.url)
-                  : (window.location.href = data.url);
+                if (window.top) {
+                  window.top.location.href = data.url;
+                } else {
+                  window.location.href = data.url;
+                }
               }
               navigate("/dashboard");
               return;
@@ -66,7 +75,7 @@ const VerificarEmail = () => {
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate, toast, planoFromState, skipCheckout]);
+  }, [navigate, toast, planoFromState, skipCheckout, onboardingFlow]);
 
   const handleResend = async () => {
     setResending(true);
@@ -127,7 +136,11 @@ const VerificarEmail = () => {
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
-            <p className="text-sm text-muted-foreground">Você será redirecionado automaticamente para o checkout</p>
+            <p className="text-sm text-muted-foreground">
+              {onboardingFlow
+                ? "Depois da confirmação, você poderá concluir o onboarding da sua conta."
+                : "Depois da confirmação, você poderá continuar para a próxima etapa."}
+            </p>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
