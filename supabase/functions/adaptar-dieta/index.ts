@@ -111,13 +111,22 @@ serve(async (req) => {
 
     const { data: h, error: profileError } = await serviceClient
       .from("profiles")
-      .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+      .select("data_nascimento,peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
       .eq("user_id", authData.user.id)
       .maybeSingle();
     if (profileError) {
       console.error("Health profile lookup failed:", profileError);
       return new Response(JSON.stringify({ error: "Não foi possível carregar os dados de saúde autorizados." }), {
         status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const age = h?.data_nascimento
+      ? Math.floor((Date.now() - new Date(h.data_nascimento).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+      : null;
+    if (age === null || age < 18) {
+      return new Response(JSON.stringify({ error: "Este recurso com dados de saúde ainda não está disponível para menores de 18 anos." }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
