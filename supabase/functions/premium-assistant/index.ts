@@ -51,9 +51,7 @@ serve(async (req) => {
     const [{ data: profile }, { data: adminRole }] = await Promise.all([
       service
         .from("profiles")
-        .select(
-          "nome,data_nascimento,peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras,plano",
-        )
+        .select("nome,data_nascimento,plano")
         .eq("user_id", userId)
         .maybeSingle(),
       service
@@ -63,6 +61,33 @@ serve(async (req) => {
         .eq("role", "admin")
         .maybeSingle(),
     ]);
+
+    // Health information is loaded only after the server confirms active consent.
+    const { data: activeConsent, error: consentError } = await service
+      .from("health_data_consents")
+      .select("id")
+      .eq("user_id", userId)
+      .is("revoked_at", null)
+      .limit(1)
+      .maybeSingle();
+    if (consentError) {
+      console.error("Health consent lookup failed:", consentError);
+      return json({ error: "Não foi possível confirmar a autorização para dados de saúde." }, 503);
+    }
+
+    let healthProfile: Record<string, any> = {};
+    if (activeConsent) {
+      const { data, error } = await service
+        .from("profiles")
+        .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error) {
+        console.error("Health profile lookup failed:", error);
+        return json({ error: "Não foi possível carregar os dados autorizados." }, 503);
+      }
+      healthProfile = data || {};
+    }
 
     const plano = (profile?.plano || "essencial").toLowerCase();
     const isTop = plano === "performance" || Boolean(adminRole);
@@ -106,13 +131,13 @@ serve(async (req) => {
       const d = new Date(profile.data_nascimento);
       idade = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
     }
-    const restricoes = (profile?.restricoes_alimentares || []).filter(
+    const restricoes = (healthProfile.restricoes_alimentares || []).filter(
       (r: string) => r && r.toLowerCase() !== "nenhuma",
     );
-    const condicoes = (profile?.condicoes_saude || []).filter(
+    const condicoes = (healthProfile.condicoes_saude || []).filter(
       (c: string) => c && c.toLowerCase() !== "nenhuma",
     );
-    if (profile?.condicoes_outras) condicoes.push(profile.condicoes_outras);
+    if (healthProfile.condicoes_outras) condicoes.push(healthProfile.condicoes_outras);
 
     const { data: ultimoCardapio } = await service
       .from("cardapios_salvos")
@@ -125,14 +150,14 @@ serve(async (req) => {
     const ctx = [
       `Nome: ${profile?.nome || "usuário"}`,
       idade ? `Idade: ${idade} anos` : null,
-      profile?.peso_kg ? `Peso: ${profile.peso_kg}kg` : null,
-      profile?.altura_cm ? `Altura: ${profile.altura_cm}cm` : null,
-      profile?.imc ? `IMC: ${profile.imc}` : null,
-      profile?.objetivo ? `Objetivo principal: ${profile.objetivo}` : null,
-      profile?.nivel_atividade ? `Nível de atividade física: ${profile.nivel_atividade}` : null,
-      profile?.refeicoes_dia ? `Refeições por dia: ${profile.refeicoes_dia}` : null,
+      healthProfile.peso_kg ? `Peso: ${profile.peso_kg}kg` : null,
+      healthProfile.altura_cm ? `Altura: ${profile.altura_cm}cm` : null,
+      healthProfile.imc ? `IMC: ${profile.imc}` : null,
+      healthProfile.objetivo ? `Objetivo principal: ${profile.objetivo}` : null,
+      healthProfile.nivel_atividade ? `Nível de atividade física: ${profile.nivel_atividade}` : null,
+      healthProfile.refeicoes_dia ? `Refeições por dia: ${profile.refeicoes_dia}` : null,
       restricoes.length ? `Restrições alimentares: ${restricoes.join(", ")}` : "Restrições alimentares: nenhuma",
-      profile?.alergias ? `Alergias alimentares: ${profile.alergias}` : "Alergias alimentares: nenhuma",
+      healthProfile.alergias ? `Alergias alimentares: ${profile.alergias}` : "Alergias alimentares: nenhuma",
       condicoes.length ? `Condições de saúde: ${condicoes.join(", ")}` : "Condições de saúde: nenhuma",
       ultimoCardapio
         ? `Plano alimentar ativo: sim (cardápio ${ultimoCardapio.tipo === "esporte" ? "esportivo" : "normal"} salvo recentemente)`
