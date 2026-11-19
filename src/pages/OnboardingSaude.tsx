@@ -85,14 +85,19 @@ const OnboardingSaude = () => {
       onboarding_completo: true,
     };
 
-    const { error } = await supabase
-      .from("profiles")
-      .update(health)
-      .eq("user_id", authData.user.id);
+    const consentText = "Autorizo o uso dos dados de saúde e alimentação fornecidos para personalizar cardápios, receitas e alertas solicitados por mim. Sei que posso revogar esta autorização e que recursos dependentes desses dados poderão deixar de funcionar.";
+    const { error } = await supabase.rpc("save_health_profile_with_consent", {
+      p_profile_data: health,
+      p_policy_version: "2026-11-19",
+      p_consent_text: consentText,
+      p_confirm_consent: true,
+    });
     if (error) {
       toast({
         title: "Não foi possível salvar seus dados",
-        description: "Verifique sua conexão e tente novamente.",
+        description: error.message?.includes("responsável")
+        ? "Para menores de 18 anos, o cadastro de dados de saúde exige autorização do responsável. Esse fluxo ainda não está disponível."
+        : "Verifique sua conexão e tente novamente.",
         variant: "destructive",
       });
       return;
