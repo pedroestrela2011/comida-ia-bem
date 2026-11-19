@@ -93,7 +93,11 @@ serve(async (req) => {
         "prod_UH38eWsa8YkfG9": "equilibrio",
         "prod_UH39mhR0txjsdp": "performance",
       };
-      const plan = guardianPlanMap[String(productId)] ?? "essencial";
+      const plan = guardianPlanMap[String(productId)];
+      if (!plan) {
+        await supabase.from("profiles").update({ plano: "essencial", trial_ends_at: null }).eq("user_id", user.id);
+        return json({ subscribed: false, plan: "essencial", trial_ends_at: null, subscription_end: null });
+      }
       const subscriptionEnd = new Date(linkedSubscription.current_period_end * 1000).toISOString();
       await supabase.from("profiles").update({ plano: plan, trial_ends_at: null }).eq("user_id", user.id);
       return json({
@@ -142,7 +146,11 @@ serve(async (req) => {
       "prod_UH38eWsa8YkfG9": "equilibrio",
       "prod_UH39mhR0txjsdp": "performance",
     };
-    const plan = productPlanMap[String(productId)] ?? "essencial";
+    const plan = productPlanMap[String(productId)];
+    if (!plan) {
+      await supabase.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
+      return json({ subscribed: false, plan: "essencial", trial_ends_at: null, subscription_end: null });
+    }
     const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
     await supabase.from("profiles").update({ plano: plan }).eq("user_id", user.id);
