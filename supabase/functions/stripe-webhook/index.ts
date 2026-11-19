@@ -19,9 +19,9 @@ function metadataString(metadata: Stripe.Metadata | null | undefined, key: strin
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-function getPlan(subscription: Stripe.Subscription): string {
+function getPlan(subscription: Stripe.Subscription): string | null {
   const product = subscription.items.data[0]?.price.product;
-  return PLAN_BY_PRODUCT[String(product)] ?? "essencial";
+  return PLAN_BY_PRODUCT[String(product)] ?? null;
 }
 
 function getUserId(subscription: Stripe.Subscription): string | null {
@@ -71,7 +71,7 @@ async function syncSubscription(
   const currentEntitlement = subscriptionsByCustomer
     .flatMap((result) => result.data)
     .filter((candidate) => {
-      if (!isEntitled(candidate)) return false;
+      if (!isEntitled(candidate) || !getPlan(candidate)) return false;
       const candidateUserId = getUserId(candidate);
       return candidateUserId === userId;
     })
