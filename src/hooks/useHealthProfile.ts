@@ -56,7 +56,7 @@ export function useHealthProfile() {
   useEffect(() => { load(); }, [load]);
 
   const update = useCallback(
-    async (patch: Partial<HealthProfile>) => {
+    async (patch: Partial<HealthProfile>, consentConfirmed = false) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const next: any = { ...patch };
@@ -71,7 +71,7 @@ export function useHealthProfile() {
         p_profile_data: next,
         p_policy_version: "2026-11-19",
         p_consent_text: "Autorizo o uso dos dados de saúde e alimentação fornecidos para personalizar recursos solicitados por mim.",
-        p_confirm_consent: !hasConsent,
+        p_confirm_consent: !hasConsent && consentConfirmed,
       });
       if (error) throw error;
       await load();
