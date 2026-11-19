@@ -39,7 +39,7 @@ serve(async (req) => {
     let healthRestrictionsList: string[] = [];
     let healthAllergies = "";
     try {
-      const { data: activeConsent } = await serviceForHealth
+      const { data: activeConsent, error: consentLookupError } = await serviceForHealth
         .from("health_data_consents")
         .select("id")
         .eq("user_id", userIdForHealth)
@@ -47,13 +47,28 @@ serve(async (req) => {
         .order("granted_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (consentLookupError) throw consentLookupError;
+
       if (activeConsent) {
-      const { data: hp } = await serviceForHealth
-        .from("profiles")
-        .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
-        .eq("user_id", userIdForHealth)
-        .maybeSingle();
-      if (hp) {
+        const { data: hp, error: healthProfileError } = await serviceForHealth
+          .from("profiles")
+          .select("data_nascimento,peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+          .eq("user_id", userIdForHealth)
+          .maybeSingle();
+        if (healthProfileError) throw healthProfileError;
+
+        const birthDate = hp?.data_nascimento
+          ? new Date(`${hp.data_nascimento}T00:00:00Z`)
+          : null;
+        const today = new Date();
+        const age = birthDate && Number.isFinite(birthDate.getTime())
+          ? today.getUTCFullYear() - birthDate.getUTCFullYear() -
+            (today.getUTCMonth() < birthDate.getUTCMonth() ||
+            (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate()) ? 1 : 0)
+          : null;
+
+        // This function must fail closed for minors or profiles without a valid birth date.
+        if (hp && age !== null && age >= 18) {
         const parts: string[] = [];
         if (hp.peso_kg) parts.push(`Peso: ${hp.peso_kg}kg`);
         if (hp.altura_cm) parts.push(`Altura: ${hp.altura_cm}cm`);
