@@ -108,6 +108,18 @@ const OnboardingSaude = () => {
     navigate("/escolher-plano", { replace: true });
   };
 
+  const isMinor = (() => {
+    if (!pending?.data_nascimento) return false;
+    const birth = new Date(`${pending.data_nascimento}T00:00:00`);
+    if (Number.isNaN(birth.getTime())) return false;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const beforeBirthday = today.getMonth() < birth.getMonth()
+      || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+    if (beforeBirthday) age -= 1;
+    return age >= 12 && age < 18;
+  })();
+
   const pct = step === 1 ? 33 : step === 2 ? 66 : 100;
 
   return (
@@ -152,7 +164,22 @@ const OnboardingSaude = () => {
               }}
             />
           )}
-          {step === 3 && (
+          {step === 3 && isMinor && (
+            <div className="space-y-5 rounded-xl border border-border bg-card p-6">
+              <h2 className="text-2xl font-display font-bold text-foreground">Etapa de saúde opcional</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Como você tem menos de 18 anos, não vamos solicitar sua autorização individual para tratar dados de saúde. Você pode continuar sem preencher nem salvar peso, altura, alergias ou condições de saúde. Um fluxo específico de autorização do responsável será necessário antes de ativar esses recursos.
+              </p>
+              <div className="flex gap-3">
+                <Button type="button" variant="outline" onClick={() => setStep(2)}>Voltar</Button>
+                <Button type="button" className="flex-1" onClick={() => {
+                  sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+                  navigate("/escolher-plano", { replace: true });
+                }}>Continuar sem dados de saúde</Button>
+              </div>
+            </div>
+          )}
+          {step === 3 && !isMinor && (
             <StepSaude
               initial={saude}
               onBack={() => setStep(2)}
