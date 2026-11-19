@@ -39,6 +39,15 @@ serve(async (req) => {
     let healthRestrictionsList: string[] = [];
     let healthAllergies = "";
     try {
+      const { data: activeConsent } = await serviceForHealth
+        .from("health_data_consents")
+        .select("id")
+        .eq("user_id", userIdForHealth)
+        .is("revoked_at", null)
+        .order("granted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (activeConsent) {
       const { data: hp } = await serviceForHealth
         .from("profiles")
         .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
@@ -78,6 +87,7 @@ REGRAS OBRIGATÓRIAS DE PERSONALIZAÇÃO:
 4. Se qualquer preferência informada no formulário conflitar com uma condição/restrição, PREVALECE a condição/restrição de saúde. Menção explícita ao motivo em "dicas".
 ${hasCritical ? '5. Inclua em "dicas" ou "descricao" um breve motivo educativo quando a escolha for feita por causa de uma condição de saúde do usuário.' : ""}`;
         }
+      }
       }
     } catch (_e) { /* ignore */ }
 
