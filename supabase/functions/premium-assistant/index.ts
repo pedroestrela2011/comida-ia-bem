@@ -147,18 +147,24 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
+    const healthContext = canUseHealthData
+      ? [
+          healthProfile.peso_kg ? `Peso: ${healthProfile.peso_kg}kg` : null,
+          healthProfile.altura_cm ? `Altura: ${healthProfile.altura_cm}cm` : null,
+          healthProfile.imc ? `IMC: ${healthProfile.imc}` : null,
+          healthProfile.objetivo ? `Objetivo principal: ${healthProfile.objetivo}` : null,
+          healthProfile.nivel_atividade ? `Nível de atividade física: ${healthProfile.nivel_atividade}` : null,
+          healthProfile.refeicoes_dia ? `Refeições por dia: ${healthProfile.refeicoes_dia}` : null,
+          restricoes.length ? `Restrições alimentares: ${restricoes.join(", ")}` : "Restrições alimentares: nenhuma",
+          healthProfile.alergias ? `Alergias alimentares: ${healthProfile.alergias}` : "Alergias alimentares: nenhuma",
+          condicoes.length ? `Condições de saúde: ${condicoes.join(", ")}` : "Condições de saúde: nenhuma",
+        ].filter(Boolean)
+      : ["Dados de saúde não utilizados: sem autorização ativa ou usuário menor de 18 anos"];
+
     const ctx = [
       `Nome: ${profile?.nome || "usuário"}`,
-      idade ? `Idade: ${idade} anos` : null,
-      healthProfile.peso_kg ? `Peso: ${profile.peso_kg}kg` : null,
-      healthProfile.altura_cm ? `Altura: ${profile.altura_cm}cm` : null,
-      healthProfile.imc ? `IMC: ${profile.imc}` : null,
-      healthProfile.objetivo ? `Objetivo principal: ${profile.objetivo}` : null,
-      healthProfile.nivel_atividade ? `Nível de atividade física: ${profile.nivel_atividade}` : null,
-      healthProfile.refeicoes_dia ? `Refeições por dia: ${profile.refeicoes_dia}` : null,
-      restricoes.length ? `Restrições alimentares: ${restricoes.join(", ")}` : "Restrições alimentares: nenhuma",
-      healthProfile.alergias ? `Alergias alimentares: ${profile.alergias}` : "Alergias alimentares: nenhuma",
-      condicoes.length ? `Condições de saúde: ${condicoes.join(", ")}` : "Condições de saúde: nenhuma",
+      idade !== null ? `Idade: ${idade} anos` : null,
+      ...healthContext,
       ultimoCardapio
         ? `Plano alimentar ativo: sim (cardápio ${ultimoCardapio.tipo === "esporte" ? "esportivo" : "normal"} salvo recentemente)`
         : "Plano alimentar ativo: nenhum",
