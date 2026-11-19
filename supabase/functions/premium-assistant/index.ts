@@ -75,8 +75,13 @@ serve(async (req) => {
       return json({ error: "Não foi possível confirmar a autorização para dados de saúde." }, 503);
     }
 
+    const idade = profile?.data_nascimento
+      ? Math.floor((Date.now() - new Date(profile.data_nascimento).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+      : null;
+    const canUseHealthData = idade !== null && idade >= 18 && Boolean(activeConsent);
+
     let healthProfile: Record<string, any> = {};
-    if (activeConsent) {
+    if (canUseHealthData) {
       const { data, error } = await service
         .from("profiles")
         .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
@@ -126,11 +131,6 @@ serve(async (req) => {
     }
 
     // ---- User context (never displayed on screen) ----
-    let idade: number | null = null;
-    if (profile?.data_nascimento) {
-      const d = new Date(profile.data_nascimento);
-      idade = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
-    }
     const restricoes = (healthProfile.restricoes_alimentares || []).filter(
       (r: string) => r && r.toLowerCase() !== "nenhuma",
     );
