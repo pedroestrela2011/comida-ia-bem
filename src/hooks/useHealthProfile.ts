@@ -24,6 +24,7 @@ const HEALTH_FIELDS = [
 export function useHealthProfile() {
   const [profile, setProfile] = useState<(HealthProfile & { data_nascimento?: string | null; pais?: string | null }) | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasConsent, setHasConsent] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,6 +40,14 @@ export function useHealthProfile() {
         .eq("user_id", user.id)
         .maybeSingle();
       setProfile((data as any) || null);
+      const { data: consent } = await (supabase as any)
+        .from("health_data_consents")
+        .select("id")
+        .eq("user_id", user.id)
+        .is("revoked_at", null)
+        .limit(1)
+        .maybeSingle();
+      setHasConsent(!!consent);
     } finally {
       setLoading(false);
     }
@@ -58,15 +67,23 @@ export function useHealthProfile() {
         const altura = next.altura_cm ?? profile?.altura_cm;
         if (peso && altura) next.imc = calcIMC(Number(peso), Number(altura));
       }
-      const { error } = await supabase
-        .from("profiles")
-        .update(next)
-        .eq("user_id", user.id);
+      const { error } = await (supabase as any).rpc("save_health_profile_with_consent", {
+        p_profile_data: next,
+        p_policy_version: "2026-11-19",
+        p_consent_text: "Autorizo o uso dos dados de saúde e alimentação fornecidos para personalizar recursos solicitados por mim.",
+        p_confirm_consent: !hasConsent,
+      });
       if (error) throw error;
       await load();
     },
-    [load, profile],
+    [load, profile, hasConsent],
   );
 
-  return { profile, loading, reload: load, update };
+  const revokeConsent = useCallback(async () => {
+    const { error } = await (supabase as any).rpc("revoke_health_data_consent");
+    if (error) throw error;
+    await load();
+  }, [load]);
+
+  return { profile, loading, reload: load, update, hasConsent, revokeConsent };
 }
