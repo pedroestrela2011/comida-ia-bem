@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -503,7 +504,8 @@ export default function Configuracoes() {
 }
 
 function DadosSaudeTab() {
-  const { profile, loading, update } = useHealthProfile();
+  const { profile, loading, update, hasConsent, revokeConsent } = useHealthProfile();
+  const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [peso, setPeso] = useState("");
   const [altura, setAltura] = useState("");
   const [objetivo, setObjetivo] = useState("");
@@ -549,7 +551,7 @@ function DadosSaudeTab() {
         alergias: alergias || null,
         condicoes_saude: condicoes,
         condicoes_outras: outras || null,
-      });
+      }, consentConfirmed);
       toast({ title: "Dados de saúde atualizados!" });
     } catch (e: any) {
       toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
@@ -682,7 +684,31 @@ function DadosSaudeTab() {
         )}
       </div>
 
-      <Button onClick={salvar} disabled={saving}>
+      {!hasConsent && (
+        <div className="rounded-lg border border-border p-4 space-y-2">
+          <div className="flex items-start gap-3">
+            <Checkbox id="settings-health-consent" checked={consentConfirmed} onCheckedChange={(checked) => setConsentConfirmed(checked === true)} />
+            <Label htmlFor="settings-health-consent" className="text-sm leading-relaxed cursor-pointer">
+              Autorizo separadamente o uso dos dados de saúde e alimentação para personalizar cardápios, receitas e alertas solicitados por mim, conforme a <a href="/privacidade" className="text-primary underline">Política de Privacidade</a>. Posso revogar esta autorização.
+            </Label>
+          </div>
+        </div>
+      )}
+      {hasConsent && (
+        <div className="rounded-lg border border-border p-4 space-y-2">
+          <p className="text-sm">Autorização para uso de dados de saúde ativa.</p>
+          <Button type="button" variant="outline" onClick={async () => {
+            try {
+              await revokeConsent();
+              setConsentConfirmed(false);
+              toast({ title: "Autorização revogada", description: "Os dados de saúde salvos foram apagados do perfil." });
+            } catch (e: any) {
+              toast({ title: "Não foi possível revogar", description: e.message, variant: "destructive" });
+            }
+          }}>Revogar autorização e apagar dados de saúde</Button>
+        </div>
+      )}
+      <Button onClick={salvar} disabled={saving || (!hasConsent && !consentConfirmed)}>
         {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Salvando...</> : "Salvar dados de saúde"}
       </Button>
     </div>
