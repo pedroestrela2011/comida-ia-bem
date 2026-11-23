@@ -24,3 +24,9 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.create-health-data-consent-request]
+verify_jwt = true
+
+[functions.accept-health-data-consent]
+verify_jwt = true
