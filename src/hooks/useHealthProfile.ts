@@ -29,19 +29,20 @@ export function useHealthProfile() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setProfile(null);
+    setHasConsent(false);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setProfile(null);
-        return;
-      }
-      const { data } = await supabase
+      if (!user) return;
+
+      const { data, error: profileError } = await supabase
         .from("profiles")
         .select(HEALTH_FIELDS.join(","))
         .eq("user_id", user.id)
         .maybeSingle();
-      setProfile((data as any) || null);
-      const age = calculateAge(String((data as any)?.data_nascimento || ""));
+      if (profileError || !data) return;
+
+      const age = calculateAge(String((data as any).data_nascimento || ""));
       const expectedAuthorization = age !== null && age < 18 ? "guardian" : "self";
       let consentQuery = (supabase as any)
         .from("health_data_consents")
@@ -49,11 +50,18 @@ export function useHealthProfile() {
         .eq("user_id", user.id)
         .eq("authorization_type", expectedAuthorization)
         .is("revoked_at", null);
+
       if (expectedAuthorization === "guardian") {
         consentQuery = consentQuery.not("guardian_user_id", "is", null);
       }
-      const { data: consent } = await consentQuery.limit(1).maybeSingle();
-      setHasConsent(!!consent);
+
+      const { data: consent, error: consentError } = await consentQuery.limit(1).maybeSingle();
+      const authorized = !consentError && !!consent;
+      setHasConsent(authorized);
+
+      // Never expose previously stored sensitive profile fields to feature consumers
+      // when the account has no currently valid authorization.
+      if (authorized) setProfile(data as any);
     } finally {
       setLoading(false);
     }
