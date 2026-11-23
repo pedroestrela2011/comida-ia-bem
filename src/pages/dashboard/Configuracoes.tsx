@@ -82,7 +82,7 @@ export default function Configuracoes() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id,nome,data_nascimento,pais,avatar_url,tema,notificacoes_score")
         .eq("user_id", user.id)
         .single();
 
