@@ -102,8 +102,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Never trust health data supplied by the browser. Require active consent,
-    // then load the authoritative health profile using the authenticated user ID.
+    // Validate age using only the non-sensitive birth-date field before checking
+    // consent or requesting any health-profile columns.
+    const { data: identity, error: identityError } = await serviceClient
+      .from("profiles")
+      .select("data_nascimento")
+      .eq("user_id", authData.user.id)
+      .maybeSingle();
+    if (identityError) {
+      return new Response(JSON.stringify({ error: "Não foi possível validar a idade da conta." }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const age = calculateValidatedAge(identity?.data_nascimento);
+    if (age === null || age < 18) {
+      return new Response(JSON.stringify({ error: "Este recurso com dados de saúde ainda não está disponível para menores de 18 anos ou contas com idade não validada." }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Only after age validation, verify the adult's own active consent.
     const { data: activeConsent, error: consentError } = await serviceClient
       .from("health_data_consents")
       .select("id")
@@ -126,20 +144,13 @@ serve(async (req) => {
 
     const { data: h, error: profileError } = await serviceClient
       .from("profiles")
-      .select("data_nascimento,peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+      .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
       .eq("user_id", authData.user.id)
       .maybeSingle();
     if (profileError) {
       console.error("Health profile lookup failed:", profileError);
       return new Response(JSON.stringify({ error: "Não foi possível carregar os dados de saúde autorizados." }), {
         status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const age = calculateValidatedAge(h?.data_nascimento);
-    if (age === null || age < 18) {
-      return new Response(JSON.stringify({ error: "Este recurso com dados de saúde ainda não está disponível para menores de 18 anos." }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
