@@ -1,3 +1,5 @@
+- [ ] Corrigir a tela branca da publicação garantindo a configuração pública de conexão.
+- [ ] Validar a inicialização e publicar a correção no domínio principal.
 - [x] Adicionar Acompanhamento Alimentar ao Meu Progresso com cardápio semanal, refeições e substituições por texto/foto.
 - [x] Integrar visão/resumo semanal, Início, conquistas opcionais e lembrete das 21h.
 - [x] Verificar cálculos e bloqueios do acompanhamento.
