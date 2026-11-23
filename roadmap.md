@@ -1,3 +1,5 @@
+- [ ] Auditar rotas, chamadas diretas e funções do servidor contra novas telas brancas por configuração ausente.
+- [ ] Corrigir eventuais pontos fora da configuração compartilhada e validar os endereços públicos.
 - [x] Corrigir a tela branca da publicação garantindo a configuração pública de conexão.
 - [x] Validar a inicialização e publicar a correção no domínio principal.
 - [x] Adicionar Acompanhamento Alimentar ao Meu Progresso com cardápio semanal, refeições e substituições por texto/foto.
