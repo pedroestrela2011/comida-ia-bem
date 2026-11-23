@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { calcIMC, HealthProfile } from "@/lib/health";
+import { calculateAge } from "@/lib/account-age";
 
 const HEALTH_FIELDS = [
   "peso_kg",
@@ -40,13 +41,18 @@ export function useHealthProfile() {
         .eq("user_id", user.id)
         .maybeSingle();
       setProfile((data as any) || null);
-      const { data: consent } = await (supabase as any)
+      const age = calculateAge(String((data as any)?.data_nascimento || ""));
+      const expectedAuthorization = age !== null && age < 18 ? "guardian" : "self";
+      let consentQuery = (supabase as any)
         .from("health_data_consents")
         .select("id")
         .eq("user_id", user.id)
-        .is("revoked_at", null)
-        .limit(1)
-        .maybeSingle();
+        .eq("authorization_type", expectedAuthorization)
+        .is("revoked_at", null);
+      if (expectedAuthorization === "guardian") {
+        consentQuery = consentQuery.not("guardian_user_id", "is", null);
+      }
+      const { data: consent } = await consentQuery.limit(1).maybeSingle();
       setHasConsent(!!consent);
     } finally {
       setLoading(false);
