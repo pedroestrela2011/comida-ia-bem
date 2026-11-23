@@ -1,5 +1,5 @@
 import { PLANS } from "@/data/plans";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Settings, User, Shield, Moon, Sun, Camera, Loader2, Eye, EyeOff, Crown, Star, Zap, Check, X, Bell, Sparkles, HeartPulse } from "lucide-react";
 import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { CONDICOES_OPCOES, NIVEIS_ATIVIDADE, OBJETIVOS, REFEICOES_OPCOES, RESTRICOES_OPCOES, faixaIMC, calcIMC } from "@/lib/health";
@@ -738,7 +738,7 @@ function AutorizacoesResponsavelTab() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
-  const loadAuthorizations = async () => {
+  const loadAuthorizations = useCallback(async () => {
     setLoadingAuthorizations(true);
     setLoadError("");
     try {
@@ -750,11 +750,11 @@ function AutorizacoesResponsavelTab() {
     } finally {
       setLoadingAuthorizations(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadAuthorizations();
-  }, []);
+  }, [loadAuthorizations]);
 
   const revoke = async (consentId: string) => {
     setRevokingId(consentId);
