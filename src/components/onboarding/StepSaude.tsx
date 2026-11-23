@@ -46,12 +46,14 @@ export function StepSaude({
   onBack,
   onSubmit,
   requireConsent = true,
+  isMinor = false,
 }: {
   initial: SaudeData;
   submitting?: boolean;
   onBack: () => void;
   onSubmit: (d: SaudeData) => void;
   requireConsent?: boolean;
+  isMinor?: boolean;
 }) {
   const [data, setData] = useState<SaudeData>(initial);
   const [healthConsent, setHealthConsent] = useState(false);
@@ -128,7 +130,9 @@ export function StepSaude({
           <div className="flex items-start gap-3">
             <Checkbox id="health-data-consent" checked={healthConsent} onCheckedChange={(checked) => setHealthConsent(checked === true)} />
             <Label htmlFor="health-data-consent" className="text-sm leading-relaxed cursor-pointer">
-              Autorizo, de forma livre, informada e específica, o uso dos dados de saúde e alimentação que forneci para personalizar cardápios, receitas e alertas solicitados por mim. Sei que posso retirar esta autorização nas configurações; recursos que dependem desses dados poderão deixar de funcionar. Consulte a <a href="/privacidade" className="text-primary underline">Política de Privacidade</a>.
+              {isMinor
+                ? "Confirmo que li e entendi como meus dados de saúde e alimentação poderão ser utilizados para personalizar cardápios e recomendações. Sei que esses dados só serão utilizados após a autorização do meu responsável legal, que poderá ser retirada nas configurações."
+                : "Autorizo o Coma Fácil a usar meus dados de saúde e alimentação para personalizar cardápios, receitas e recomendações. Sei que posso retirar esta autorização nas configurações e que os recursos que dependem desses dados poderão deixar de funcionar."} Consulte a <a href="/privacidade" className="text-primary underline">Política de Privacidade</a>.
             </Label>
           </div>
           <p className="text-xs text-muted-foreground">Esta autorização é separada da aceitação dos Termos de Uso.</p>
