@@ -87,7 +87,7 @@ const VerificarEmail = () => {
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate, toast, planoFromState, skipCheckout, onboardingFlow]);
+  }, [navigate, toast, planoFromState, skipCheckout, onboardingFlow, guardianFlow, safeReturn]);
 
   const handleResend = async () => {
     setResending(true);
