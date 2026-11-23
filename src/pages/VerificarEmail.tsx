@@ -9,8 +9,14 @@ const VerificarEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean; flow?: string }) || {};
-  const onboardingFlow = state.flow === "onboarding" || new URLSearchParams(location.search).get("flow") === "onboarding";
+  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean; flow?: string; redirect?: string }) || {};
+  const query = new URLSearchParams(location.search);
+  const guardianFlow = state.flow === "guardian" || query.get("flow") === "guardian";
+  const requestedReturn = state.redirect || query.get("redirect");
+  const safeReturn = requestedReturn && requestedReturn.startsWith("/") && !requestedReturn.startsWith("//")
+    ? requestedReturn
+    : null;
+  const onboardingFlow = !guardianFlow && (state.flow === "onboarding" || query.get("flow") === "onboarding");
   const email = state.email || "";
   const planoFromState = state.plano;
   const skipCheckout = state.skipCheckout === true;
@@ -22,6 +28,12 @@ const VerificarEmail = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         setRedirecting(true);
+
+        if (guardianFlow) {
+          toast({ title: "Email verificado!", description: "Continue a autorização do adolescente." });
+          navigate(safeReturn || "/dashboard", { replace: true });
+          return;
+        }
 
         if (onboardingFlow) {
           toast({ title: "Email verificado!", description: "Continue seu cadastro." });
@@ -137,9 +149,11 @@ const VerificarEmail = () => {
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
             <p className="text-sm text-muted-foreground">
-              {onboardingFlow
-                ? "Depois da confirmação, você poderá concluir o onboarding da sua conta."
-                : "Depois da confirmação, você poderá continuar para a próxima etapa."}
+              {guardianFlow
+                ? "Depois da confirmação, você voltará à página de autorização."
+                : onboardingFlow
+                  ? "Depois da confirmação, você poderá concluir o onboarding da sua conta."
+                  : "Depois da confirmação, você poderá continuar para a próxima etapa."}
             </p>
           </div>
           <div className="flex items-start gap-3">
