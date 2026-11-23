@@ -243,12 +243,15 @@ export default function Configuracoes() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
           <TabsTrigger value="perfil" className="gap-1.5">
             <User className="h-3.5 w-3.5" /> Perfil
           </TabsTrigger>
           <TabsTrigger value="saude" className="gap-1.5">
             <HeartPulse className="h-3.5 w-3.5" /> Saúde
+          </TabsTrigger>
+          <TabsTrigger value="autorizacoes" className="gap-1.5">
+            <Shield className="h-3.5 w-3.5" /> Autorizações
           </TabsTrigger>
           <TabsTrigger value="seguranca" className="gap-1.5">
             <Shield className="h-3.5 w-3.5" /> Segurança
@@ -333,6 +336,11 @@ export default function Configuracoes() {
         {/* ========== DADOS DE SAÚDE ========== */}
         <TabsContent value="saude" className="space-y-6 mt-6">
           <DadosSaudeTab />
+        </TabsContent>
+
+        {/* ========== AUTORIZAÇÕES CONCEDIDAS ========== */}
+        <TabsContent value="autorizacoes" className="space-y-6 mt-6">
+          <AutorizacoesResponsavelTab />
         </TabsContent>
 
         {/* ========== SEGURANÇA ========== */}
@@ -711,6 +719,138 @@ function DadosSaudeTab() {
       <Button onClick={salvar} disabled={saving || (!hasConsent && !consentConfirmed)}>
         {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Salvando...</> : "Salvar dados de saúde"}
       </Button>
+    </div>
+  );
+}
+
+type GuardianConsent = {
+  consent_id: string;
+  beneficiary_user_id: string;
+  beneficiary_name: string;
+  guardian_relationship: string;
+  granted_at: string;
+};
+
+function AutorizacoesResponsavelTab() {
+  const [authorizations, setAuthorizations] = useState<GuardianConsent[]>([]);
+  const [loadingAuthorizations, setLoadingAuthorizations] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+
+  const loadAuthorizations = async () => {
+    setLoadingAuthorizations(true);
+    setLoadError("");
+    try {
+      const { data, error } = await (supabase as any).rpc("list_guardian_health_data_consents");
+      if (error) throw error;
+      setAuthorizations((data || []) as GuardianConsent[]);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : "Não foi possível carregar as autorizações.");
+    } finally {
+      setLoadingAuthorizations(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAuthorizations();
+  }, []);
+
+  const revoke = async (consentId: string) => {
+    setRevokingId(consentId);
+    try {
+      const { error } = await (supabase as any).rpc("revoke_guardian_health_data_consent", {
+        p_consent_id: consentId,
+      });
+      if (error) throw error;
+      setConfirmingId(null);
+      toast({ title: "Autorização revogada" });
+      await loadAuthorizations();
+    } catch (error) {
+      toast({
+        title: "Não foi possível revogar a autorização",
+        description: error instanceof Error ? error.message : "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setRevokingId(null);
+    }
+  };
+
+  const relationshipLabel: Record<string, string> = {
+    pai: "Pai",
+    mae: "Mãe",
+    tutor_legal: "Tutor(a) legal",
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Shield className="h-5 w-5 text-primary" /> Autorizações concedidas
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Consulte as autorizações de dados de saúde que foram concedidas pela sua conta e revogue aquelas que não deseja manter.
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <p className="text-sm text-muted-foreground">
+          Ao revogar, sua autorização deixa de valer. Se não existir outra autorização válida para o adolescente, os dados de saúde salvos no perfil serão apagados e os recursos que dependem deles ficarão bloqueados.
+        </p>
+      </div>
+
+      {loadingAuthorizations ? (
+        <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+      ) : loadError ? (
+        <div className="space-y-3">
+          <p className="text-sm text-destructive">Não foi possível carregar suas autorizações.</p>
+          <Button type="button" variant="outline" onClick={loadAuthorizations}>Tentar novamente</Button>
+        </div>
+      ) : authorizations.length === 0 ? (
+        <p className="text-sm text-muted-foreground rounded-lg border border-dashed border-border p-5 text-center">
+          Você não possui autorizações ativas de dados de saúde concedidas por esta conta.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {authorizations.map((item) => (
+            <div key={item.consent_id} className="rounded-lg border border-border p-4 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div>
+                  <p className="font-medium text-foreground">{item.beneficiary_name || "Conta do adolescente"}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Vínculo declarado: {relationshipLabel[item.guardian_relationship] || item.guardian_relationship}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Concedida em {new Date(item.granted_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+                <span className="text-xs font-medium rounded-full bg-primary/10 text-primary px-3 py-1 w-fit">
+                  Ativa
+                </span>
+              </div>
+
+              {confirmingId === item.consent_id ? (
+                <div className="rounded-md bg-muted/40 p-3 space-y-3">
+                  <p className="text-sm text-foreground">Confirma a revogação desta autorização?</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="destructive" size="sm" disabled={revokingId === item.consent_id} onClick={() => revoke(item.consent_id)}>
+                      {revokingId === item.consent_id ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Revogando...</> : "Confirmar revogação"}
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" disabled={!!revokingId} onClick={() => setConfirmingId(null)}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button type="button" variant="outline" size="sm" onClick={() => setConfirmingId(item.consent_id)}>
+                  Revogar autorização
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
