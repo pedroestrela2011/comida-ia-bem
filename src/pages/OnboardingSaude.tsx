@@ -84,6 +84,7 @@ const OnboardingSaude = () => {
               .select("id")
               .eq("user_id", authData.user.id)
               .eq("authorization_type", "guardian")
+              .not("guardian_user_id", "is", null)
               .is("revoked_at", null)
               .limit(1)
               .maybeSingle();
