@@ -77,7 +77,11 @@ serve(async (req) => {
         .maybeSingle(),
     ]);
 
-    // Health information is loaded only after the server confirms active consent.
+    // Validate the birth date before checking consent or loading health fields.
+    const idade = calculateValidatedAge(profile?.data_nascimento);
+    const isAdultWithValidAge = idade !== null && idade >= 18;
+
+    // Health information is loaded only after age and the server-side consent check.
     const { data: activeConsent, error: consentError } = await service
       .from("health_data_consents")
       .select("id")
@@ -92,7 +96,7 @@ serve(async (req) => {
     }
 
     const idade = calculateValidatedAge(profile?.data_nascimento);
-    const canUseHealthData = idade !== null && idade >= 18 && Boolean(activeConsent);
+    const canUseHealthData = isAdultWithValidAge && Boolean(activeConsent);
 
     let healthProfile: Record<string, any> = {};
     if (canUseHealthData) {
