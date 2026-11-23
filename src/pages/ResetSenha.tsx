@@ -61,7 +61,7 @@ const ResetSenha = () => {
       if (msg.includes("same password")) {
         description = "A nova senha não pode ser igual à senha anterior.";
       } else if (msg.includes("weak") || msg.includes("pwned") || msg.includes("compromised")) {
-        description = "Essa senha é fraca ou já vazou na internet. Escolha uma senha mais forte.";
+        description = PASSWORD_HINT;
       }
       toast({ title: "Erro ao redefinir senha", description, variant: "destructive" });
       return;

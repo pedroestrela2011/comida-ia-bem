@@ -5,13 +5,13 @@
 export const PASSWORD_REQUIREMENTS: { label: string; test: (p: string) => boolean }[] = [
   { label: "Pelo menos 8 caracteres", test: (p) => p.length >= 8 },
   { label: "Pelo menos 1 número", test: (p) => /[0-9]/.test(p) },
-  { label: "Pelo menos 1 letra maiúscula", test: (p) => /[A-Z]/.test(p) },
+  { label: "Pelo menos 1 caractere especial", test: (p) => /[^A-Za-z0-9]/.test(p) },
 ];
 
 export const PASSWORD_HINT =
-  "A senha precisa ter pelo menos 8 caracteres, 1 número e 1 letra maiúscula.";
+  "A senha precisa ter pelo menos 8 caracteres, 1 número e 1 caractere especial.";
 
-export const PASSWORD_PLACEHOLDER = "Mínimo 8 caracteres, número e maiúscula";
+export const PASSWORD_PLACEHOLDER = "Mínimo 8 caracteres, número e caractere especial";
 
 export function checkPassword(password: string) {
   const missing = PASSWORD_REQUIREMENTS.filter((r) => !r.test(password)).map((r) => r.label);
