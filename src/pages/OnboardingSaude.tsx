@@ -259,7 +259,8 @@ const OnboardingSaude = () => {
           {step === 3 && (
             <StepSaude
               initial={saude}
-              requireConsent={!requiresGuardian}
+              requireConsent={true}
+              isMinor={requiresGuardian}
               onBack={() => setStep(2)}
               onSubmit={(d) => {
                 setSaude(d);
