@@ -98,6 +98,30 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_audit_logs: {
+        Row: {
+          created_at: string
+          details: Json
+          event_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          event_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          event_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       daily_actions: {
         Row: {
           action_date: string
@@ -362,6 +386,7 @@ export type Database = {
         Row: {
           authorization_type: string
           consent_text: string
+          declaration_context: string
           granted_at: string
           guardian_email: string | null
           guardian_name: string | null
@@ -376,6 +401,7 @@ export type Database = {
         Insert: {
           authorization_type?: string
           consent_text: string
+          declaration_context?: string
           granted_at?: string
           guardian_email?: string | null
           guardian_name?: string | null
@@ -390,6 +416,7 @@ export type Database = {
         Update: {
           authorization_type?: string
           consent_text?: string
+          declaration_context?: string
           granted_at?: string
           guardian_email?: string | null
           guardian_name?: string | null
@@ -469,6 +496,30 @@ export type Database = {
           updated_at?: string
           user_id?: string
           week_start?: string
+        }
+        Relationships: []
+      }
+      privacy_policy_versions: {
+        Row: {
+          created_at: string
+          effective_at: string
+          id: string
+          summary: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          effective_at: string
+          id?: string
+          summary: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          effective_at?: string
+          id?: string
+          summary?: string
+          version?: string
         }
         Relationships: []
       }
@@ -799,6 +850,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_valid_health_consent: { Args: { _user_id: string }; Returns: boolean }
       list_guardian_health_data_consents: {
         Args: never
         Returns: {
