@@ -57,7 +57,9 @@ const ResponsavelAutorizarSaude = () => {
     }
   };
 
-  const loginUrl = "/login?redirect=" + encodeURIComponent(location.pathname + location.search);
+  const returnUrl = location.pathname + location.search;
+  const loginUrl = "/login?redirect=" + encodeURIComponent(returnUrl);
+  const signupUrl = "/cadastro?redirect=" + encodeURIComponent(returnUrl);
 
   if (loading) {
     return <main className="min-h-screen flex items-center justify-center text-muted-foreground">Verificando acesso...</main>;
@@ -81,7 +83,10 @@ const ResponsavelAutorizarSaude = () => {
             <p className="text-sm leading-relaxed text-muted-foreground">
               Para continuar, entre em uma conta ComaFacil de adulto, com e-mail confirmado e data de nascimento cadastrada. A conta do adolescente não pode aprovar a própria solicitação.
             </p>
-            <Button asChild className="w-full"><Link to={loginUrl}>Entrar na conta adulta</Link></Button>
+            <div className="space-y-2">
+              <Button asChild className="w-full"><Link to={loginUrl}>Entrar na conta adulta</Link></Button>
+              <Button asChild variant="outline" className="w-full"><Link to={signupUrl}>Criar conta adulta e confirmar e-mail</Link></Button>
+            </div>
           </>
         ) : (
           <form onSubmit={accept} className="space-y-5">
