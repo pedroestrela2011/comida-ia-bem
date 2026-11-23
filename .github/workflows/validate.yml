@@ -30,12 +30,15 @@ jobs:
           src/pages/EscolherPlano.tsx
           src/pages/OnboardingSaude.tsx
           src/pages/ResponsavelContratar.tsx
+          src/pages/ResponsavelAutorizarSaude.tsx
           src/pages/VerificarEmail.tsx
           src/pages/dashboard/Configuracoes.tsx
           supabase/functions/adaptar-dieta/index.ts
           supabase/functions/check-subscription/index.ts
           supabase/functions/create-checkout/index.ts
           supabase/functions/create-guardian-request/index.ts
+          supabase/functions/create-health-data-consent-request/index.ts
+          supabase/functions/accept-health-data-consent/index.ts
           supabase/functions/customer-portal/index.ts
           supabase/functions/guardian-checkout/index.ts
           --rule '@typescript-eslint/no-explicit-any: off'
