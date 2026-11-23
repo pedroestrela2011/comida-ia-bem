@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,11 @@ const Login = () => {
       if (error) throw error;
 
       toast({ title: "Bem-vindo de volta!" });
-      navigate("/dashboard", { replace: true });
+      const redirectTo = searchParams.get("redirect");
+      const safeRedirect = redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+        ? redirectTo
+        : "/dashboard";
+      navigate(safeRedirect, { replace: true });
     } catch (err: any) {
       const msg = (err?.message || "").toLowerCase();
       let description = "Email ou senha incorretos.";

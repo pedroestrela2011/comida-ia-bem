@@ -9,7 +9,14 @@ const VerificarEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean }) || {};
+  const state = (location.state as { email?: string; plano?: PlanType; skipCheckout?: boolean; flow?: string; redirect?: string }) || {};
+  const query = new URLSearchParams(location.search);
+  const guardianFlow = state.flow === "guardian" || query.get("flow") === "guardian";
+  const requestedReturn = state.redirect || query.get("redirect");
+  const safeReturn = requestedReturn && requestedReturn.startsWith("/") && !requestedReturn.startsWith("//")
+    ? requestedReturn
+    : null;
+  const onboardingFlow = !guardianFlow && (state.flow === "onboarding" || query.get("flow") === "onboarding");
   const email = state.email || "";
   const planoFromState = state.plano;
   const skipCheckout = state.skipCheckout === true;
@@ -21,6 +28,18 @@ const VerificarEmail = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         setRedirecting(true);
+
+        if (guardianFlow) {
+          toast({ title: "Email verificado!", description: "Continue a autorização do adolescente." });
+          navigate(safeReturn || "/dashboard", { replace: true });
+          return;
+        }
+
+        if (onboardingFlow) {
+          toast({ title: "Email verificado!", description: "Continue seu cadastro." });
+          navigate("/onboarding-saude", { replace: true });
+          return;
+        }
 
         if (skipCheckout) {
           toast({ title: "Email verificado!", description: "Bem-vindo ao ComaFacil." });
@@ -45,9 +64,11 @@ const VerificarEmail = () => {
             if (data?.url) {
               const win = window.open(data.url, "_blank", "noopener,noreferrer");
               if (!win) {
-                window.top
-                  ? (window.top.location.href = data.url)
-                  : (window.location.href = data.url);
+                if (window.top) {
+                  window.top.location.href = data.url;
+                } else {
+                  window.location.href = data.url;
+                }
               }
               navigate("/dashboard");
               return;
@@ -66,7 +87,7 @@ const VerificarEmail = () => {
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate, toast, planoFromState, skipCheckout]);
+  }, [navigate, toast, planoFromState, skipCheckout, onboardingFlow, guardianFlow, safeReturn]);
 
   const handleResend = async () => {
     setResending(true);
@@ -127,7 +148,13 @@ const VerificarEmail = () => {
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
-            <p className="text-sm text-muted-foreground">Você será redirecionado automaticamente para o checkout</p>
+            <p className="text-sm text-muted-foreground">
+              {guardianFlow
+                ? "Depois da confirmação, você voltará à página de autorização."
+                : onboardingFlow
+                  ? "Depois da confirmação, você poderá concluir o onboarding da sua conta."
+                  : "Depois da confirmação, você poderá continuar para a próxima etapa."}
+            </p>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />

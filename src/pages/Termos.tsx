@@ -71,15 +71,23 @@ const Termos = () => (
       </p>
       <p>
         Usuários menores de 18 anos não poderão concluir diretamente a contratação de planos pagos.
-        Nesses casos, a contratação deverá ser realizada por seu responsável legal, em procedimento
-        específico disponibilizado pela plataforma, no qual o responsável será identificado como
-        contratante e assumirá as obrigações de pagamento. Até que esse procedimento esteja
-        disponível, a contratação paga por meio da conta do menor ficará indisponível.
+        A contratação para uma conta de adolescente deverá ser iniciada por um responsável adulto
+        por meio de um link individual, com validade limitada e uso único. O adulto deverá informar
+        seus dados, declarar que tem mais de 18 anos e que é pai, mãe ou responsável legal, e concluir
+        o pagamento em seu próprio nome, sem precisar criar uma conta ComaFacil.
       </p>
       <p>
-        Novos usuários podem receber um período gratuito de 7 dias com recursos limitados. Ao final
-        desse período, o acesso às funcionalidades pagas poderá ser bloqueado até a contratação de
-        um plano pago.
+        O fluxo registra os dados e a declaração do adulto, mas não realiza, por si só, verificação
+        documental automática do vínculo familiar ou da autoridade legal. A plataforma poderá
+        solicitar informações adicionais quando necessário. Enquanto o fluxo não estiver implantado
+        e habilitado no ambiente de produção, a contratação paga por meio da conta do adolescente
+        permanecerá indisponível.
+      </p>
+      <p>
+        Usuários adultos podem receber um período gratuito de 7 dias com recursos limitados.
+        Usuários de 12 a 17 anos permanecem no acesso gratuito básico sem expiração desse período.
+        O acesso a recursos de planos pagos para adolescentes depende da contratação válida por um
+        responsável adulto.
       </p>
       <p>
         Os pagamentos são processados por provedor externo de pagamentos. O ComaFacil não armazena os
@@ -89,8 +97,11 @@ const Termos = () => (
 
     <LegalSection title="5. Cancelamento e reembolso">
       <p>
-        A pessoa responsável pela assinatura pode solicitar o cancelamento a qualquer momento nas
-        configurações da conta ou pelo canal de suporte indicado na plataforma. O cancelamento
+        A pessoa responsável pela assinatura pode solicitar o cancelamento a qualquer momento
+        nas configurações da conta, quando disponíveis para o titular, ou pelo canal de suporte
+        indicado na plataforma. Quando a contratação tiver sido feita por responsável adulto sem
+        conta ComaFacil, o cancelamento deverá ser solicitado pelo responsável pelo canal de suporte,
+        com dados suficientes para localizar a assinatura. O cancelamento
         interrompe as cobranças futuras e o acesso aos recursos pagos permanece disponível até o fim
         do período já pago, salvo informação diferente apresentada no momento da contratação.
       </p>

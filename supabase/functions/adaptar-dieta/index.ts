@@ -1,4 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+ // Strictly validate YYYY-MM-DD and calculate age using the UTC calendar date.
+ // Invalid, impossible, or future birth dates return null so health data access fails closed.
+ function calculateValidatedAge(value: unknown): number | null {
+   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+   const birthDate = new Date(`${value}T00:00:00.000Z`);
+   if (Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== value) return null;
+   const today = new Date();
+   let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
+   const birthdayHasNotOccurred = today.getUTCMonth() < birthDate.getUTCMonth()
+     || (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate());
+   if (birthdayHasNotOccurred) age--;
+   return age >= 0 ? age : null;
+ }
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -72,16 +87,80 @@ serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const token = authHeader.slice(7);
+    const authClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: authData, error: authError } = await authClient.auth.getUser(token);
+    if (authError || !authData.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
-    const { source, personalization } = await req.json();
+    const { source, personalization = {} } = await req.json();
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Validate age using only the non-sensitive birth-date field before checking
+    // consent or requesting any health-profile columns.
+    const { data: identity, error: identityError } = await serviceClient
+      .from("profiles")
+      .select("data_nascimento")
+      .eq("user_id", authData.user.id)
+      .maybeSingle();
+    if (identityError) {
+      return new Response(JSON.stringify({ error: "Não foi possível validar a idade da conta." }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const age = calculateValidatedAge(identity?.data_nascimento);
+    if (age === null || age < 18) {
+      return new Response(JSON.stringify({ error: "Este recurso com dados de saúde ainda não está disponível para menores de 18 anos ou contas com idade não validada." }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Only after age validation, verify the adult's own active consent.
+    const { data: activeConsent, error: consentError } = await serviceClient
+      .from("health_data_consents")
+      .select("id")
+      .eq("user_id", authData.user.id)
+      .eq("authorization_type", "self")
+      .is("revoked_at", null)
+      .limit(1)
+      .maybeSingle();
+    if (consentError) {
+      console.error("Health consent lookup failed:", consentError);
+      return new Response(JSON.stringify({ error: "Não foi possível confirmar a autorização para dados de saúde." }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!activeConsent) {
+      return new Response(JSON.stringify({ error: "Para adaptar o plano com dados de saúde, é necessário conceder autorização específica nas configurações de saúde." }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: h, error: profileError } = await serviceClient
+      .from("profiles")
+      .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+      .eq("user_id", authData.user.id)
+      .maybeSingle();
+    if (profileError) {
+      console.error("Health profile lookup failed:", profileError);
+      return new Response(JSON.stringify({ error: "Não foi possível carregar os dados de saúde autorizados." }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const h = personalization.health || {};
-    const restH = Array.isArray(h.restricoes_alimentares)
+    const restH = Array.isArray(h?.restricoes_alimentares)
       ? h.restricoes_alimentares.filter((r: string) => r && r !== "Nenhuma").join(", ")
       : "";
-    const condH = Array.isArray(h.condicoes_saude)
+    const condH = Array.isArray(h?.condicoes_saude)
       ? h.condicoes_saude.filter((c: string) => c && c !== "Nenhuma").join(", ")
       : "";
 
@@ -89,20 +168,20 @@ serve(async (req) => {
 - Horários habituais: ${personalization.horarios || "não informado"}
 - Gosta de: ${personalization.gosta || "sem preferência específica"}
 - NÃO gosta / evita: ${personalization.nao_gosta || "nenhum"}
-- Alergias / restrições: ${personalization.alergias || h.alergias || "nenhuma"}
+- Alergias / restrições: ${h?.alergias || restH || "nenhuma"}
 - Rotina (trabalho/estudo): ${personalization.rotina || "não informada"}
 - Tempo disponível para cozinhar: ${personalization.tempo_cozinhar || "moderado"}
 - Orçamento mensal: ${personalization.orcamento || "moderado"}
 
-PERFIL DE SAÚDE (do onboarding):
-- Peso: ${h.peso_kg ? h.peso_kg + "kg" : "não informado"}
-- Altura: ${h.altura_cm ? h.altura_cm + "cm" : "não informado"}
-- IMC: ${h.imc ?? "não informado"}
-- Objetivo pessoal: ${h.objetivo || "não informado"}
-- Nível de atividade: ${h.nivel_atividade || "não informado"}
-- Refeições por dia preferidas: ${h.refeicoes_dia || "não informado"}
+PERFIL DE SAÚDE (consultado pelo servidor após confirmar autorização):
+- Peso: ${h?.peso_kg ? h.peso_kg + "kg" : "não informado"}
+- Altura: ${h?.altura_cm ? h.altura_cm + "cm" : "não informado"}
+- IMC: ${h?.imc ?? "não informado"}
+- Objetivo pessoal: ${h?.objetivo || "não informado"}
+- Nível de atividade: ${h?.nivel_atividade || "não informado"}
+- Refeições por dia preferidas: ${h?.refeicoes_dia || "não informado"}
 - Restrições alimentares: ${restH || "nenhuma"}
-- Condições de saúde: ${condH || "nenhuma"}${h.condicoes_outras ? " | Outras: " + h.condicoes_outras : ""}
+- Condições de saúde: ${condH || "nenhuma"}${h?.condicoes_outras ? " | Outras: " + h.condicoes_outras : ""}
 
 Analise o plano alimentar enviado (a seguir) e gere a versão ADAPTADA no JSON solicitado. Mantenha rigorosamente o objetivo nutricional original, mas respeite as condições de saúde, restrições e alergias do usuário — sinalize substituições feitas por causa delas.`;
 

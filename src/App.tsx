@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Cadastro from "./pages/Cadastro";
 import OnboardingSaude from "./pages/OnboardingSaude";
 import EscolherPlano from "./pages/EscolherPlano";
+import ResponsavelContratar from "./pages/ResponsavelContratar";
+import ResponsavelAutorizarSaude from "./pages/ResponsavelAutorizarSaude";
 import Login from "./pages/Login";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import ResetSenha from "./pages/ResetSenha";
@@ -60,6 +62,8 @@ const App = () => (
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/onboarding-saude" element={<OnboardingSaude />} />
           <Route path="/escolher-plano" element={<EscolherPlano />} />
+          <Route path="/responsavel/contratar" element={<ResponsavelContratar />} />
+          <Route path="/responsavel/autorizar-saude" element={<ResponsavelAutorizarSaude />} />
           <Route path="/login" element={<Login />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
           <Route path="/reset-password" element={<ResetSenha />} />

@@ -13,6 +13,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { TrendingUp, TrendingDown, Zap, Plus, History, BarChart3, Trophy, Trash2, User, Utensils } from "lucide-react";
 import FoodTracking from "@/components/dashboard/FoodTracking";
+import { useHealthProfile } from "@/hooks/useHealthProfile";
 
 interface ProfileInfo {
   nome: string;
@@ -59,6 +60,7 @@ export default function Progresso() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("registro");
+  const { profile: authorizedHealthProfile, hasConsent, loading: healthLoading } = useHealthProfile();
   const { registerAction } = useDailyScore();
   const { awardXP } = useGamification();
 
@@ -74,15 +76,22 @@ export default function Progresso() {
   const [observacoes, setObservacoes] = useState("");
 
   useEffect(() => {
-    fetchRecords();
-  }, []);
+    if (!healthLoading) fetchRecords();
+  }, [healthLoading, hasConsent, authorizedHealthProfile]);
 
   const fetchRecords = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    setRecords([]);
+    setProfile(null);
+    if (healthLoading || !hasConsent || !authorizedHealthProfile) {
+      setLoading(false);
+      return;
+    }
 
-    const [{ data, error }, { data: profileData }] = await Promise.all([
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const [{ data, error }, { data: identity }] = await Promise.all([
       supabase
         .from("progress_records")
         .select("*")
@@ -90,23 +99,22 @@ export default function Progresso() {
         .order("created_at", { ascending: true }),
       supabase
         .from("profiles")
-        .select("nome, peso_kg, altura_cm, imc, objetivo")
+        .select("nome")
         .eq("user_id", user.id)
         .maybeSingle(),
     ]);
 
-    if (!error && data) {
-      setRecords(data as ProgressRecord[]);
-    }
-    if (profileData) {
-      setProfile(profileData as ProfileInfo);
-      // Pré-preenche o peso com o dado da conta quando o campo está vazio
-      setPeso((prev) => prev || (profileData.peso_kg != null ? String(profileData.peso_kg) : ""));
-    }
+    if (!error && data) setRecords(data as ProgressRecord[]);
+    setProfile({ ...authorizedHealthProfile, nome: identity?.nome || "" } as ProfileInfo);
+    setPeso((prev) => prev || (authorizedHealthProfile.peso_kg != null ? String(authorizedHealthProfile.peso_kg) : ""));
     setLoading(false);
   };
 
   const handleSave = async () => {
+    if (!hasConsent || !authorizedHealthProfile) {
+      toast({ title: "Autorização de dados de saúde necessária.", description: "Conceda a autorização nas configurações para registrar seu progresso.", variant: "destructive" });
+      return;
+    }
     if (!peso) {
       toast({ title: "Preencha pelo menos o peso.", variant: "destructive" });
       return;

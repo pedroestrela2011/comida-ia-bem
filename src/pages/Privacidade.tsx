@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const Privacidade = () => (
   <LegalPage
     title="Política de Privacidade"
-    updatedAt="18 de novembro de 2026"
+    updatedAt="23 de novembro de 2026"
     intro="Esta Política explica como o ComaFacil coleta, utiliza, armazena, compartilha e protege dados pessoais durante o uso da plataforma, em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 - LGPD) e demais normas aplicáveis."
   >
     <LegalSection title="1. Quem trata seus dados">
@@ -40,9 +40,17 @@ const Privacidade = () => (
         limites dos planos.
       </p>
       <p>
-        <strong>Dados de assinatura e pagamento:</strong> plano contratado, situação da assinatura e
-        identificadores de cobrança. Os dados completos do cartão são tratados pelo provedor de
-        pagamento, e não são armazenados pelo ComaFacil.
+        <strong>Dados de assinatura e pagamento:</strong> plano contratado, situação da assinatura,
+        identificadores de cobrança e identificadores técnicos de clientes e sessões no provedor de
+        pagamento. Os dados completos do cartão são tratados pelo provedor de pagamento, e não são
+        armazenados pelo ComaFacil.
+      </p>
+      <p>
+        <strong>Dados do responsável pela contratação:</strong> quando um adulto contrata um plano
+        para uma conta adolescente, podemos tratar nome, e-mail, declaração de maioridade e
+        responsabilidade legal, vínculo do convite, status da solicitação e registros da contratação.
+        O link de convite utiliza um token de uso único armazenado no banco de dados em formato
+        criptográfico de hash.
       </p>
       <p>
         <strong>Dados técnicos e de funcionamento:</strong> informações estritamente necessárias
@@ -82,10 +90,30 @@ const Privacidade = () => (
         previstas na legislação aplicável.
       </p>
       <p>
-        A contratação de planos pagos por menores de 18 anos deverá ser realizada por responsável
-        legal, conforme os Termos de Uso e o procedimento específico de contratação. A participação
-        do responsável será solicitada sempre que exigida pela legislação ou necessária para a
-        contratação.
+        Antes de solicitar dados de saúde de um adolescente, a plataforma exige autorização específica
+        de um responsável por um fluxo separado. O responsável deve acessar uma conta com 18 anos
+        completos ou mais, e-mail confirmado e data de nascimento cadastrada, declarar seu vínculo
+        legal e confirmar expressamente a autorização. O convite é individual, de uso único e expira
+        em 24 horas. O registro guarda a conta adulta utilizada, o e-mail, o nome declarado, o vínculo,
+        a versão do texto e a data da autorização.
+      </p>
+      <p>
+        A verificação técnica da idade e do e-mail da conta adulta não comprova, por si só, a guarda
+        ou a representação legal. O vínculo é declarado pelo adulto e não há conferência documental
+        automática nesta etapa. A autorização pode ser revogada, e os dados de saúde associados serão
+        apagados conforme o procedimento de revogação descrito nesta Política.
+      </p>
+      <p>
+        A contratação de planos pagos por menores de 18 anos deverá ser realizada por um adulto que
+        declare ser pai, mãe ou responsável legal, por meio de um convite individual com validade
+        limitada e uso único. O adulto informa nome e e-mail e realiza o pagamento sem precisar criar
+        uma conta ComaFacil.
+      </p>
+      <p>
+        O fluxo registra a declaração e os dados informados pelo adulto, mas não realiza verificação
+        documental automática do vínculo familiar ou da autoridade legal. Essa limitação deve ser
+        considerada na avaliação do procedimento e poderá exigir medidas adicionais antes da
+        disponibilização ampla da contratação.
       </p>
     </LegalSection>
 
@@ -94,7 +122,7 @@ const Privacidade = () => (
         <li>criar, manter e proteger contas e autenticar usuários;</li>
         <li>gerar cardápios, receitas, listas de compras e análises solicitadas;</li>
         <li>considerar alergias, restrições e informações fornecidas para adaptar respostas e alertas;</li>
-        <li>administrar planos, assinaturas, cobranças e limites de utilização;</li>
+        <li>administrar planos, assinaturas, cobranças, convites de responsáveis e limites de utilização;</li>
         <li>salvar preferências e conteúdos solicitados pelo usuário;</li>
         <li>prestar suporte e enviar comunicações operacionais;</li>
         <li>prevenir fraude, abuso, acessos não autorizados e falhas de segurança;</li>
@@ -135,7 +163,7 @@ const Privacidade = () => (
       <ul className="list-disc pl-5 space-y-2">
         <li>serviços de hospedagem, infraestrutura, banco de dados e autenticação;</li>
         <li>gateway e provedores de inteligência artificial, para processar solicitações de IA;</li>
-        <li>provedor de pagamento, para processar e administrar assinaturas;</li>
+        <li>provedor de pagamento, para processar e administrar assinaturas e identificar o adulto contratante;</li>
         <li>serviços de envio de e-mails operacionais e de suporte;</li>
         <li>autoridades públicas, quando houver obrigação legal, regulatória ou ordem válida.</li>
       </ul>

@@ -1,5 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Strictly validate YYYY-MM-DD and calculate age using the UTC calendar date.
+// Invalid, impossible, or future birth dates return null so health data access fails closed.
+function calculateValidatedAge(value: unknown): number | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const birthDate = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== value) return null;
+
+  const today = new Date();
+  let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
+  const birthdayHasNotOccurred = today.getUTCMonth() < birthDate.getUTCMonth()
+    || (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate());
+  if (birthdayHasNotOccurred) age--;
+  return age >= 0 ? age : null;
+}
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,9 +66,7 @@ serve(async (req) => {
     const [{ data: profile }, { data: adminRole }] = await Promise.all([
       service
         .from("profiles")
-        .select(
-          "nome,data_nascimento,peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras,plano",
-        )
+        .select("nome,data_nascimento,plano")
         .eq("user_id", userId)
         .maybeSingle(),
       service
@@ -63,6 +76,41 @@ serve(async (req) => {
         .eq("role", "admin")
         .maybeSingle(),
     ]);
+
+    // Validate the birth date before checking consent or loading health fields.
+    const idade = calculateValidatedAge(profile?.data_nascimento);
+    const isAdultWithValidAge = idade !== null && idade >= 18;
+
+    // Health information is loaded only after age and the server-side consent check.
+    const { data: activeConsent, error: consentError } = await service
+      .from("health_data_consents")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("authorization_type", "self")
+      .is("revoked_at", null)
+      .limit(1)
+      .maybeSingle();
+    if (consentError) {
+      console.error("Health consent lookup failed:", consentError);
+      return json({ error: "Não foi possível confirmar a autorização para dados de saúde." }, 503);
+    }
+
+    const idade = calculateValidatedAge(profile?.data_nascimento);
+    const canUseHealthData = isAdultWithValidAge && Boolean(activeConsent);
+
+    let healthProfile: Record<string, any> = {};
+    if (canUseHealthData) {
+      const { data, error } = await service
+        .from("profiles")
+        .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error) {
+        console.error("Health profile lookup failed:", error);
+        return json({ error: "Não foi possível carregar os dados autorizados." }, 503);
+      }
+      healthProfile = data || {};
+    }
 
     const plano = (profile?.plano || "essencial").toLowerCase();
     const isTop = plano === "performance" || Boolean(adminRole);
@@ -101,18 +149,13 @@ serve(async (req) => {
     }
 
     // ---- User context (never displayed on screen) ----
-    let idade: number | null = null;
-    if (profile?.data_nascimento) {
-      const d = new Date(profile.data_nascimento);
-      idade = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
-    }
-    const restricoes = (profile?.restricoes_alimentares || []).filter(
+    const restricoes = (healthProfile.restricoes_alimentares || []).filter(
       (r: string) => r && r.toLowerCase() !== "nenhuma",
     );
-    const condicoes = (profile?.condicoes_saude || []).filter(
+    const condicoes = (healthProfile.condicoes_saude || []).filter(
       (c: string) => c && c.toLowerCase() !== "nenhuma",
     );
-    if (profile?.condicoes_outras) condicoes.push(profile.condicoes_outras);
+    if (healthProfile.condicoes_outras) condicoes.push(healthProfile.condicoes_outras);
 
     const { data: ultimoCardapio } = await service
       .from("cardapios_salvos")
@@ -122,18 +165,24 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
+    const healthContext = canUseHealthData
+      ? [
+          healthProfile.peso_kg ? `Peso: ${healthProfile.peso_kg}kg` : null,
+          healthProfile.altura_cm ? `Altura: ${healthProfile.altura_cm}cm` : null,
+          healthProfile.imc ? `IMC: ${healthProfile.imc}` : null,
+          healthProfile.objetivo ? `Objetivo principal: ${healthProfile.objetivo}` : null,
+          healthProfile.nivel_atividade ? `Nível de atividade física: ${healthProfile.nivel_atividade}` : null,
+          healthProfile.refeicoes_dia ? `Refeições por dia: ${healthProfile.refeicoes_dia}` : null,
+          restricoes.length ? `Restrições alimentares: ${restricoes.join(", ")}` : "Restrições alimentares: nenhuma",
+          healthProfile.alergias ? `Alergias alimentares: ${healthProfile.alergias}` : "Alergias alimentares: nenhuma",
+          condicoes.length ? `Condições de saúde: ${condicoes.join(", ")}` : "Condições de saúde: nenhuma",
+        ].filter(Boolean)
+      : ["Dados de saúde não utilizados: sem autorização ativa ou usuário menor de 18 anos"];
+
     const ctx = [
       `Nome: ${profile?.nome || "usuário"}`,
-      idade ? `Idade: ${idade} anos` : null,
-      profile?.peso_kg ? `Peso: ${profile.peso_kg}kg` : null,
-      profile?.altura_cm ? `Altura: ${profile.altura_cm}cm` : null,
-      profile?.imc ? `IMC: ${profile.imc}` : null,
-      profile?.objetivo ? `Objetivo principal: ${profile.objetivo}` : null,
-      profile?.nivel_atividade ? `Nível de atividade física: ${profile.nivel_atividade}` : null,
-      profile?.refeicoes_dia ? `Refeições por dia: ${profile.refeicoes_dia}` : null,
-      restricoes.length ? `Restrições alimentares: ${restricoes.join(", ")}` : "Restrições alimentares: nenhuma",
-      profile?.alergias ? `Alergias alimentares: ${profile.alergias}` : "Alergias alimentares: nenhuma",
-      condicoes.length ? `Condições de saúde: ${condicoes.join(", ")}` : "Condições de saúde: nenhuma",
+      idade !== null ? `Idade: ${idade} anos` : null,
+      ...healthContext,
       ultimoCardapio
         ? `Plano alimentar ativo: sim (cardápio ${ultimoCardapio.tipo === "esporte" ? "esportivo" : "normal"} salvo recentemente)`
         : "Plano alimentar ativo: nenhum",

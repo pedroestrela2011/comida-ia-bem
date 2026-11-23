@@ -1,5 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Strictly validate YYYY-MM-DD and calculate age using the UTC calendar date.
+// Invalid, impossible, or future birth dates return null so health data access fails closed.
+function calculateValidatedAge(value: unknown): number | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const birthDate = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== value) return null;
+
+  const today = new Date();
+  let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
+  const birthdayHasNotOccurred = today.getUTCMonth() < birthDate.getUTCMonth()
+    || (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate());
+  if (birthdayHasNotOccurred) age--;
+  return age >= 0 ? age : null;
+}
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,12 +54,40 @@ serve(async (req) => {
     let healthRestrictionsList: string[] = [];
     let healthAllergies = "";
     try {
-      const { data: hp } = await serviceForHealth
+      // Validate age from the non-sensitive birth-date field before any health
+      // consent lookup or health-profile query.
+      const { data: identity, error: identityError } = await serviceForHealth
         .from("profiles")
-        .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+        .select("data_nascimento")
         .eq("user_id", userIdForHealth)
         .maybeSingle();
-      if (hp) {
+      if (identityError) throw identityError;
+      const validatedAge = calculateValidatedAge(identity?.data_nascimento);
+      if (validatedAge === null || validatedAge < 18) {
+        throw new Error("Idade não validada para uso de dados de saúde");
+      }
+
+      const { data: activeConsent, error: consentLookupError } = await serviceForHealth
+        .from("health_data_consents")
+        .select("id")
+        .eq("user_id", userIdForHealth)
+        .eq("authorization_type", "self")
+        .is("revoked_at", null)
+        .order("granted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (consentLookupError) throw consentLookupError;
+
+      if (activeConsent) {
+        const { data: hp, error: healthProfileError } = await serviceForHealth
+          .from("profiles")
+          .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+          .eq("user_id", userIdForHealth)
+          .maybeSingle();
+        if (healthProfileError) throw healthProfileError;
+
+        // Age and adult status were validated before this sensitive query.
+        if (hp) {
         const parts: string[] = [];
         if (hp.peso_kg) parts.push(`Peso: ${hp.peso_kg}kg`);
         if (hp.altura_cm) parts.push(`Altura: ${hp.altura_cm}cm`);
@@ -78,6 +121,7 @@ REGRAS OBRIGATÓRIAS DE PERSONALIZAÇÃO:
 4. Se qualquer preferência informada no formulário conflitar com uma condição/restrição, PREVALECE a condição/restrição de saúde. Menção explícita ao motivo em "dicas".
 ${hasCritical ? '5. Inclua em "dicas" ou "descricao" um breve motivo educativo quando a escolha for feita por causa de uma condição de saúde do usuário.' : ""}`;
         }
+      }
       }
     } catch (_e) { /* ignore */ }
 
