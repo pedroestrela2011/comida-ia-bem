@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { PENDING_SIGNUP_KEY } from "./Cadastro";
 import { StepCorpo, CorpoData } from "@/components/onboarding/StepCorpo";
@@ -149,7 +151,7 @@ const OnboardingSaude = () => {
     };
 
     const consentText = "Autorizo o uso dos dados de saúde e alimentação fornecidos para personalizar cardápios, receitas e alertas solicitados por mim. Sei que posso revogar esta autorização e que recursos dependentes desses dados poderão deixar de funcionar.";
-    const { error } = await supabase.rpc("save_health_profile_with_consent", {
+    const { error } = await (supabase as any).rpc("save_health_profile_with_consent", {
       p_profile_data: health,
       p_policy_version: "2026-11-23",
       p_consent_text: consentText,
