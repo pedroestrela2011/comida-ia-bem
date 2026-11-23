@@ -1,5 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+ // Strictly validate YYYY-MM-DD and calculate age using the UTC calendar date.
+ // Invalid, impossible, or future birth dates return null so health data access fails closed.
+ function calculateValidatedAge(value: unknown): number | null {
+   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+   const birthDate = new Date(`${value}T00:00:00.000Z`);
+   if (Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== value) return null;
+   const today = new Date();
+   let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
+   const birthdayHasNotOccurred = today.getUTCMonth() < birthDate.getUTCMonth()
+     || (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate());
+   if (birthdayHasNotOccurred) age--;
+   return age >= 0 ? age : null;
+ }
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,6 +108,7 @@ serve(async (req) => {
       .from("health_data_consents")
       .select("id")
       .eq("user_id", authData.user.id)
+      .eq("authorization_type", "self")
       .is("revoked_at", null)
       .limit(1)
       .maybeSingle();
@@ -121,9 +136,7 @@ serve(async (req) => {
       });
     }
 
-    const age = h?.data_nascimento
-      ? Math.floor((Date.now() - new Date(h.data_nascimento).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
-      : null;
+    const age = calculateValidatedAge(h?.data_nascimento);
     if (age === null || age < 18) {
       return new Response(JSON.stringify({ error: "Este recurso com dados de saúde ainda não está disponível para menores de 18 anos." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
