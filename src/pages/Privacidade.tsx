@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const Privacidade = () => (
   <LegalPage
     title="Política de Privacidade"
-    updatedAt="18 de novembro de 2026"
+    updatedAt="23 de novembro de 2026"
     intro="Esta Política explica como o ComaFacil coleta, utiliza, armazena, compartilha e protege dados pessoais durante o uso da plataforma, em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 - LGPD) e demais normas aplicáveis."
   >
     <LegalSection title="1. Quem trata seus dados">
@@ -88,6 +88,20 @@ const Privacidade = () => (
         Dados pessoais de adolescentes entre 12 e 17 anos serão tratados com atenção especial,
         observando o melhor interesse, a proteção da privacidade, a segurança e as demais garantias
         previstas na legislação aplicável.
+      </p>
+      <p>
+        Antes de solicitar dados de saúde de um adolescente, a plataforma exige autorização específica
+        de um responsável por um fluxo separado. O responsável deve acessar uma conta com 18 anos
+        completos ou mais, e-mail confirmado e data de nascimento cadastrada, declarar seu vínculo
+        legal e confirmar expressamente a autorização. O convite é individual, de uso único e expira
+        em 24 horas. O registro guarda a conta adulta utilizada, o e-mail, o nome declarado, o vínculo,
+        a versão do texto e a data da autorização.
+      </p>
+      <p>
+        A verificação técnica da idade e do e-mail da conta adulta não comprova, por si só, a guarda
+        ou a representação legal. O vínculo é declarado pelo adulto e não há conferência documental
+        automática nesta etapa. A autorização pode ser revogada, e os dados de saúde associados serão
+        apagados conforme o procedimento de revogação descrito nesta Política.
       </p>
       <p>
         A contratação de planos pagos por menores de 18 anos deverá ser realizada por um adulto que
