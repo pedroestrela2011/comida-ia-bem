@@ -81,6 +81,7 @@ async function syncSubscription(
     .from("profiles")
     .update({
       plano: currentEntitlement ? getPlan(currentEntitlement) : "essencial",
+      subscription_active: Boolean(currentEntitlement),
       ...(currentEntitlement ? { trial_ends_at: null } : {}),
     })
     .eq("user_id", userId);

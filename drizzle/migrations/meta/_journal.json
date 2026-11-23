@@ -43,6 +43,13 @@
       "when": 1795452477768,
       "tag": "0005_in_app_guardian_health_declaration",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795455572325,
+      "tag": "0006_secure_plans_admin_and_gamification",
+      "breakpoints": true
     }
   ]
 }

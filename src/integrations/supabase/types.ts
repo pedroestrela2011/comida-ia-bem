@@ -547,6 +547,7 @@ export type Database = {
           plano: string
           refeicoes_dia: number | null
           restricoes_alimentares: string[] | null
+          subscription_active: boolean
           tema: string
           trial_ends_at: string | null
           two_fa_enabled: boolean
@@ -578,6 +579,7 @@ export type Database = {
           plano?: string
           refeicoes_dia?: number | null
           restricoes_alimentares?: string[] | null
+          subscription_active?: boolean
           tema?: string
           trial_ends_at?: string | null
           two_fa_enabled?: boolean
@@ -609,6 +611,7 @@ export type Database = {
           plano?: string
           refeicoes_dia?: number | null
           restricoes_alimentares?: string[] | null
+          subscription_active?: boolean
           tema?: string
           trial_ends_at?: string | null
           two_fa_enabled?: boolean
@@ -843,6 +846,50 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_xp: {
+        Args: { p_action: string; p_metadata?: Json }
+        Returns: {
+          created_at: string
+          current_streak: number
+          last_action_date: string | null
+          longest_streak: number
+          shield_month: string | null
+          streak_shield_available: boolean
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_xp"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ensure_user_xp: {
+        Args: never
+        Returns: {
+          created_at: string
+          current_streak: number
+          last_action_date: string | null
+          longest_streak: number
+          shield_month: string | null
+          streak_shield_available: boolean
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_xp"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      has_plan_access: {
+        Args: { _required_plan: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

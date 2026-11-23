@@ -95,11 +95,11 @@ serve(async (req) => {
       };
       const plan = guardianPlanMap[String(productId)];
       if (!plan) {
-        await supabase.from("profiles").update({ plano: "essencial", trial_ends_at: null }).eq("user_id", user.id);
+        await supabase.from("profiles").update({ plano: "essencial", trial_ends_at: null, subscription_active: false }).eq("user_id", user.id);
         return json({ subscribed: false, plan: "essencial", trial_ends_at: null, subscription_end: null });
       }
       const subscriptionEnd = new Date(linkedSubscription.current_period_end * 1000).toISOString();
-      await supabase.from("profiles").update({ plano: plan, trial_ends_at: null }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ plano: plan, trial_ends_at: null, subscription_active: true }).eq("user_id", user.id);
       return json({
         subscribed: true,
         plan,
@@ -112,7 +112,7 @@ serve(async (req) => {
 
 
     if (age < 18) {
-      await supabase.from("profiles").update({ plano: "essencial", trial_ends_at: null }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ plano: "essencial", trial_ends_at: null, subscription_active: false }).eq("user_id", user.id);
       return json({ subscribed: false, plan: "essencial", trial_ends_at: null, subscription_end: null });
     }
 
@@ -121,7 +121,7 @@ serve(async (req) => {
       (candidate) => candidate.metadata?.supabase_user_id === user.id && !candidate.deleted,
     );
     if (!customer) {
-      await supabase.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ plano: "essencial", subscription_active: false }).eq("user_id", user.id);
       return json({ subscribed: false, plan: "essencial", trial_ends_at: profile.trial_ends_at ?? null });
     }
 
@@ -136,7 +136,7 @@ serve(async (req) => {
         item.metadata?.supabase_user_id === user.id,
     );
     if (!subscription) {
-      await supabase.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ plano: "essencial", subscription_active: false }).eq("user_id", user.id);
       return json({ subscribed: false, plan: "essencial", trial_ends_at: profile.trial_ends_at ?? null });
     }
 
@@ -148,12 +148,12 @@ serve(async (req) => {
     };
     const plan = productPlanMap[String(productId)];
     if (!plan) {
-      await supabase.from("profiles").update({ plano: "essencial" }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ plano: "essencial", subscription_active: false }).eq("user_id", user.id);
       return json({ subscribed: false, plan: "essencial", trial_ends_at: null, subscription_end: null });
     }
     const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
-    await supabase.from("profiles").update({ plano: plan }).eq("user_id", user.id);
+    await supabase.from("profiles").update({ plano: plan, subscription_active: true }).eq("user_id", user.id);
     return json({
       subscribed: true,
       plan,

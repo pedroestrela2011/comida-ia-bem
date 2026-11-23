@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasPaidPlanAccess } from "../_shared/plan-access.ts";
 // Strictly validate YYYY-MM-DD and calculate age using the UTC calendar date.
 // Invalid, impossible, or future birth dates return null so health data access fails closed.
 function calculateValidatedAge(value: unknown): number | null {
@@ -30,6 +31,14 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+function sanitizeMessages(value: unknown): Array<{ role: "user" | "assistant"; content: unknown }> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .slice(-50)
+    .filter((message) => message && (message.role === "user" || message.role === "assistant"))
+    .map((message) => ({ role: message.role, content: message.content }));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -54,7 +63,7 @@ serve(async (req) => {
 
     const body = await req.json();
     const mode: string = body.mode || "chat";
-    const messages: any[] = Array.isArray(body.messages) ? body.messages : [];
+    const messages = sanitizeMessages(body.messages);
     const weekStart: string = /^\d{4}-\d{2}-\d{2}$/.test(body.week_start || "")
       ? body.week_start
       : new Date().toISOString().slice(0, 10);
@@ -66,7 +75,7 @@ serve(async (req) => {
     const [{ data: profile }, { data: adminRole }] = await Promise.all([
       service
         .from("profiles")
-        .select("nome,data_nascimento,plano")
+        .select("nome,data_nascimento,plano,subscription_active")
         .eq("user_id", userId)
         .maybeSingle(),
       service
@@ -95,7 +104,6 @@ serve(async (req) => {
       return json({ error: "Não foi possível confirmar a autorização para dados de saúde." }, 503);
     }
 
-    const idade = calculateValidatedAge(profile?.data_nascimento);
     const canUseHealthData = isAdultWithValidAge && Boolean(activeConsent);
 
     let healthProfile: Record<string, any> = {};
@@ -113,7 +121,11 @@ serve(async (req) => {
     }
 
     const plano = (profile?.plano || "essencial").toLowerCase();
-    const isTop = plano === "performance" || Boolean(adminRole);
+    const isTop = hasPaidPlanAccess({
+      plan: plano,
+      subscriptionActive: profile?.subscription_active === true,
+      isAdmin: Boolean(adminRole),
+    }, "performance");
     if (!isTop) return json({ error: "Recurso exclusivo do Plano Top.", plan_locked: true }, 403);
 
     // ---- Weekly message limit (30 / week, reset on Monday in the user's timezone) ----

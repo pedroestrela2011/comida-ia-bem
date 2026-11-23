@@ -5,9 +5,6 @@ import { ACHIEVEMENTS, AchievementContext, AchievementDef } from "@/data/achieve
 import { XP_VALUES, XPAction, getLevel } from "@/lib/levels";
 import { RARITY_INFO } from "@/lib/rarity";
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
-const monthKey = () => new Date().toISOString().slice(0, 7);
-const daysBetween = (a: string, b: string) => Math.round((new Date(b + "T00:00:00").getTime() - new Date(a + "T00:00:00").getTime()) / 86400000);
 
 export type UserXP = {
   user_id: string;
@@ -42,33 +39,14 @@ export function useGamification() {
 
     if (!isEnabled) { setLoading(false); return; }
 
-    const { data: xpRow } = await supabase
-      .from("user_xp" as any)
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle() as any;
-
-    if (!xpRow) {
-      const { data: created } = await supabase
-        .from("user_xp" as any)
-        .insert({ user_id: user.id, shield_month: monthKey() } as any)
-        .select()
-        .single() as any;
-      setXP(created);
-    } else {
-      // reset shield mensal
-      if (xpRow.shield_month !== monthKey()) {
-        const { data: updated } = await supabase
-          .from("user_xp" as any)
-          .update({ streak_shield_available: true, shield_month: monthKey() } as any)
-          .eq("user_id", user.id)
-          .select()
-          .single() as any;
-        setXP(updated);
-      } else {
-        setXP(xpRow);
-      }
+    const { data: xpRow, error: xpError } = await supabase.rpc("ensure_user_xp");
+    if (xpError) {
+      setXP(null);
+      setUnlocked(new Set());
+      setLoading(false);
+      return;
     }
+    setXP(xpRow);
 
     const { data: achs } = await supabase
       .from("user_achievements")
@@ -184,87 +162,27 @@ export function useGamification() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const amount = XP_VALUES[action];
-    // update streak
-    let current = xp;
-    if (!current) {
-      const { data } = await supabase.from("user_xp" as any).select("*").eq("user_id", user.id).maybeSingle() as any;
-      current = data;
-    }
-    if (!current) return;
+    const current = xp;
+    const { data: updated, error } = await supabase.rpc("award_xp", {
+      p_action: action,
+      p_metadata: metadata,
+    });
+    if (error || !updated) return;
 
-    const today = todayISO();
-    let newStreak = current.current_streak;
-    let newLongest = current.longest_streak;
-    let shieldAvailable = current.streak_shield_available;
-    let streakLost = false;
-    let bonus = 0;
-
-    if (current.last_action_date !== today) {
-      if (current.last_action_date) {
-        const diff = daysBetween(current.last_action_date, today);
-        if (diff === 1) {
-          newStreak += 1;
-        } else if (diff > 1) {
-          if (shieldAvailable) {
-            shieldAvailable = false;
-            newStreak += 1;
-          } else {
-            streakLost = true;
-            newStreak = 1;
-          }
-        }
-      } else {
-        newStreak = 1;
-      }
-      newLongest = Math.max(newLongest, newStreak);
-
-      if (newStreak === 7) bonus += XP_VALUES.streak_7_bonus;
-      if (newStreak === 30) bonus += XP_VALUES.streak_30_bonus;
-    }
-
-    const totalDelta = amount + bonus;
-    const newTotal = current.total_xp + totalDelta;
-
-    // log main event
-    await supabase.from("xp_events" as any).insert({
-      user_id: user.id,
-      action_type: action,
-      xp_amount: amount,
-      metadata: { ...metadata, streak_lost: streakLost || undefined },
-    } as any);
-
+    setXP(updated);
+    const bonus = current
+      ? updated.total_xp - current.total_xp - XP_VALUES[action]
+      : 0;
     if (bonus > 0) {
-      await supabase.from("xp_events" as any).insert({
-        user_id: user.id,
-        action_type: newStreak === 30 ? "bonus_streak_30" : "bonus_streak_7",
-        xp_amount: bonus,
-        metadata: { streak: newStreak },
-      } as any);
       toast(`+${bonus} XP bônus de sequência!`, { duration: 3500 });
     }
 
-    const { data: updated } = await supabase
-      .from("user_xp" as any)
-      .update({
-        total_xp: newTotal,
-        current_streak: newStreak,
-        longest_streak: newLongest,
-        last_action_date: today,
-        streak_shield_available: shieldAvailable,
-        shield_month: current.shield_month ?? monthKey(),
-      } as any)
-      .eq("user_id", user.id)
-      .select()
-      .single() as any;
-
-    setXP(updated);
-
-    // level up detection
-    const prevLevel = getLevel(current.total_xp);
-    const nextLevel = getLevel(newTotal);
-    if (prevLevel.name !== nextLevel.name) {
-      toast(`${nextLevel.icon}  Novo nível: ${nextLevel.name}!`, { duration: 5000 });
+    if (current) {
+      const prevLevel = getLevel(current.total_xp);
+      const nextLevel = getLevel(updated.total_xp);
+      if (prevLevel.name !== nextLevel.name) {
+        toast(`${nextLevel.icon}  Novo nível: ${nextLevel.name}!`, { duration: 5000 });
+      }
     }
 
     await checkAchievements(user.id, updated, unlocked);

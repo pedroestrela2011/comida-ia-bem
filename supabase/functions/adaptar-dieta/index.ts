@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasPaidPlanAccess } from "../_shared/plan-access.ts";
  // Strictly validate YYYY-MM-DD and calculate age using the UTC calendar date.
  // Invalid, impossible, or future birth dates return null so health data access fails closed.
  function calculateValidatedAge(value: unknown): number | null {
@@ -106,7 +107,7 @@ serve(async (req) => {
     // consent or requesting any health-profile columns.
     const { data: identity, error: identityError } = await serviceClient
       .from("profiles")
-      .select("data_nascimento")
+      .select("data_nascimento,plano,subscription_active")
       .eq("user_id", authData.user.id)
       .maybeSingle();
     if (identityError) {
@@ -114,6 +115,23 @@ serve(async (req) => {
         status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { data: adminRole } = await serviceClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", authData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    const hasAccess = hasPaidPlanAccess({
+      plan: identity?.plano,
+      subscriptionActive: identity?.subscription_active === true,
+      isAdmin: Boolean(adminRole),
+    }, "equilibrio");
+    if (!hasAccess) {
+      return new Response(JSON.stringify({ error: "O Adaptador de Dietas exige uma assinatura ativa do plano Equilíbrio ou Performance.", plan_locked: true }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const age = calculateValidatedAge(identity?.data_nascimento);
     if (age === null || age < 18) {
       return new Response(JSON.stringify({ error: "Este recurso com dados de saúde ainda não está disponível para menores de 18 anos ou contas com idade não validada." }), {

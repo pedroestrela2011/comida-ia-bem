@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasPaidPlanAccess } from "../_shared/plan-access.ts";
 // Strictly validate YYYY-MM-DD and calculate age using the UTC calendar date.
 // Invalid, impossible, or future birth dates return null so health data access fails closed.
 function calculateValidatedAge(value: unknown): number | null {
@@ -21,6 +22,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function sanitizeTextMessages(value: unknown): Array<{ role: "user" | "assistant"; content: string }> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .slice(-40)
+    .filter((message) => message && (message.role === "user" || message.role === "assistant") && typeof message.content === "string")
+    .map((message) => ({ role: message.role, content: message.content.slice(0, 12000) }));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -39,7 +48,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { type, messages, preferences, ingredients } = await req.json();
+    const { type, messages: rawMessages, preferences, ingredients } = await req.json();
+    const messages = sanitizeTextMessages(rawMessages);
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -49,6 +59,32 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    if (type === "cardapio_esporte" || type === "analisador_prato" || type === "identificar_alimentos_foto") {
+      const [{ data: accessProfile, error: accessError }, { data: adminRole }] = await Promise.all([
+        serviceForHealth.from("profiles").select("plano,subscription_active").eq("user_id", userIdForHealth).maybeSingle(),
+        serviceForHealth.from("user_roles").select("role").eq("user_id", userIdForHealth).eq("role", "admin").maybeSingle(),
+      ]);
+      if (accessError) {
+        return new Response(JSON.stringify({ error: "Não foi possível validar sua assinatura." }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const hasAccess = hasPaidPlanAccess({
+        plan: accessProfile?.plano,
+        subscriptionActive: accessProfile?.subscription_active === true,
+        isAdmin: Boolean(adminRole),
+      }, type === "cardapio_esporte" ? "equilibrio" : "essencial");
+      if (!hasAccess) {
+        const message = type === "cardapio_esporte"
+          ? "O Modo Esporte exige uma assinatura ativa do plano Equilíbrio ou Performance."
+          : "O Analisador de Pratos exige uma assinatura ativa e não está incluído no período gratuito.";
+        return new Response(JSON.stringify({ error: message, plan_locked: true }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     let healthContext = "";
     let healthConditionsList: string[] = [];
     let healthRestrictionsList: string[] = [];
