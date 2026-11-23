@@ -35,15 +35,18 @@ export function useHealthProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error: profileError } = await supabase
+      // Read only the birth date first. Sensitive profile columns are fetched
+      // only after age and the matching authorization have both been validated.
+      const { data: identity, error: identityError } = await supabase
         .from("profiles")
-        .select(HEALTH_FIELDS.join(","))
+        .select("data_nascimento")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (profileError || !data) return;
+      if (identityError || !identity) return;
 
-      const age = calculateAge(String((data as any).data_nascimento || ""));
-      const expectedAuthorization = age !== null && age < 18 ? "guardian" : "self";
+      const age = calculateAge(String(identity.data_nascimento || ""));
+      if (age === null) return;
+      const expectedAuthorization = age < 18 ? "guardian" : "self";
       let consentQuery = (supabase as any)
         .from("health_data_consents")
         .select("id")
@@ -59,9 +62,17 @@ export function useHealthProfile() {
       const authorized = !consentError && !!consent;
       setHasConsent(authorized);
 
-      // Never expose previously stored sensitive profile fields to feature consumers
-      // when the account has no currently valid authorization.
-      if (authorized) setProfile(data as any);
+      if (!authorized) return;
+
+      const { data: healthData, error: healthError } = await supabase
+        .from("profiles")
+        .select(HEALTH_FIELDS.join(","))
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (healthError || !healthData) return;
+
+      // Only authorized, age-appropriate health fields reach feature consumers.
+      setProfile(healthData as any);
     } finally {
       setLoading(false);
     }
