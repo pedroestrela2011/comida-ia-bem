@@ -90,12 +90,15 @@ const Privacidade = () => (
         previstas na legislação aplicável.
       </p>
       <p>
-        Antes de solicitar dados de saúde de um adolescente, a plataforma exige autorização específica
-        de um responsável por um fluxo separado. O responsável deve acessar uma conta com 18 anos
-        completos ou mais, e-mail confirmado e data de nascimento cadastrada, declarar seu vínculo
-        legal e confirmar expressamente a autorização. O convite é individual, de uso único e expira
-        em 24 horas. O registro guarda a conta adulta utilizada, o e-mail, o nome declarado, o vínculo,
-        a versão do texto e a data da autorização.
+        Antes de solicitar dados de saúde de um adolescente (12 a 17 anos), a plataforma exibe na
+        própria conta uma declaração específica, que deve ser lida e confirmada pelo responsável legal:
+        "Sou responsável legal por este adolescente e autorizo o tratamento dos seus dados pessoais e
+        de saúde pelo Coma Fácil, conforme explicado na Política de Privacidade." O registro guarda o
+        texto confirmado, a versão da política, a data e a conta em que a declaração foi feita. A
+        autorização pode ser revogada a qualquer momento em Configurações; ao revogar, os dados de
+        saúde e de progresso são apagados, mantendo-se apenas o registro da autorização exigido por lei.
+        Autorizações concedidas anteriormente por link continuam válidas. Adotamos o princípio do
+        melhor interesse da criança e do adolescente (ECA e LGPD, art. 14).
       </p>
       <p>
         A verificação técnica da idade e do e-mail da conta adulta não comprova, por si só, a guarda

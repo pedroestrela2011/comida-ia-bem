@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { PENDING_SIGNUP_KEY } from "./Cadastro";
@@ -10,6 +10,8 @@ import { StepObjetivos, ObjetivosData } from "@/components/onboarding/StepObjeti
 import { StepSaude, SaudeData } from "@/components/onboarding/StepSaude";
 import { calcIMC } from "@/lib/health";
 import { supabase } from "@/integrations/supabase/client";
+
+const GUARDIAN_DECLARATION = "Sou responsável legal por este adolescente e autorizo o tratamento dos seus dados pessoais e de saúde pelo Coma Fácil, conforme explicado na Política de Privacidade.";
 
 type PendingSignup = {
   nome: string;
@@ -64,8 +66,7 @@ const OnboardingSaude = () => {
   });
   const [guardianCheckDone, setGuardianCheckDone] = useState(false);
   const [guardianAuthorized, setGuardianAuthorized] = useState(false);
-  const [requestingGuardian, setRequestingGuardian] = useState(false);
-  const [guardianLink, setGuardianLink] = useState<string | null>(null);
+  const [guardianDeclared, setGuardianDeclared] = useState(false);
 
   useEffect(() => {
     const loadPending = async () => {
@@ -86,7 +87,6 @@ const OnboardingSaude = () => {
               .select("id")
               .eq("user_id", authData.user.id)
               .eq("authorization_type", "guardian")
-              .not("guardian_user_id", "is", null)
               .is("revoked_at", null)
               .limit(1)
               .maybeSingle();
@@ -107,25 +107,6 @@ const OnboardingSaude = () => {
     () => isUnder18OrBirthDateInvalid(pending?.data_nascimento),
     [pending?.data_nascimento],
   );
-
-  const requestGuardianAuthorization = async () => {
-    setRequestingGuardian(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-health-data-consent-request");
-      if (error) throw error;
-      if (!data?.url) throw new Error("O servidor não retornou um link válido.");
-      setGuardianLink(data.url);
-      toast({ title: "Link de autorização criado", description: "Envie este link ao seu responsável legal." });
-    } catch (error) {
-      toast({
-        title: "Não foi possível gerar o link",
-        description: error instanceof Error ? error.message : "Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    } finally {
-      setRequestingGuardian(false);
-    }
-  };
 
   const finish = async (dSaude: SaudeData) => {
     if (!pending || !corpo) return;
@@ -150,18 +131,18 @@ const OnboardingSaude = () => {
       onboarding_completo: true,
     };
 
-    const consentText = "Autorizo o uso dos dados de saúde e alimentação fornecidos para personalizar cardápios, receitas e alertas solicitados por mim. Sei que posso revogar esta autorização e que recursos dependentes desses dados poderão deixar de funcionar.";
+    const consentText = requiresGuardian ? GUARDIAN_DECLARATION : "Autorizo o uso dos dados de saúde e alimentação fornecidos para personalizar cardápios, receitas e alertas solicitados por mim. Sei que posso revogar esta autorização e que recursos dependentes desses dados poderão deixar de funcionar.";
     const { error } = await (supabase as any).rpc("save_health_profile_with_consent", {
       p_profile_data: health,
       p_policy_version: "2026-11-23",
       p_consent_text: consentText,
-      p_confirm_consent: !requiresGuardian,
+      p_confirm_consent: true,
     });
     if (error) {
       toast({
         title: "Não foi possível salvar seus dados",
         description: error.message?.includes("autorização")
-          ? "A autorização do responsável não foi encontrada ou não está mais ativa. Peça que ele conclua o link e atualize esta página."
+          ? "A autorização para dados de saúde não foi registrada. Confirme a declaração e tente novamente."
           : "Verifique sua conexão e tente novamente.",
         variant: "destructive",
       });
@@ -188,22 +169,15 @@ const OnboardingSaude = () => {
         <div className="w-full max-w-lg space-y-5 rounded-xl border border-border bg-card p-6">
           <h2 className="text-2xl font-display font-bold text-foreground">Autorização do responsável</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Antes de solicitar medidas corporais, hábitos alimentares ou condições de saúde, um responsável legal precisa autorizar esse tratamento. Nenhum desses dados será coletado nesta etapa.
+            Antes de informar medidas corporais, hábitos alimentares ou condições de saúde, o responsável legal deve ler e confirmar a declaração abaixo.
           </p>
-          <Button className="w-full" onClick={requestGuardianAuthorization} disabled={requestingGuardian}>
-            {requestingGuardian ? "Criando link..." : "Gerar link para meu responsável"}
+          <label htmlFor="guardian-declaration" className="flex items-start gap-3 rounded-lg border border-border p-4 cursor-pointer">
+            <Checkbox id="guardian-declaration" checked={guardianDeclared} onCheckedChange={(v) => setGuardianDeclared(v === true)} className="mt-0.5" />
+            <span className="text-sm leading-relaxed text-foreground">{GUARDIAN_DECLARATION}</span>
+          </label>
+          <Button className="w-full" disabled={!guardianDeclared} onClick={() => setGuardianAuthorized(true)}>
+            Continuar
           </Button>
-          {guardianLink && (
-            <div className="space-y-2 rounded-lg border p-3">
-              <Label htmlFor="guardian-link">Link individual (válido por 24 horas e uso único)</Label>
-              <Input id="guardian-link" readOnly value={guardianLink} />
-              <Button type="button" variant="outline" className="w-full" onClick={() => {
-                navigator.clipboard.writeText(guardianLink);
-                toast({ title: "Link copiado" });
-              }}>Copiar link</Button>
-              <p className="text-xs text-muted-foreground">Envie o link diretamente ao seu pai, mãe ou tutor legal. Depois que a autorização for concluída, atualize esta página.</p>
-            </div>
-          )}
           <Button variant="outline" className="w-full" onClick={() => {
             sessionStorage.removeItem(PENDING_SIGNUP_KEY);
             navigate("/escolher-plano", { replace: true });
@@ -211,7 +185,7 @@ const OnboardingSaude = () => {
             Continuar sem informar dados de saúde
           </Button>
           <p className="text-xs text-muted-foreground">
-            O responsável precisa usar uma conta adulta com e-mail confirmado e data de nascimento cadastrada. A declaração de vínculo não substitui verificação documental.
+            A autorização pode ser revogada a qualquer momento em Configurações; os dados de saúde salvos serão apagados.
             Consulte a <Link to="/privacidade" className="text-primary underline">Política de Privacidade</Link>.
           </p>
         </div>

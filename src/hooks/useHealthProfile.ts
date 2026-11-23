@@ -47,16 +47,12 @@ export function useHealthProfile() {
       const age = calculateAge(String(identity.data_nascimento || ""));
       if (age === null) return;
       const expectedAuthorization = age < 18 ? "guardian" : "self";
-      let consentQuery = (supabase as any)
+      const consentQuery = (supabase as any)
         .from("health_data_consents")
         .select("id")
         .eq("user_id", user.id)
         .eq("authorization_type", expectedAuthorization)
         .is("revoked_at", null);
-
-      if (expectedAuthorization === "guardian") {
-        consentQuery = consentQuery.not("guardian_user_id", "is", null);
-      }
 
       const { data: consent, error: consentError } = await consentQuery.limit(1).maybeSingle();
       const authorized = !consentError && !!consent;
