@@ -1,5 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Strictly validate YYYY-MM-DD and calculate age using the UTC calendar date.
+// Invalid, impossible, or future birth dates return null so health data access fails closed.
+function calculateValidatedAge(value: unknown): number | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const birthDate = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== value) return null;
+
+  const today = new Date();
+  let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
+  const birthdayHasNotOccurred = today.getUTCMonth() < birthDate.getUTCMonth()
+    || (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate());
+  if (birthdayHasNotOccurred) age--;
+  return age >= 0 ? age : null;
+}
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +58,7 @@ serve(async (req) => {
         .from("health_data_consents")
         .select("id")
         .eq("user_id", userIdForHealth)
+        .eq("authorization_type", "self")
         .is("revoked_at", null)
         .order("granted_at", { ascending: false })
         .limit(1)
@@ -57,15 +73,7 @@ serve(async (req) => {
           .maybeSingle();
         if (healthProfileError) throw healthProfileError;
 
-        const birthDate = hp?.data_nascimento
-          ? new Date(`${hp.data_nascimento}T00:00:00Z`)
-          : null;
-        const today = new Date();
-        const age = birthDate && Number.isFinite(birthDate.getTime())
-          ? today.getUTCFullYear() - birthDate.getUTCFullYear() -
-            (today.getUTCMonth() < birthDate.getUTCMonth() ||
-            (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() < birthDate.getUTCDate()) ? 1 : 0)
-          : null;
+        const age = calculateValidatedAge(hp?.data_nascimento);
 
         // This function must fail closed for minors or profiles without a valid birth date.
         if (hp && age !== null && age >= 18) {
