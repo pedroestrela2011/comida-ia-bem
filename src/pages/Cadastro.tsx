@@ -101,13 +101,21 @@ const Cadastro = () => {
 
     const dataNascimento = `${form.ano}-${form.mes.padStart(2, "0")}-${form.dia.padStart(2, "0")}`;
 
+    const requestedReturn = new URLSearchParams(window.location.search).get("redirect");
+    const safeReturn = requestedReturn && requestedReturn.startsWith("/") && !requestedReturn.startsWith("//")
+      ? requestedReturn
+      : null;
+
     setCheckingPassword(true);
     try {
+      const emailRedirectTo = safeReturn
+        ? `${window.location.origin}/verificar-email?flow=guardian&redirect=${encodeURIComponent(safeReturn)}`
+        : `${window.location.origin}/verificar-email?flow=onboarding`;
       const { data, error } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.senha,
         options: {
-          emailRedirectTo: `${window.location.origin}/verificar-email?flow=onboarding`,
+          emailRedirectTo,
           data: {
             nome: form.nome.trim(),
             data_nascimento: dataNascimento,
@@ -130,9 +138,12 @@ const Cadastro = () => {
       );
 
       if (data.session) {
-        navigate("/onboarding-saude");
+        navigate(safeReturn || "/onboarding-saude", { replace: true });
       } else {
-        navigate("/verificar-email", { state: { email: form.email.trim(), flow: "onboarding" } });
+        navigate("/verificar-email", {
+          state: { email: form.email.trim(), flow: safeReturn ? "guardian" : "onboarding", redirect: safeReturn },
+          search: undefined,
+        });
       }
     } catch (err: any) {
       const message = (err?.message || "").toLowerCase();
