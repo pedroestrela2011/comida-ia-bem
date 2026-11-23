@@ -274,6 +274,135 @@ export type Database = {
         }
         Relationships: []
       }
+      guardian_checkout_requests: {
+        Row: {
+          beneficiary_user_id: string
+          created_at: string
+          expires_at: string
+          guardian_email: string | null
+          guardian_name: string | null
+          id: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          beneficiary_user_id: string
+          created_at?: string
+          expires_at: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          id?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          beneficiary_user_id?: string
+          created_at?: string
+          expires_at?: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          id?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      health_data_consent_requests: {
+        Row: {
+          accepted_at: string | null
+          beneficiary_user_id: string
+          created_at: string
+          expires_at: string
+          guardian_email: string | null
+          guardian_name: string | null
+          guardian_relationship: string | null
+          guardian_user_id: string | null
+          id: string
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          beneficiary_user_id: string
+          created_at?: string
+          expires_at: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          guardian_relationship?: string | null
+          guardian_user_id?: string | null
+          id?: string
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          beneficiary_user_id?: string
+          created_at?: string
+          expires_at?: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          guardian_relationship?: string | null
+          guardian_user_id?: string | null
+          id?: string
+          status?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
+      health_data_consents: {
+        Row: {
+          authorization_type: string
+          consent_text: string
+          granted_at: string
+          guardian_email: string | null
+          guardian_name: string | null
+          guardian_relationship: string | null
+          guardian_user_id: string | null
+          id: string
+          policy_version: string
+          purpose: string
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          authorization_type?: string
+          consent_text: string
+          granted_at?: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          guardian_relationship?: string | null
+          guardian_user_id?: string | null
+          id?: string
+          policy_version: string
+          purpose: string
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          authorization_type?: string
+          consent_text?: string
+          granted_at?: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          guardian_relationship?: string | null
+          guardian_user_id?: string | null
+          id?: string
+          policy_version?: string
+          purpose?: string
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_creations: {
         Row: {
           created_at: string
@@ -669,6 +798,30 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      list_guardian_health_data_consents: {
+        Args: never
+        Returns: {
+          beneficiary_name: string
+          beneficiary_user_id: string
+          consent_id: string
+          granted_at: string
+          guardian_relationship: string
+        }[]
+      }
+      revoke_guardian_health_data_consent: {
+        Args: { p_consent_id: string }
+        Returns: undefined
+      }
+      revoke_health_data_consent: { Args: never; Returns: undefined }
+      save_health_profile_with_consent: {
+        Args: {
+          p_confirm_consent?: boolean
+          p_consent_text: string
+          p_policy_version: string
+          p_profile_data: Json
+        }
+        Returns: undefined
       }
     }
     Enums: {
