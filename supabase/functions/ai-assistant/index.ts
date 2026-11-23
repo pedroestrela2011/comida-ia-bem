@@ -54,6 +54,19 @@ serve(async (req) => {
     let healthRestrictionsList: string[] = [];
     let healthAllergies = "";
     try {
+      // Validate age from the non-sensitive birth-date field before any health
+      // consent lookup or health-profile query.
+      const { data: identity, error: identityError } = await serviceForHealth
+        .from("profiles")
+        .select("data_nascimento")
+        .eq("user_id", userIdForHealth)
+        .maybeSingle();
+      if (identityError) throw identityError;
+      const validatedAge = calculateValidatedAge(identity?.data_nascimento);
+      if (validatedAge === null || validatedAge < 18) {
+        throw new Error("Idade não validada para uso de dados de saúde");
+      }
+
       const { data: activeConsent, error: consentLookupError } = await serviceForHealth
         .from("health_data_consents")
         .select("id")
@@ -68,15 +81,13 @@ serve(async (req) => {
       if (activeConsent) {
         const { data: hp, error: healthProfileError } = await serviceForHealth
           .from("profiles")
-          .select("data_nascimento,peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
+          .select("peso_kg,altura_cm,imc,objetivo,nivel_atividade,refeicoes_dia,restricoes_alimentares,alergias,condicoes_saude,condicoes_outras")
           .eq("user_id", userIdForHealth)
           .maybeSingle();
         if (healthProfileError) throw healthProfileError;
 
-        const age = calculateValidatedAge(hp?.data_nascimento);
-
-        // This function must fail closed for minors or profiles without a valid birth date.
-        if (hp && age !== null && age >= 18) {
+        // Age and adult status were validated before this sensitive query.
+        if (hp) {
         const parts: string[] = [];
         if (hp.peso_kg) parts.push(`Peso: ${hp.peso_kg}kg`);
         if (hp.altura_cm) parts.push(`Altura: ${hp.altura_cm}cm`);
