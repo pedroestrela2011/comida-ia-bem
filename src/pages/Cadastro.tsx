@@ -142,7 +142,6 @@ const Cadastro = () => {
       } else {
         navigate("/verificar-email", {
           state: { email: form.email.trim(), flow: safeReturn ? "guardian" : "onboarding", redirect: safeReturn },
-          search: undefined,
         });
       }
     } catch (err: any) {
