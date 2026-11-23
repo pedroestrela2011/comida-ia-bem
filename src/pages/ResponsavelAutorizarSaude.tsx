@@ -72,7 +72,7 @@ const ResponsavelAutorizarSaude = () => {
         {completed ? (
           <>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              A autorização foi registrada. O adolescente poderá voltar ao cadastro e atualizar a página para continuar. A autorização poderá ser revogada nas configurações da conta.
+              A autorização foi registrada. O adolescente poderá voltar ao cadastro e atualizar a página para continuar. Você poderá consultar e revogar esta autorização em Configurações, na aba Autorizações.
             </p>
             <p className="text-xs text-muted-foreground">O registro documenta sua declaração e a conta adulta utilizada. Ele não substitui uma verificação documental da guarda ou da representação legal.</p>
           </>
