@@ -86,7 +86,7 @@ const ResponsavelAutorizarSaude = () => {
         ) : (
           <form onSubmit={accept} className="space-y-5">
             <p className="text-sm text-muted-foreground">
-              Conta autenticada: {user.email}. O sistema verificará no servidor se essa conta tem 18 anos completos e e-mail confirmado.
+              Conta autenticada: {user.email}. O servidor verificará a data de nascimento cadastrada (18 anos ou mais) e a confirmação do e-mail. Esses dados não equivalem a uma verificação documental de identidade.
             </p>
             <div className="space-y-2">
               <Label htmlFor="guardian-name">Seu nome completo</Label>
