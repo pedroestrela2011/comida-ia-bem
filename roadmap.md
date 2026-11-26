@@ -1,6 +1,6 @@
 - [x] Auditar rotas, chamadas diretas e funções do servidor contra novas telas brancas por configuração ausente.
 - [x] Validar os endereços públicos (36/36 sem erro) e 13/14 funções do servidor.
-- [ ] Ativar o aviso automático do Stripe — aguardando o usuário informar o código de assinatura (STRIPE_WEBHOOK_SECRET).
+- [x] Configurar o aviso automático do Stripe no modo de teste e confirmar que o segredo é reconhecido; pagamentos reais não foram testados.
 - [x] Corrigir a tela branca da publicação garantindo a configuração pública de conexão.
 - [x] Validar a inicialização e publicar a correção no domínio principal.
 - [x] Adicionar Acompanhamento Alimentar ao Meu Progresso com cardápio semanal, refeições e substituições por texto/foto.
