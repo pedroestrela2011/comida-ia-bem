@@ -9,3 +9,5 @@
 - [x] Unificar os preços e benefícios exibidos na escolha de planos, cadastro, página inicial e configurações.
 - [x] Verificar os preços e benefícios na escolha do cadastro e página de planos, sem alterar a cobrança no Stripe.
 - [x] Deixar a lista de compras interativa.
+- [x] Remover exigências de composição e medidor de força das telas de senha, preservando proteções essenciais.
+- [x] Verificar cadastro real com seis letras, sem números, símbolos ou maiúsculas: aprovado e encaminhado ao onboarding.

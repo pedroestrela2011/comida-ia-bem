@@ -6,8 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import PasswordStrength from "@/components/PasswordStrength";
-import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER } from "@/lib/password";
+import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER, passwordErrorMessage } from "@/lib/password";
 
 const ResetSenha = () => {
   const navigate = useNavigate();
@@ -56,13 +55,7 @@ const ResetSenha = () => {
 
     setLoading(false);
     if (error) {
-      const msg = (error.message || "").toLowerCase();
-      let description = "Não foi possível atualizar a senha. Tente novamente.";
-      if (msg.includes("same password")) {
-        description = "A nova senha não pode ser igual à senha anterior.";
-      } else if (msg.includes("weak") || msg.includes("pwned") || msg.includes("compromised")) {
-        description = PASSWORD_HINT;
-      }
+      const description = passwordErrorMessage(error) || "Não foi possível atualizar a senha. Tente novamente.";
       toast({ title: "Erro ao redefinir senha", description, variant: "destructive" });
       return;
     }
@@ -146,7 +139,7 @@ const ResetSenha = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            <PasswordStrength password={form.senha} />
+            <p className="text-xs text-muted-foreground">{PASSWORD_HINT}</p>
             {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
           </div>
 

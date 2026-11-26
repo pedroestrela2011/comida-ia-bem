@@ -17,8 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useGamification } from "@/hooks/useGamification";
 import { WelcomeGamificationDialog } from "@/components/dashboard/WelcomeGamificationDialog";
-import PasswordStrength from "@/components/PasswordStrength";
-import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER } from "@/lib/password";
+import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER, passwordErrorMessage } from "@/lib/password";
 
 const countries = [
   "Brasil", "Portugal", "Angola", "Moçambique", "Cabo Verde",
@@ -196,7 +195,7 @@ export default function Configuracoes() {
       setConfirmarSenha("");
       toast({ title: "Senha alterada com sucesso!" });
     } catch (e: any) {
-      toast({ title: "Erro ao alterar senha", description: e.message, variant: "destructive" });
+      toast({ title: "Erro ao alterar senha", description: passwordErrorMessage(e || {}) || e.message, variant: "destructive" });
     } finally {
       setChangingPassword(false);
     }
@@ -383,7 +382,7 @@ export default function Configuracoes() {
                   {showNovaSenha ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <PasswordStrength password={novaSenha} />
+              <p className="text-xs text-muted-foreground">{PASSWORD_HINT}</p>
             </div>
 
             <div className="space-y-2">

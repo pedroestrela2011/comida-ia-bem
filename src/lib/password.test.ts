@@ -1,23 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { checkPassword } from "./password";
+import { checkPassword, passwordErrorMessage } from "./password";
 
 describe("regras de senha do Coma Fácil", () => {
-  it("aceita automaticamente uma senha com 8 caracteres, número e caractere especial, sem maiúscula", () => {
-    expect(checkPassword("comafacil1!")).toEqual({ valid: true, missing: [] });
+  it("aceita seis letras sem números, símbolos ou maiúsculas", () => {
+    expect(checkPassword("abcdef")).toEqual({ valid: true, missing: [] });
   });
 
-  it("rejeita uma senha com menos de 8 caracteres", () => {
-    expect(checkPassword("cofa1!")).toMatchObject({ valid: false });
-    expect(checkPassword("cofa1!").missing).toContain("Pelo menos 8 caracteres");
+  it("rejeita menos de seis caracteres e senha vazia", () => {
+    expect(checkPassword("abcde").valid).toBe(false);
+    expect(checkPassword("").valid).toBe(false);
   });
 
-  it("rejeita uma senha sem número", () => {
-    expect(checkPassword("comafacil!")).toMatchObject({ valid: false });
-    expect(checkPassword("comafacil!").missing).toContain("Pelo menos 1 número");
+  it("não exige letras em uma senha", () => {
+    expect(checkPassword("123456").valid).toBe(true);
   });
 
-  it("rejeita uma senha sem caractere especial", () => {
-    expect(checkPassword("comafacil1")).toMatchObject({ valid: false });
-    expect(checkPassword("comafacil1").missing).toContain("Pelo menos 1 caractere especial");
+  it("distingue senha vazada de exigência de composição", () => {
+    expect(passwordErrorMessage({ code: "weak_password", reasons: ["pwned"] })).toContain("vazamentos");
+    expect(passwordErrorMessage({ message: "Invalid email" })).toBeNull();
   });
 });

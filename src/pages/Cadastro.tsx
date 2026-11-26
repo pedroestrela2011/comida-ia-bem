@@ -6,8 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import PasswordStrength from "@/components/PasswordStrength";
-import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER } from "@/lib/password";
+import { checkPassword, PASSWORD_HINT, PASSWORD_PLACEHOLDER, passwordErrorMessage } from "@/lib/password";
 import { supabase } from "@/integrations/supabase/client";
 
 const countries = [
@@ -108,7 +107,7 @@ const Cadastro = () => {
       }
     } catch (err: any) {
       const message = (err?.message || "").toLowerCase();
-      let description = err?.message || "Não foi possível criar sua conta. Tente novamente.";
+      let description = passwordErrorMessage(err || {}) || err?.message || "Não foi possível criar sua conta. Tente novamente.";
       if (message.includes("12 anos") || message.includes("pelo menos 12")) {
         description = "É necessário ter pelo menos 12 anos completos para criar uma conta.";
       } else if (message.includes("already registered") || message.includes("already exists")) {
@@ -287,7 +286,7 @@ const Cadastro = () => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <PasswordStrength password={form.senha} />
+              <p className="text-xs text-muted-foreground">{PASSWORD_HINT}</p>
               {errors.senha && <p className="text-sm text-destructive">{errors.senha}</p>}
             </div>
 
